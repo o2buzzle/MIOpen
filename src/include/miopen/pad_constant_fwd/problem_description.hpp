@@ -24,6 +24,8 @@
  *
  *******************************************************************************/
 
+#pragma once
+
 #include "miopen/names.hpp"
 #include "miopen/problem_description_base.hpp"
 #include "miopen/tensor.hpp"

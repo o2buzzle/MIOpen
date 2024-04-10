@@ -41,8 +41,11 @@ struct InvokeParams : public miopen::InvokeParams
     ConstData_t x = nullptr;
     Data_t y      = nullptr;
 
-    const int padding[4] = {0, 0, 0, 0};
-    const float value    = 0.0f;
+    const int* padding = nullptr;
+    float value    = 0.0f;
+
+    std::size_t GetWorkspaceSize() const { return 0; }
+    Data_t GetWorkspace() const { return nullptr; }
 };
 } // namespace pad_constant_fwd_contiguous
 } // namespace miopen

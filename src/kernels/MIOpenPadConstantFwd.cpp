@@ -67,22 +67,36 @@
 //     c = nc % tv##_tv.size[1];             \
 //   }
 
+extern "C" __global__ void PadConstantFwdContiguous(const FLOAT_ACCUM* __restrict__ x,
+                                                    const FLOAT_ACCUM* __restrict__ y,
+                                                    const size_t* __restrict y_dims, // needed to calculate the abosolue position in output
+                                                    const size_t* __restrict__ padding,
+                                                    const size_t output_size,
+                                                    float value)
+{
+    const int gid = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    if(gid >= output_size)
+        return;
+    bool flag = true;
+    int o[5];
 
-extern "C" __global__ void PadConstantFwdContiguous(
-    const FLOAT* __restrict__ x,
-    const FLOAT* __restrict__ y,
-    int* __restrict__ o, // n, c, d, h, w
-    const int* __restrict__ padding,
-    const int output_size,
-    float value
-    )
+    ulong ncdh = gid / y_dims[4];
+    o[4] = gid % y_dims[4];
+    ulong ncd = ncdh / y_dims[3];
+    o[3] = ncdh % y_dims[3];
+    ulong nc = ncd / y_dims[2];
+    o[2] = ncd % y_dims[2];
+    o[1] = nc / y_dims[1];
+    o[0] = nc % y_dims[1];
+    
+    for(int i = 0; i < 5; i++)
     {
-        const int gid = blockIdx.x * blockDim.x + threadIdx.x;
-        if (gid >= output_size) return;
-        bool flag = true;
-        for (int i =0; i <5; i++){
-            o[i] = o[i] - padding[2*i];
-            flag *= (o[i] >= 0 && o[i] < o[4]);
-        }
-        y[gid] = flag ? x[o[0]*o[1]*o[2]*o[3]*o[4] + o[1]*o[2]*o[3]*o[4] + o[2]*o[3]*o[4] + o[3]*o[4] + o[4]] : value;
+        o[i] = o[i] - padding[static_cast<ptrdiff_t>(2 * i)];
+        flag *= static_cast<int>(o[i] >= 0 && o[i] < o[4]);
     }
+
+
+    y[gid] = flag ? x[o[0] * o[1] * o[2] * o[3] * o[4] + o[1] * o[2] * o[3] * o[4] +
+                      o[2] * o[3] * o[4] + o[3] * o[4] + o[4]]
+                  : value;
+}

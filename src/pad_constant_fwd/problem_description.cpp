@@ -36,5 +36,5 @@ namespace pad_constant_fwd_contiguous {
 
         return NetworkConfig{ss.str()};
     }
-}
+} // namespace pad_constant_fwd_contiguous
 } // namespace miopen

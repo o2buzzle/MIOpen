@@ -34,14 +34,16 @@
 namespace miopen {
 namespace solver {
 namespace pad_constant_fwd_contiguous {
-bool PadConstantFwdContiguous::IsApplicable(const ExecutionContext& context, 
-                                            const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const 
+bool PadConstantFwdContiguous::IsApplicable(
+    const ExecutionContext& context,
+    const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const
 {
     return true;
 }
 
-ConvSolution PadConstantFwdContiguous::GetSolution(const ExecutionContext& context, 
-                                                  const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const
+ConvSolution PadConstantFwdContiguous::GetSolution(
+    const ExecutionContext& context,
+    const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const
 {
     auto result = ConvSolution{miopenStatusSuccess};
 
@@ -78,13 +80,23 @@ ConvSolution PadConstantFwdContiguous::GetSolution(const ExecutionContext& conte
     result.invoker_factory = [](const std::vector<Kernel>& kernels) {
         return [=](const Handle& handle_, const AnyInvokeParams& invoke_params) {
             decltype(auto) kernel = handle_.Run(kernels.front());
-            decltype(auto) params = invoke_params.CastTo<miopen::pad_constant_fwd_contiguous::InvokeParams>();
-            kernel(params.x, params.y, params.padding, params.value);
+            decltype(auto) params =
+                invoke_params.CastTo<miopen::pad_constant_fwd_contiguous::InvokeParams>();
+
+            auto xdims = params.xDesc->GetLengths();
+            auto ydims = params.yDesc->GetLengths();
+
+            // Calculate output size
+            size_t output_size = 1;
+            for(unsigned long ydim : ydims)
+                output_size *= ydim;
+
+            kernel(params.x, params.y, ydims.data(), params.padding, output_size, params.value);
         };
     };
 
     return result;
 }
-}  // namespace pad_constant_fwd_contiguous
-}  // namespace solver
-}  // namespace miopen
+} // namespace pad_constant_fwd_contiguous
+} // namespace solver
+} // namespace miopen

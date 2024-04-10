@@ -24,8 +24,45 @@
  *
  *******************************************************************************/
 
-#include <miopen/miopen.h>
+#include <miopen/datatype.hpp>
+#include <miopen/find_solution.hpp>
+#include <miopen/float_equal.hpp>
+#include <miopen/kernel_cache.hpp>
+#include <miopen/tensor.hpp>
+#include <miopen/constant_pad.hpp>
+#include <miopen/pad_constant_fwd/problem_description.hpp>
+#include <miopen/pad_constant_fwd/invoke_params.hpp>
+#include <miopen/pad_constant_fwd/solvers.hpp>
 
 namespace miopen {
-    
+
+miopenStatus_t PadConstantForward(Handle& handle,
+                                  const TensorDescriptor& xDesc,
+                                  ConstData_t x,
+                                  const int* padding,
+                                  float value,
+                                  Data_t y)
+{
+    auto ctx = ExecutionContext{&handle};
+    const auto problem = pad_constant_fwd_contiguous::ProblemDescription{xDesc, xDesc, padding, value};
+
+    const auto invoke_params = [&]() {
+        auto tmp = pad_constant_fwd_contiguous::InvokeParams{};
+        tmp.xDesc = &xDesc;
+        tmp.yDesc = &xDesc;
+        tmp.x     = x;
+        tmp.y     = y;
+        tmp.padding = padding;
+        tmp.value   = value;
+        return tmp;
+    }();
+
+    const auto algo = AlgorithmName{"PadConstantForwardContiguous"};
+    const auto solvers = solver::SolverContainer<solver::pad_constant_fwd_contiguous::PadConstantFwdContiguous>{};
+
+    solvers.ExecutePrimitive(handle, problem, algo, invoke_params);
+
+    return miopenStatusSuccess;
 }
+
+} // namespace miopen

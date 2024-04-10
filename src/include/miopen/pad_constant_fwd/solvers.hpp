@@ -26,6 +26,7 @@
 
 #include "miopen/solver.hpp"
 #include "problem_description.hpp"
+#include <cstddef>
 #include <string>
 
 namespace miopen {
