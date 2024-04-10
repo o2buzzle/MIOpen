@@ -6582,6 +6582,30 @@ MIOPEN_EXPORT miopenStatus_t miopenBackendInitialize(miopenBackendDescriptor_t d
 // CLOSEOUT BackendAPI DOXYGEN GROUP
 #endif // MIOPEN_BETA_API
 
+#ifdef MIOPEN_BETA_API
+
+/*! @brief Pads the input tensor boundaries with a constant value.
+ *
+ *  @param [in]  handle An instance of miopenHandle_t
+ *  @param [in]  xDesc Descriptor of the input tensor
+ *  @param [in]  x Input
+ *  @param [in]  padding The size of the padding
+ *  @param [in]  value The padding value
+ *  @param [out] y Padded output
+ *
+ *   @retval miopenStatusSuccess        The memory was destroyed successfully
+ *   @retval miopenStatusBadParm        An invalid or inconsistent argument value is encountered.
+ */
+
+MIOPEN_EXPORT miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
+                                                  miopenTensorDescriptor_t xDesc,
+                                                  const void* x,
+                                                  const int* padding,
+                                                  float value,
+                                                  void* y);
+
+#endif // MIOPEN_BETA_API
+
 #ifdef __cplusplus
 }
 #endif
