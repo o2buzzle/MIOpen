@@ -23,10 +23,6 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-#include "miopen/tensor.hpp"
-#include <cstddef>
-#include <cstdint>
-#include <sys/types.h>
 #ifndef MIOPEN_DONT_USE_HIP_RUNTIME_HEADERS
 #include <hip/hip_runtime.h>
 #endif
@@ -89,8 +85,8 @@ get5DValueAt(const T* x, const size_t* x_dims, size_t n, size_t c, size_t d, siz
 }
 
 extern "C" __global__ void PadConstantFwdContiguous(
-    const FLOAT_ACCUM* __restrict__ x,
-    FLOAT_ACCUM* __restrict__ y,
+    const FLOAT* __restrict__ x,
+    FLOAT* __restrict__ y,
     const size_t* __restrict__ x_dims,
     const size_t* __restrict y_dims, // needed to calculate the abosolue position in output
     const size_t* __restrict__ padding,
@@ -99,7 +95,7 @@ extern "C" __global__ void PadConstantFwdContiguous(
 {
     //   size_t gid = get_global_id(0);
     //   if (gid >= output_size) return;
-    const int gid = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    const uint64_t gid = threadIdx.x + blockIdx.x * blockDim.x;
     if(gid >= output_size)
         return;
 
@@ -116,6 +112,7 @@ extern "C" __global__ void PadConstantFwdContiguous(
     o[1]       = nc / y_dims[1];
     o[0]       = nc % y_dims[1];
 
+
     //   bool flag = true;
     bool flag = true;
 
@@ -126,7 +123,7 @@ extern "C" __global__ void PadConstantFwdContiguous(
     for(int i = 0; i < 5; i++)
     {
         o[i] = o[i] - padding[2 * i];
-        flag *= (o[i] >= 0 && o[i] < y_dims[i]);
+        flag *= (o[i] >= 0 && o[i] < x_dims[i]);
     }
 
     //   DTYPE val = flag ? GET_5D_VAL_AT(input, o[0], o[1], o[2], o[3], o[4]) : value;

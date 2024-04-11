@@ -86,12 +86,23 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
             auto xdims = params.xDesc->GetLengths();
             auto ydims = params.yDesc->GetLengths();
 
+            const size_t* d_xdims;
+            const size_t* d_ydims;
+
+            hipMalloc(&d_xdims, xdims.size() * sizeof(size_t));
+            hipMemcpy((void*)d_xdims, xdims.data(), xdims.size() * sizeof(size_t), hipMemcpyHostToDevice);
+            hipMalloc(&d_ydims, ydims.size() * sizeof(size_t));
+            hipMemcpy((void*)d_ydims, ydims.data(), ydims.size() * sizeof(size_t), hipMemcpyHostToDevice);
+
             // Calculate output size
             size_t output_size = 1;
             for(unsigned long ydim : ydims)
                 output_size *= ydim;
 
-            kernel(params.x, params.y, xdims.data(), ydims.data(), params.padding, output_size, params.padding_value);
+            kernel(params.x, params.y, d_xdims, d_ydims, params.padding, output_size, params.padding_value);
+
+            hipFree((void*)d_xdims);
+            hipFree((void*)d_ydims);
         };
     };
 
