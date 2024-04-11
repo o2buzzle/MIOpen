@@ -41,6 +41,7 @@ miopenStatus_t PadConstantForward(Handle& handle,
                                   ConstData_t x,
                                   const int* padding,
                                   float value,
+                                  const TensorDescriptor& yDesc,
                                   Data_t y)
 {
     auto ctx = ExecutionContext{&handle};
@@ -49,7 +50,7 @@ miopenStatus_t PadConstantForward(Handle& handle,
     const auto invoke_params = [&]() {
         auto tmp = pad_constant_fwd_contiguous::InvokeParams{};
         tmp.xDesc = &xDesc;
-        tmp.yDesc = &xDesc;
+        tmp.yDesc = &yDesc;
         tmp.x     = x;
         tmp.y     = y;
         tmp.padding = padding;

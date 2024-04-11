@@ -57,7 +57,7 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
 
     auto kernel = KernelInfo{};
 
-    kernel.kernel_file = "MIOpenPadConstantFwdContiguous.cpp";
+    kernel.kernel_file = "MIOpenPadConstantFwd.cpp";
     kernel.kernel_name = "PadConstantFwdContiguous";
 
     const auto build_params = KernelBuildParameters{

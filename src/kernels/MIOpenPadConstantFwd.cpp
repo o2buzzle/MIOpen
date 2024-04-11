@@ -68,7 +68,7 @@
 //   }
 
 extern "C" __global__ void PadConstantFwdContiguous(const FLOAT_ACCUM* __restrict__ x,
-                                                    const FLOAT_ACCUM* __restrict__ y,
+                                                    FLOAT_ACCUM* __restrict__ y,
                                                     const size_t* __restrict y_dims, // needed to calculate the abosolue position in output
                                                     const size_t* __restrict__ padding,
                                                     const size_t output_size,
@@ -91,8 +91,8 @@ extern "C" __global__ void PadConstantFwdContiguous(const FLOAT_ACCUM* __restric
     
     for(int i = 0; i < 5; i++)
     {
-        o[i] = o[i] - padding[static_cast<ptrdiff_t>(2 * i)];
-        flag *= static_cast<int>(o[i] >= 0 && o[i] < o[4]);
+        o[i] = o[i] - padding[2*i];
+        flag *= (o[i] >= 0 && o[i] < y_dims[i]);
     }
 
 

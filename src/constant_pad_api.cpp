@@ -35,6 +35,7 @@ extern "C" miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
                                                const void* x,
                                                const int* padding,
                                                float value,
+                                               miopenTensorDescriptor_t yDesc,
                                                void* y)
 {
     MIOPEN_LOG_FUNCTION(handle, xDesc, x, padding, value, y);
@@ -46,6 +47,7 @@ extern "C" miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
             DataCast(x), 
             padding,
             value, 
+            miopen::deref(yDesc),
             DataCast(y));
     });
 }

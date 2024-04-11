@@ -38,6 +38,7 @@ miopenStatus_t PadConstantForward(Handle& handle,
                                    ConstData_t x,
                                    const int* padding,
                                    float value,
+                                   const TensorDescriptor& yDesc,
                                    Data_t y);
 } // namespace miopen
 #endif

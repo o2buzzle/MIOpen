@@ -6602,6 +6602,7 @@ MIOPEN_EXPORT miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
                                                   const void* x,
                                                   const int* padding,
                                                   float value,
+                                                  miopenTensorDescriptor_t yDesc,
                                                   void* y);
 
 #endif // MIOPEN_BETA_API
