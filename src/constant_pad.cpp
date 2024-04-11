@@ -38,28 +38,29 @@ namespace miopen {
 
 miopenStatus_t PadConstantForward(Handle& handle,
                                   const TensorDescriptor& xDesc,
-                                  ConstData_t x,
-                                  const int* padding,
-                                  float value,
                                   const TensorDescriptor& yDesc,
-                                  Data_t y)
+                                  ConstData_t x,
+                                  Data_t y,
+                                  const int* padding,
+                                  float value)
 {
-    auto ctx = ExecutionContext{&handle};
-    const auto problem = pad_constant_fwd_contiguous::ProblemDescription{xDesc, xDesc, padding, value};
+    auto ctx           = ExecutionContext{&handle};
+    const auto problem = pad_constant_fwd_contiguous::ProblemDescription{xDesc, yDesc};
 
     const auto invoke_params = [&]() {
-        auto tmp = pad_constant_fwd_contiguous::InvokeParams{};
-        tmp.xDesc = &xDesc;
-        tmp.yDesc = &yDesc;
-        tmp.x     = x;
-        tmp.y     = y;
-        tmp.padding = padding;
-        tmp.value   = value;
+        auto tmp          = pad_constant_fwd_contiguous::InvokeParams{};
+        tmp.xDesc         = &xDesc;
+        tmp.yDesc         = &yDesc;
+        tmp.x             = x;
+        tmp.y             = y;
+        tmp.padding       = padding;
+        tmp.padding_value = value;
         return tmp;
     }();
 
     const auto algo = AlgorithmName{"PadConstantForwardContiguous"};
-    const auto solvers = solver::SolverContainer<solver::pad_constant_fwd_contiguous::PadConstantFwdContiguous>{};
+    const auto solvers =
+        solver::SolverContainer<solver::pad_constant_fwd_contiguous::PadConstantFwdContiguous>{};
 
     solvers.ExecutePrimitive(handle, problem, algo, invoke_params);
 

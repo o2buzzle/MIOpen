@@ -30,9 +30,11 @@
 namespace miopen {
 namespace pad_constant_fwd_contiguous {
     NetworkConfig ProblemDescription::MakeNetworkConfig() const {
-        std::ostringstream ss;
+        // Should be the only thing we need? (After all paddings are all the same operation kind)
+        auto dtype = xDesc.GetType();
 
-        ss << "value" << value;
+        std::ostringstream ss;
+        ss << "dtype" << dtype;
 
         return NetworkConfig{ss.str()};
     }

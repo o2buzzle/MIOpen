@@ -91,7 +91,7 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
             for(unsigned long ydim : ydims)
                 output_size *= ydim;
 
-            kernel(params.x, params.y, ydims.data(), params.padding, output_size, params.value);
+            kernel(params.x, params.y, xdims.data(), ydims.data(), params.padding, output_size, params.padding_value);
         };
     };
 

@@ -41,9 +41,10 @@ struct InvokeParams : public miopen::InvokeParams
     ConstData_t x = nullptr;
     Data_t y      = nullptr;
 
-    const int* padding = nullptr;
-    float value    = 0.0f;
+    const int* padding  = nullptr;
+    float padding_value = 0.0f;
 
+    // We should be able to go directly from x -> padded x (aka. y), so no need for extra workspace
     std::size_t GetWorkspaceSize() const { return 0; }
     Data_t GetWorkspace() const { return nullptr; }
 };

@@ -6599,11 +6599,11 @@ MIOPEN_EXPORT miopenStatus_t miopenBackendInitialize(miopenBackendDescriptor_t d
 
 MIOPEN_EXPORT miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
                                                   miopenTensorDescriptor_t xDesc,
-                                                  const void* x,
-                                                  const int* padding,
-                                                  float value,
                                                   miopenTensorDescriptor_t yDesc,
-                                                  void* y);
+                                                  const void* x,
+                                                  void* y,
+                                                  const int* padding,
+                                                  float value);
 
 #endif // MIOPEN_BETA_API
 

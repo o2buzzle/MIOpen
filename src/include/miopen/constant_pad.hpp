@@ -35,10 +35,10 @@ struct TensorDescriptor;
 
 miopenStatus_t PadConstantForward(Handle& handle,
                                    const TensorDescriptor& xDesc,
-                                   ConstData_t x,
-                                   const int* padding,
-                                   float value,
                                    const TensorDescriptor& yDesc,
-                                   Data_t y);
+                                   ConstData_t x,
+                                   Data_t y,
+                                   const int* padding,
+                                   float value);
 } // namespace miopen
 #endif

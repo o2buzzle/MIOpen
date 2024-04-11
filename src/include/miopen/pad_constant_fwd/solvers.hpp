@@ -42,7 +42,7 @@ struct PadConstantFwdContiguous final : PadConstantFwdContiguousSolver
                       const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const override;
 
     ConvSolution GetSolution(const ExecutionContext& context,
-                             const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const override;                             
+                             const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const override; 
 };
 }  // namespace pad_constant_fwd_contiguous
 }  // namespace solver

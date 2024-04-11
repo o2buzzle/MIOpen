@@ -35,29 +35,19 @@ namespace miopen {
 namespace pad_constant_fwd_contiguous {
 struct ProblemDescription : ProblemDescriptionBase
 {
-    ProblemDescription(const TensorDescriptor& xDesc_,
-                       const TensorDescriptor& yDesc_,
-                       const int padding_[],
-                       const float value_)
-        : xDesc(xDesc_),
-          yDesc(yDesc_),
-          padding(padding_),
-          value(value_)
+    ProblemDescription(const TensorDescriptor& xDesc_, const TensorDescriptor& yDesc_)
+        : xDesc(xDesc_), yDesc(yDesc_)
     {
     }
 
     const TensorDescriptor& GetXDesc() const { return xDesc; }
     const TensorDescriptor& GetYDesc() const { return yDesc; }
 
-    const int* GetPadding() const { return padding; }
-    float GetValue() const { return value; }
-
     NetworkConfig MakeNetworkConfig() const override;
+
 private:
     const TensorDescriptor& xDesc;
     const TensorDescriptor& yDesc;
-    const int* padding;
-    const float value;
 };
 } // namespace pad_constant_fwd_contiguous
 } // namespace miopen
