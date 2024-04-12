@@ -58,7 +58,7 @@ miopenStatus_t PadConstantForward(Handle& handle,
         return tmp;
     }();
 
-    const auto algo = AlgorithmName{"PadConstantForwardContiguous"};
+    const auto algo = AlgorithmName{"PadConstantFwdContiguous"};
     const auto solvers =
         solver::SolverContainer<solver::pad_constant_fwd_contiguous::PadConstantFwdContiguous>{};
 

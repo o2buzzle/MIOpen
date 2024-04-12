@@ -28,7 +28,6 @@
 #include <gtest/gtest-param-test.h>
 #include <miopen/env.hpp>
 
-
 MIOPEN_DECLARE_ENV_VAR_STR(MIOPEN_TEST_FLOAT_ARG)
 MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_TEST_ALL)
 
@@ -52,10 +51,14 @@ using namespace pad_constant;
 TEST_P(PadConstantTestFloat, PadConstantTestFw)
 {
     if(miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--float"))
+    {
         RunTest();
+        Verify();
+    }
     else
         GTEST_SKIP();
 }
 
-INSTANTIATE_TEST_CASE_P(PadConstantTest, PadConstantTestFloat,
+INSTANTIATE_TEST_CASE_P(PadConstantTest,
+                        PadConstantTestFloat,
                         testing::ValuesIn(PadConstantTestConfigs()));

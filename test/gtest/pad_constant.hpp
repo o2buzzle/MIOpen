@@ -31,6 +31,8 @@
 #include "random.hpp"
 #include "tensor_holder.hpp"
 #include "verify.hpp"
+#include "cpu_pad_constant.hpp"
+#include <cstdio>
 #include <gtest/gtest.h>
 #include <miopen/miopen.h>
 #include <miopen/constant_pad.hpp>
@@ -42,11 +44,11 @@ struct PadConstantTestCase
     size_t D;
     size_t H;
     size_t W;
-    int32_t dim;
+
     friend std::ostream& operator<<(std::ostream& os, const PadConstantTestCase& tc)
     {
-        return os << " N:" << tc.N << " C:" << tc.C << " D:" << tc.D << " H:" << tc.H
-                  << " W:" << tc.W << " dim:" << tc.dim;
+        return os << "(N: " << tc.N << " C:" << tc.C << " D:" << tc.D << " H:" << tc.H
+                  << " W:" << tc.W << ")";
     }
 
     std::vector<size_t> GetInput()
@@ -57,19 +59,19 @@ struct PadConstantTestCase
         }
         else if((N != 0) && (C != 0) && (H != 0) && (W != 0))
         {
-            return std::vector<size_t>({N, C, H, W});
+            return std::vector<size_t>({N, C, 1, H, W});
         }
         else if((N != 0) && (C != 0) && (W != 0))
         {
-            return std::vector<size_t>({N, C, W});
+            return std::vector<size_t>({N, C,1 ,1 , W});
         }
         else if((N != 0) && (W != 0))
         {
-            return std::vector<size_t>({N, W});
+            return std::vector<size_t>({N, 1,1,1,W});
         }
         else if(N != 0)
         {
-            return std::vector<size_t>({N});
+            return std::vector<size_t>({N,1,1,1,1});
         }
         else
         {
@@ -83,9 +85,18 @@ std::vector<PadConstantTestCase> PadConstantTestConfigs()
 {
     // clang-format off
     return {
-        PadConstantTestCase{.N = 8, .C = 120, .D = 0, .H = 0, .W = 1, .dim = 0},
-        PadConstantTestCase{.N = 8, .C = 120, .D = 0, .H = 0, .W = 1, .dim = 0},
-        PadConstantTestCase{.N = 8, .C = 1023, .D = 0, .H = 0, .W = 1, .dim = 0},
+        { 8,    120,  0,  0,   1   },  
+        { 8,    120,  0,  0,   1  },
+        { 8,    1023, 0,  0,   1     },  
+        { 8,    1024, 0,  0,   768},
+        { 8,    1023, 0,  0,   1  },
+        { 8,    1024, 0,  0,   768},
+        { 16,   1024, 0,  0,   768   },  
+        { 16,   1024, 0,  0,   768},
+        { 48,   8,    0,  512, 512  }, 
+        { 48,   8,    0,  512, 512},
+        { 16, 311,    0,  98,  512   },
+        { 16, 311,    0,  98,  512}
     };
     // clang-format on
 }
@@ -104,7 +115,7 @@ protected:
     miopen::Allocator::ManageDataPtr output_dev;
 
     // We only do 2d tests (for now)
-    const int padding[10] = {0, 0, 0, 0, 0, 0, 2, 0, 2, 0};
+    const size_t padding[10] = {2, 0, 2, 0, 0, 0, 0, 0, 0, 0};
 
     void SetUp() override
     {
@@ -112,35 +123,50 @@ protected:
         pad_constant_config = GetParam();
         auto gen_value      = [](auto...) { return prng::gen_descreet_uniform_sign<T>(1e-2, 100); };
 
-        auto in_dims = std::vector<size_t>({1, 1, 1,6, 6});
+        auto in_dims = pad_constant_config.GetInput();
         input        = tensor<T>{in_dims}.generate(gen_value);
-
-        std::vector<size_t> out_dims = {1, 1, 1, 10, 10};
-        output                       = tensor<T>{out_dims}.generate(gen_value);
-
         input_dev  = handle.Write(input.data);
+        printf("Input tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n", in_dims[0], in_dims[1], in_dims[2], in_dims[3], in_dims[4]);
+        
+        std::vector<size_t> out_dims = in_dims;
+        // printf("Output tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n", out_dims[0], out_dims[1], out_dims[2], out_dims[3], out_dims[4]);
+
+        output = tensor<T>{out_dims};
+        std::fill(output.begin(), output.end(), std::numeric_limits<T>::quiet_NaN());
         output_dev = handle.Write(output.data);
+
+        ref_output = tensor<T>{out_dims};
+        std::fill(ref_output.begin(), ref_output.end(), std::numeric_limits<T>::quiet_NaN());
     };
 
     void RunTest()
     {
         auto&& handle = get_handle();
 
+        auto out_dims = output.desc.GetLengths();
+        printf("Output tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n", out_dims[0], out_dims[1], out_dims[2], out_dims[3], out_dims[4]);
+
+        cpu_pad_constant_fwd<T>(input.data.data(), ref_output.data.data(), input.desc.GetLengths().data(), output.desc.GetLengths().data(), padding, 3.5f);
         miopenStatus_t status;
 
         const int* pd;
-        hipMalloc(&pd, 10 * sizeof(int));
-        hipMemcpy((void*)pd, padding, 10 * sizeof(int), hipMemcpyHostToDevice);
+        hipMalloc(&pd, 10 * sizeof(size_t));
+        hipMemcpy((void*)pd, padding, 10 * sizeof(size_t), hipMemcpyHostToDevice);
 
         status = miopen::PadConstantForward(
             handle, input.desc, output.desc, input_dev.get(), output_dev.get(), pd, 3.5f);
         EXPECT_EQ(status, miopenStatusSuccess);
+
+        output.data = handle.Read<T>(output_dev, output.data.size());
     }
 
     void Verify()
     {
-        // ...Do nothing, right now at least
-        EXPECT_TRUE(true);
+        double threashold = 1e-2;
+        for(int i = 0; i < output.data.size() - 1; ++i)
+        {
+            EXPECT_NEAR(output.data[i], ref_output.data[i], threashold);
+        }
     }
 
     // Nothing else yet. We are just hoping the test even **run**

@@ -36,6 +36,10 @@ namespace pad_constant_fwd_contiguous {
         std::ostringstream ss;
         ss << "dtype" << dtype;
 
+        // no. i blame whoever designed this. why does the cache have launch configs.
+        ss << "xDesc" << xDesc;
+        ss << "yDesc" << yDesc;
+
         return NetworkConfig{ss.str()};
     }
 } // namespace pad_constant_fwd_contiguous

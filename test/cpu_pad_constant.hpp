@@ -23,7 +23,6 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-
 /*
 >>> m = nn.ConstantPad2d(2, 3.5)
 >>> input = torch.randn(1, 2, 2)
@@ -51,6 +50,7 @@ tensor([[[ 3.5000,  3.5000,  3.5000,  3.5000,  3.5000],
 #define GUARD_CPU_PAD_CONSTANT_HPP
 
 #include "tensor_holder.hpp"
+#include <cstddef>
 
 template <typename T>
 T get5DValueAt(const T* x, const size_t* x_dims, size_t n, size_t c, size_t d, size_t h, size_t w)
@@ -59,45 +59,72 @@ T get5DValueAt(const T* x, const size_t* x_dims, size_t n, size_t c, size_t d, s
              c * x_dims[2] * x_dims[3] * x_dims[4] + d * x_dims[3] * x_dims[4] + h * x_dims[4] + w];
 }
 
+#define GET_NCDHW(n, c, d, h, w, idx, size) \
+    {                                       \
+        ulong ncdh = (idx) / size[4];       \
+        w          = (idx) % size[4];       \
+        ulong ncd  = ncdh / size[3];        \
+        h          = ncdh % size[3];        \
+        ulong nc   = ncd / size[2];         \
+        d          = ncd % size[2];         \
+        n          = nc / size[1];          \
+        c          = nc % size[1];          \
+    }
+
 template <class T>
-void PadConstantForward(tensor<T> input, tensor<T> ref_output, const int padding[], float padding_value)
-
+void cpu_pad_constant_fwd(const T* input,
+                          T* output,
+                          const size_t* input_dims,
+                          const size_t* output_dims,
+                          const size_t* padding,
+                          T value)
 {
-    auto ref_output_dims = ref_output.desc.GetLengths();
-    auto input_dims      = input.desc.GetLengths();
+    size_t o[5];
 
-    int o[5];
+    printf("Tensor output size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n",
+           output_dims[0],
+           output_dims[1],
+           output_dims[2],
+           output_dims[3],
+           output_dims[4]);
 
-    for(auto gid = ref_output.begin(); gid != ref_output.end(); ++gid)
+    for(size_t gid = 0;
+        gid != output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3] * output_dims[4];
+        ++gid)
     {
         bool flag = true;
 
-        ulong ncdh = gid / ref_output_dims[4];
-        o[4]       = gid % ref_output_dims[4];
-        ulong ncd  = ncdh / ref_output_dims[3];
-        o[3]       = ncdh % ref_output_dims[3];
-        ulong nc   = ncd / ref_output_dims[2];
-        o[2]       = ncd % ref_output_dims[2];
-        o[1]       = nc / ref_output_dims[1];
-        o[0]       = nc % ref_output_dims[1];
+        GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, output_dims);
 
         for(int i = 0; i < 5; i++)
         {
             o[i] = o[i] - padding[2 * i];
-            flag *= (o[i] >= 0 && o[i] < ref_output_dims[i]);
+            flag *= (o[i] >= 0 && o[i] < input_dims[i]);
         }
 
         if(flag)
         {
             // This value should be copied from the input tensor
-            ref_output[gid] = get5DValueAt(input.data, input_dims, o[0], o[1], o[2], o[3], o[4]);
+            // ref_output[gid] = get5DValueAt(input.data.data(), input_dims.data(), o[0], o[1],
+            // o[2], o[3], o[4]);
+            try {
+                output[gid] = get5DValueAt(input, input_dims, o[0], o[1], o[2], o[3], o[4]);
+            } catch(...) {
+                printf("Attempted to fetch invalid value at n=%lu c=%lu d=%lu h=%lu w=%lu\n",
+                       o[0],
+                       o[1],
+                       o[2],
+                       o[3],
+                       o[4]);
+                throw;
+            }
         }
         else
         {
-            ref_output[gid] = padding_value;
+            // This value should be constant
+            output[gid] = value;
         }
     }
     // how much do you wanna bet on this instantly blowing up?
 }
-
 #endif

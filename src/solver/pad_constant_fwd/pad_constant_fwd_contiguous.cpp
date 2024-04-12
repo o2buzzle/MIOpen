@@ -28,6 +28,7 @@
 #include "miopen/execution_context.hpp"
 #include "miopen/kernel_build_params.hpp"
 #include "miopen/miopen.h"
+#include "miopen/mlo_internal.hpp"
 #include "miopen/pad_constant_fwd/solvers.hpp"
 #include "miopen/pad_constant_fwd/invoke_params.hpp"
 
@@ -50,16 +51,28 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
     auto dtype = problem.GetXDesc().GetType();
     auto ydims = problem.GetYDesc().GetLengths();
 
-    size_t xlocalsize = 1;
-    size_t xgridsize  = AlignUp(ydims[0], xlocalsize);
+    // AlignUp(output_size / block_size, block_size)
+    size_t xlocalsize = 256;
+    size_t xgridsize  = 1;
+
+    for (int i = 0; i < 5; i++)
+    {
+        xgridsize *= ydims[i] == 0 ? 1 : ydims[i];
+    }
+    xgridsize = AlignUp(xgridsize, xlocalsize);
+
     size_t ylocalsize = 1;
-    size_t ygridsize  = AlignUp(ydims[1], ylocalsize);
+    size_t ygridsize  = 1;
+
+    printf("xlocalsize = %lu, xgridsize = %lu\n", xlocalsize, xgridsize);
+    printf("ylocalsize = %lu, ygridsize = %lu\n", ylocalsize, ygridsize);
 
     auto kernel = KernelInfo{};
 
     kernel.kernel_file = "MIOpenPadConstantFwd.cpp";
     kernel.kernel_name = "PadConstantFwdContiguous";
-
+    
+    // technically not necessary.
     const auto build_params = KernelBuildParameters{
         {"MIOPEN_USE_FP16", static_cast<int32_t>(dtype == miopenHalf)},
         {"MIOPEN_USE_FP32", static_cast<int32_t>(dtype == miopenFloat)},
@@ -89,11 +102,14 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
             const size_t* d_xdims;
             const size_t* d_ydims;
 
+
             hipMalloc(&d_xdims, xdims.size() * sizeof(size_t));
             hipMemcpy((void*)d_xdims, xdims.data(), xdims.size() * sizeof(size_t), hipMemcpyHostToDevice);
             hipMalloc(&d_ydims, ydims.size() * sizeof(size_t));
             hipMemcpy((void*)d_ydims, ydims.data(), ydims.size() * sizeof(size_t), hipMemcpyHostToDevice);
 
+            // printf("Kernel reporting x_dim as n=%lu c=%lu d=%lu h=%lu w=%lu\n", d_xdims[0], d_xdims[1], d_xdims[2], d_xdims[3], d_xdims[4]);
+            // printf("Kernel reporting y_dim as n=%lu c=%lu d=%lu h=%lu w=%lu\n", d_ydims[0], d_ydims[1], d_ydims[2], d_ydims[3], d_ydims[4]);
             // Calculate output size
             size_t output_size = 1;
             for(unsigned long ydim : ydims)
