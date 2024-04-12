@@ -45,6 +45,12 @@ struct ProblemDescription : ProblemDescriptionBase
 
     NetworkConfig MakeNetworkConfig() const override;
 
+    bool IsSameType() const {
+        if (xDesc.GetType() == yDesc.GetType())
+            return true;
+        return false;
+    }
+
 private:
     const TensorDescriptor& xDesc;
     const TensorDescriptor& yDesc;
