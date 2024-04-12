@@ -162,10 +162,9 @@ protected:
 
     void Verify()
     {
-        double threashold = 1e-2;
         for(int i = 0; i < output.data.size() - 1; ++i)
         {
-            EXPECT_NEAR(output.data[i], ref_output.data[i], threashold);
+            EXPECT_EQ(output.data[i], ref_output.data[i]);
         }
     }
 
