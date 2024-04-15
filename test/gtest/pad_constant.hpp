@@ -159,7 +159,7 @@ protected:
         cpu_pad_constant_fwd<T>(input.data.data(), ref_output.data.data(), input.desc.GetLengths().data(), output.desc.GetLengths().data(), padding, 3.5f);
         miopenStatus_t status;
 
-        const int* pd;
+        const size_t* pd;
         hipMalloc(&pd, 10 * sizeof(size_t));
         hipMemcpy((void*)pd, padding, 10 * sizeof(size_t), hipMemcpyHostToDevice);
 
