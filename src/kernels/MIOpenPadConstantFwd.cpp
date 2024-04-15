@@ -29,7 +29,6 @@
 #include <hip/hip_fp16.h>
 #endif
 
-#include "miopen_cstdint.hpp"
 #include "float_types.h"
 
 #define GET_NCDHW(n, c, d, h, w, idx, size) \

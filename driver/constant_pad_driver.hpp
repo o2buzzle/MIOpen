@@ -30,19 +30,11 @@
 #include "InputFlags.hpp"
 #include "driver.hpp"
 #include "tensor_driver.hpp"
-#include "timer.hpp"
 #include "random.hpp"
-#include <algorithm>
-#include <cfloat>
-#include <cstddef>
-#include <cstdint>
-#include <cstdlib>
-#include <memory>
+#include "timer.hpp"
+#include <vector>
 #include <miopen/miopen.h>
 #include <miopen/tensor.hpp>
-#include <numeric>
-#include <vector>
-#include <../test/tensor_holder.hpp>
 #include <../test/verify.hpp>
 
 #define GET_NCDHW(n, c, d, h, w, idx, size) \

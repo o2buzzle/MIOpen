@@ -49,8 +49,8 @@ tensor([[[ 3.5000,  3.5000,  3.5000,  3.5000,  3.5000],
 #ifndef GUARD_CPU_PAD_CONSTANT_HPP
 #define GUARD_CPU_PAD_CONSTANT_HPP
 
-#include "tensor_holder.hpp"
 #include <cstddef>
+#include <sys/types.h>
 
 template <typename T>
 T get5DValueAt(const T* x, const size_t* x_dims, size_t n, size_t c, size_t d, size_t h, size_t w)
@@ -99,7 +99,7 @@ void cpu_pad_constant_fwd(const T* input,
         for(int i = 0; i < 5; i++)
         {
             o[i] = o[i] - padding[2 * i];
-            flag *= (o[i] >= 0 && o[i] < input_dims[i]);
+            flag *= (o[i] < input_dims[i]);
         }
 
         if(flag)

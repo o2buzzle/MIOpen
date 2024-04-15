@@ -24,18 +24,11 @@
  *
  *******************************************************************************/
 
-#include "../driver/tensor_driver.hpp"
 #include "get_handle.hpp"
-#include "miopen/allocator.hpp"
-#include "miopen/tensor.hpp"
 #include "random.hpp"
 #include "tensor_holder.hpp"
-#include "verify.hpp"
 #include "cpu_pad_constant.hpp"
-#include <cstdio>
-#include <cstdlib>
 #include <gtest/gtest.h>
-#include <miopen/miopen.h>
 #include <miopen/constant_pad.hpp>
 
 struct PadConstantTestCase
@@ -64,15 +57,15 @@ struct PadConstantTestCase
         }
         else if((N != 0) && (C != 0) && (W != 0))
         {
-            return std::vector<size_t>({N, C,1 ,1 , W});
+            return std::vector<size_t>({N, C, 1, 1, W});
         }
         else if((N != 0) && (W != 0))
         {
-            return std::vector<size_t>({N, 1,1,1,W});
+            return std::vector<size_t>({N, 1, 1, 1, W});
         }
         else if(N != 0)
         {
-            return std::vector<size_t>({N,1,1,1,1});
+            return std::vector<size_t>({N, 1, 1, 1, 1});
         }
         else
         {
@@ -86,17 +79,17 @@ std::vector<PadConstantTestCase> PadConstantTestConfigs()
 {
     // clang-format off
     return {
-        { 8,    120,  0,  0,   1   },  
-        { 8,    120,  0,  0,   1  },
-        { 8,    1023, 0,  0,   1     },  
+        { 8,    120,  0,  0,   1},  
+        { 8,    120,  0,  0,   1},
+        { 8,    1023, 0,  0,   1},  
         { 8,    1024, 0,  0,   768},
-        { 8,    1023, 0,  0,   1  },
+        { 8,    1023, 0,  0,   1},
         { 8,    1024, 0,  0,   768},
-        { 16,   1024, 0,  0,   768   },  
+        { 16,   1024, 0,  0,   768},  
         { 16,   1024, 0,  0,   768},
-        { 48,   8,    0,  512, 512  }, 
+        { 48,   8,    0,  512, 512}, 
         { 48,   8,    0,  512, 512},
-        { 16, 311,    0,  98,  512   },
+        { 16, 311,    0,  98,  512},
         { 16, 311,    0,  98,  512}
     };
     // clang-format on
@@ -125,21 +118,31 @@ protected:
 
         auto in_dims = pad_constant_config.GetInput();
         input        = tensor<T>{in_dims}.generate(gen_value);
-        input_dev  = handle.Write(input.data);
-        printf("Input tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n", in_dims[0], in_dims[1], in_dims[2], in_dims[3], in_dims[4]);
+        input_dev    = handle.Write(input.data);
+        printf("Input tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n",
+               in_dims[0],
+               in_dims[1],
+               in_dims[2],
+               in_dims[3],
+               in_dims[4]);
 
         // Generate random padding
-        for(unsigned long & i : padding)
+        for(size_t& i : padding)
         {
-            i = rand() % 10;
+            i = prng::gen_descreet_unsigned<size_t>(1, 10);
         }
-        
+
         std::vector<size_t> out_dims;
-        for (size_t i = 0; i < 5; i++)
+        for(size_t i = 0; i < 5; i++)
         {
             out_dims.push_back(in_dims[i] + 2 * padding[2 * i]);
         }
-        printf("Output tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n", out_dims[0], out_dims[1], out_dims[2], out_dims[3], out_dims[4]);
+        printf("Output tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n",
+               out_dims[0],
+               out_dims[1],
+               out_dims[2],
+               out_dims[3],
+               out_dims[4]);
 
         output = tensor<T>{out_dims};
         std::fill(output.begin(), output.end(), std::numeric_limits<T>::quiet_NaN());
@@ -147,7 +150,6 @@ protected:
 
         ref_output = tensor<T>{out_dims};
         std::fill(ref_output.begin(), ref_output.end(), std::numeric_limits<T>::quiet_NaN());
-
     };
 
     void RunTest()
@@ -155,9 +157,19 @@ protected:
         auto&& handle = get_handle();
 
         auto out_dims = output.desc.GetLengths();
-        printf("Output tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n", out_dims[0], out_dims[1], out_dims[2], out_dims[3], out_dims[4]);
+        printf("Output tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n",
+               out_dims[0],
+               out_dims[1],
+               out_dims[2],
+               out_dims[3],
+               out_dims[4]);
 
-        cpu_pad_constant_fwd<T>(input.data.data(), ref_output.data.data(), input.desc.GetLengths().data(), output.desc.GetLengths().data(), padding, 3.5f);
+        cpu_pad_constant_fwd<T>(input.data.data(),
+                                ref_output.data.data(),
+                                input.desc.GetLengths().data(),
+                                output.desc.GetLengths().data(),
+                                padding,
+                                3.5f);
         miopenStatus_t status;
 
         const size_t* pd;

@@ -65,7 +65,9 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
     }
 
     size_t xlocalsize = 1024;
-    size_t xgridsize  = AlignUp(output_size, xlocalsize);
+    // AlignUp blows up, because output_size can be > int_max. Lovely.
+    // size_t xgridsize  = AlignUp(output_size, xlocalsize);
+    size_t xgridsize  = (((static_cast<size_t>(output_size) + xlocalsize - 1) / xlocalsize) * xlocalsize);
     size_t ylocalsize = 1;
     size_t ygridsize  = 1;
 
