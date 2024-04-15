@@ -25,6 +25,7 @@
  *******************************************************************************/
 
 #include "miopen/conv_solution.hpp"
+#include "miopen/datatype.hpp"
 #include "miopen/execution_context.hpp"
 #include "miopen/kernel_build_params.hpp"
 #include "miopen/miopen.h"
@@ -51,37 +52,32 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
     const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const
 {
     auto result = ConvSolution{miopenStatusSuccess};
-
-    auto dtype = problem.GetXDesc().GetType();
     auto ydims = problem.GetYDesc().GetLengths();
 
-    // AlignUp(output_size / block_size, block_size)
-    size_t xlocalsize = 1024;
+    auto input_dtype = miopen::GetDataType(problem.GetXDesc().GetType());
+    auto output_dtype = miopen::GetDataType(problem.GetYDesc().GetType());
 
-    size_t xgridsize  = 1;
+    // for xgridsize: 5d -> 1d
+    size_t output_size = 1;
     for (int i = 0; i < 5; i++)
     {
-        xgridsize *= ydims[i] == 0 ? 1 : ydims[i];
+        output_size *= ydims[i] == 0 ? 1 : ydims[i];
     }
-    xgridsize = AlignUp(xgridsize, xlocalsize);
 
+    size_t xlocalsize = 1024;
+    size_t xgridsize  = AlignUp(output_size, xlocalsize);
     size_t ylocalsize = 1;
     size_t ygridsize  = 1;
-
-    printf("xlocalsize = %lu, xgridsize = %lu\n", xlocalsize, xgridsize);
-    printf("ylocalsize = %lu, ygridsize = %lu\n", ylocalsize, ygridsize);
 
     auto kernel = KernelInfo{};
 
     kernel.kernel_file = "MIOpenPadConstantFwd.cpp";
     kernel.kernel_name = "PadConstantFwdContiguous";
     
-    // technically not necessary.
+    // TODO: Actually understand how to use this properly
     const auto build_params = KernelBuildParameters{
-        {"MIOPEN_USE_FP16", static_cast<int32_t>(dtype == miopenHalf)},
-        {"MIOPEN_USE_FP32", static_cast<int32_t>(dtype == miopenFloat)},
-        {"MIOPEN_USE_FP64", static_cast<int32_t>(dtype == miopenDouble)},
-        {"MIOPEN_USE_BFP16", static_cast<int32_t>(dtype == miopenBFloat16)},
+        {"INPUT_TYPE", input_dtype == "half" ? "half" : "float"}, 
+        {"OUTPUT_TYPE", output_dtype == "half" ? "half" : "float"},
     };
 
     kernel.comp_options = build_params.GenerateFor(kbp::HIP{});
@@ -103,26 +99,18 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
             auto xdims = params.xDesc->GetLengths();
             auto ydims = params.yDesc->GetLengths();
 
+            // Copy x_dims to GPU (needed to get position in kernel later)
             const size_t* d_xdims;
-            const size_t* d_ydims;
-
-
             hipMalloc(&d_xdims, xdims.size() * sizeof(size_t));
             hipMemcpy((void*)d_xdims, xdims.data(), xdims.size() * sizeof(size_t), hipMemcpyHostToDevice);
-            hipMalloc(&d_ydims, ydims.size() * sizeof(size_t));
-            hipMemcpy((void*)d_ydims, ydims.data(), ydims.size() * sizeof(size_t), hipMemcpyHostToDevice);
 
-            // printf("Kernel reporting x_dim as n=%lu c=%lu d=%lu h=%lu w=%lu\n", d_xdims[0], d_xdims[1], d_xdims[2], d_xdims[3], d_xdims[4]);
-            // printf("Kernel reporting y_dim as n=%lu c=%lu d=%lu h=%lu w=%lu\n", d_ydims[0], d_ydims[1], d_ydims[2], d_ydims[3], d_ydims[4]);
-            // Calculate output size
+            // Calculate output size (again)
             size_t output_size = 1;
             for(unsigned long ydim : ydims)
                 output_size *= ydim;
 
-            kernel(params.x, params.y, d_xdims, d_ydims, params.padding, output_size, params.padding_value);
-
+            kernel(params.x, params.y, d_xdims, params.padding, output_size, params.padding_value);
             hipFree((void*)d_xdims);
-            hipFree((void*)d_ydims);
         };
     };
 

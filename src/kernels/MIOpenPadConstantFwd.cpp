@@ -26,6 +26,7 @@
 #include <cstdio>
 #ifndef MIOPEN_DONT_USE_HIP_RUNTIME_HEADERS
 #include <hip/hip_runtime.h>
+#include <hip/hip_fp16.h>
 #endif
 
 #include "miopen_cstdint.hpp"
@@ -52,10 +53,9 @@ get5DValueAt(const T* x, const size_t* x_dims, size_t n, size_t c, size_t d, siz
 }
 
 extern "C" __global__ void PadConstantFwdContiguous(
-    const FLOAT* __restrict__ x,
-    FLOAT* __restrict__ y,
+    const INPUT_TYPE* __restrict__ x,
+    OUTPUT_TYPE* __restrict__ y,
     const size_t* __restrict__ x_dims,
-    const size_t* __restrict y_dims, // needed to calculate the abosolue position in output
     const size_t* __restrict__ padding,
     const size_t output_size,
     float value)
