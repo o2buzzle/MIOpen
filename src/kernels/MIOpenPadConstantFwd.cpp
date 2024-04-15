@@ -64,8 +64,6 @@ extern "C" __global__ void PadConstantFwdContiguous(
     //   if (gid >= output_size) return;
     const uint64_t gid = threadIdx.x + blockIdx.x * blockDim.x;
 
-    // printf("gid = %lu, output_size=%lu \n", gid, output_size);
-
     if(gid >= output_size)
         return;
 

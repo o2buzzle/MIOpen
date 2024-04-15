@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2024 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,29 +24,14 @@
  *
  *******************************************************************************/
 
-#include "miopen/common.hpp"
-#include "miopen/invoke_params.hpp"
-#include "miopen/tensor.hpp"
-#include <miopen/miopen.h>
+#include "constant_pad_driver.hpp"
+#include "registry_driver_maker.hpp"
 
-namespace miopen {
-namespace pad_constant_fwd_contiguous {
-struct InvokeParams : public miopen::InvokeParams
+static Driver* makeDriver(const std::string& base_arg)
 {
-    InvokeParams() = default;
+    if(base_arg == "constantpad")
+        return new ConstantPadDriver<float, float>();
+    return nullptr;
+}
 
-    const TensorDescriptor* xDesc = nullptr;
-    const TensorDescriptor* yDesc = nullptr;
-
-    ConstData_t x = nullptr;
-    Data_t y      = nullptr;
-
-    const size_t* padding  = nullptr;
-    float padding_value = 0.0f;
-
-    // We should be able to go directly from x -> padded x (aka. y), so no need for extra workspace
-    std::size_t GetWorkspaceSize() const { return 0; }
-    Data_t GetWorkspace() const { return nullptr; }
-};
-} // namespace pad_constant_fwd_contiguous
-} // namespace miopen
+REGISTER_DRIVER_MAKER(makeDriver);

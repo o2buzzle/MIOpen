@@ -114,8 +114,7 @@ protected:
     miopen::Allocator::ManageDataPtr input_dev;
     miopen::Allocator::ManageDataPtr output_dev;
 
-    // We only do 2d tests (for now)
-    const size_t padding[10] = {2, 0, 2, 0, 0, 0, 0, 0, 0, 0};
+    size_t padding[10];
 
     void SetUp() override
     {
@@ -127,9 +126,19 @@ protected:
         input        = tensor<T>{in_dims}.generate(gen_value);
         input_dev  = handle.Write(input.data);
         printf("Input tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n", in_dims[0], in_dims[1], in_dims[2], in_dims[3], in_dims[4]);
+
+        // Generate random padding
+        for(unsigned long & i : padding)
+        {
+            i = prng::gen_descreet_uniform_sign<size_t>(0, 10);
+        }
         
-        std::vector<size_t> out_dims = in_dims;
-        // printf("Output tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n", out_dims[0], out_dims[1], out_dims[2], out_dims[3], out_dims[4]);
+        std::vector<size_t> out_dims;
+        for (size_t i = 0; i < 5; i++)
+        {
+            out_dims.push_back(in_dims[i] + 2 * padding[2 * i]);
+        }
+        printf("Output tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n", out_dims[0], out_dims[1], out_dims[2], out_dims[3], out_dims[4]);
 
         output = tensor<T>{out_dims};
         std::fill(output.begin(), output.end(), std::numeric_limits<T>::quiet_NaN());
@@ -137,6 +146,7 @@ protected:
 
         ref_output = tensor<T>{out_dims};
         std::fill(ref_output.begin(), ref_output.end(), std::numeric_limits<T>::quiet_NaN());
+
     };
 
     void RunTest()
@@ -162,7 +172,7 @@ protected:
 
     void Verify()
     {
-        for(int i = 0; i < output.data.size() - 1; ++i)
+        for(int i = 0; i < output.data.size(); ++i)
         {
             EXPECT_EQ(output.data[i], ref_output.data[i]);
         }

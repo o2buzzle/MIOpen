@@ -41,7 +41,7 @@ miopenStatus_t PadConstantForward(Handle& handle,
                                   const TensorDescriptor& yDesc,
                                   ConstData_t x,
                                   Data_t y,
-                                  const int* padding,
+                                  const size_t* padding,
                                   float value)
 {
     auto ctx           = ExecutionContext{&handle};

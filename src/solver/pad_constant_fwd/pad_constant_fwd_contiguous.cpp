@@ -56,9 +56,9 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
     auto ydims = problem.GetYDesc().GetLengths();
 
     // AlignUp(output_size / block_size, block_size)
-    size_t xlocalsize = 256;
-    size_t xgridsize  = 1;
+    size_t xlocalsize = 1024;
 
+    size_t xgridsize  = 1;
     for (int i = 0; i < 5; i++)
     {
         xgridsize *= ydims[i] == 0 ? 1 : ydims[i];
