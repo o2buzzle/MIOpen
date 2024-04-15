@@ -68,6 +68,7 @@
  * @defgroup argmax
  * @defgroup groupnorm
  * @defgroup cat
+ * @defgroup pad_constant
  *
  */
 
@@ -6584,7 +6585,9 @@ MIOPEN_EXPORT miopenStatus_t miopenBackendInitialize(miopenBackendDescriptor_t d
 
 #ifdef MIOPEN_BETA_API
 
-/*! @brief Pads the input tensor boundaries with a constant value.
+/*! Pad Constant API 
+ * @addtogroup pad_constant
+ * @brief Pads the input tensor boundaries with a constant value.
  *
  *  @param [in]  handle An instance of miopenHandle_t
  *  @param [in]  xDesc Descriptor of the input tensor
