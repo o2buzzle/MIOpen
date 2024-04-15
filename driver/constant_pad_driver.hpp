@@ -65,19 +65,21 @@ T get5DValueAt(const T* x, const size_t* x_dims, size_t n, size_t c, size_t d, s
 }
 
 template <typename Tgpu, typename Tcheck>
-int32_t mloConstantPadForwardRunHost(miopenTensorDescriptor_t inputDesc,
-                                     miopenTensorDescriptor_t outputDesc,
-                                     Tgpu* input,
-                                     Tcheck* output_host,
-                                     const size_t* padding,
-                                     float value)
+void mloConstantPadForwardRunHost(miopenTensorDescriptor_t inputDesc,
+                                  miopenTensorDescriptor_t outputDesc,
+                                  Tgpu* input,
+                                  Tcheck* output_host,
+                                  const size_t* padding,
+                                  float value)
 {
     size_t o[5];
     auto input_dims  = miopen::deref(inputDesc).GetLengths();
     auto output_dims = miopen::deref(outputDesc).GetLengths();
 
-    size_t output_size = output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3] * output_dims[4];
+    auto input_strides = miopen::deref(inputDesc).GetStrides();
 
+    size_t output_size =
+        output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3] * output_dims[4];
 
     for(size_t gid = 0; gid < output_size; ++gid)
     {
@@ -87,7 +89,7 @@ int32_t mloConstantPadForwardRunHost(miopenTensorDescriptor_t inputDesc,
         for(int i = 0; i < 5; i++)
         {
             o[i] = o[i] - padding[2 * i];
-            flag *= (o[i] >= 0 && o[i] < input_dims[i]);
+            flag *= (o[i] < input_dims[i]);
         }
 
         if(flag)
@@ -99,7 +101,6 @@ int32_t mloConstantPadForwardRunHost(miopenTensorDescriptor_t inputDesc,
             output_host[gid] = value;
         }
     }
-    return 0;
 }
 
 template <typename Tgpu, typename Tref>
@@ -260,11 +261,11 @@ template <typename Tgpu, typename Tref>
 std::vector<size_t> ConstantPadDriver<Tgpu, Tref>::GetPaddingsFromCmdLine()
 {
     std::vector<size_t> paddings = std::vector<size_t>(10);
-    paddings[0]               = inflags.GetValueInt("pad_n");
-    paddings[2]               = inflags.GetValueInt("pad_c");
-    paddings[4]               = inflags.GetValueInt("pad_d");
-    paddings[6]               = inflags.GetValueInt("pad_h");
-    paddings[8]               = inflags.GetValueInt("pad_w");
+    paddings[0]                  = inflags.GetValueInt("pad_n");
+    paddings[2]                  = inflags.GetValueInt("pad_c");
+    paddings[4]                  = inflags.GetValueInt("pad_d");
+    paddings[6]                  = inflags.GetValueInt("pad_h");
+    paddings[8]                  = inflags.GetValueInt("pad_w");
     return paddings;
 }
 
@@ -276,7 +277,7 @@ int ConstantPadDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
 
     in_dev      = std::unique_ptr<GPUMem>(new GPUMem(0, input_size, sizeof(Tgpu)));
     out_dev     = std::unique_ptr<GPUMem>(new GPUMem(0, output_size, sizeof(Tgpu)));
-    padding_dev = std::make_unique<GPUMem>(0, 10, sizeof(size_t));
+    padding_dev = std::unique_ptr<GPUMem>(new GPUMem(0, 10, sizeof(size_t)));
 
     input       = std::vector<Tgpu>(input_size, static_cast<Tgpu>(0));
     output      = std::vector<Tgpu>(output_size, static_cast<Tgpu>(0));
@@ -349,7 +350,7 @@ int ConstantPadDriver<Tgpu, Tref>::RunForwardGPU()
 template <typename Tgpu, typename Tref>
 int ConstantPadDriver<Tgpu, Tref>::RunForwardCPU()
 {
-    mloConstantPadForwardRunHost<Tgpu, Tref>(
+    mloConstantPadForwardRunHost(
         inputDesc, outputDesc, input.data(), output_host.data(), padding.data(), value);
     return miopenStatusSuccess;
 }
@@ -359,15 +360,22 @@ int ConstantPadDriver<Tgpu, Tref>::VerifyForward()
 {
     RunForwardCPU();
 
+    bool failed = false;
+
     for(int i = 0; i < output.size(); i++)
     {
         if(output[i] != output_host[i])
         {
-            std::cout << "ConstantPadDriver: Forward verification failed." << std::endl;
             std::cout << "output[" << i << "] = " << output[i] << " != "
                       << "output_host[" << i << "] = " << output_host[i] << std::endl;
-            return miopenStatusNotInitialized;
+            return -1;
         }
+    }
+
+    if(failed)
+    {
+        std::cout << "ConstantPadDriver: Forward verification failed." << std::endl;
+        return -1;
     }
 
     std::cout << "ConstantPadDriver: Forward verification passed." << std::endl;

@@ -33,6 +33,7 @@
 #include "verify.hpp"
 #include "cpu_pad_constant.hpp"
 #include <cstdio>
+#include <cstdlib>
 #include <gtest/gtest.h>
 #include <miopen/miopen.h>
 #include <miopen/constant_pad.hpp>
@@ -130,7 +131,7 @@ protected:
         // Generate random padding
         for(unsigned long & i : padding)
         {
-            i = prng::gen_descreet_uniform_sign<size_t>(0, 10);
+            i = rand() % 10;
         }
         
         std::vector<size_t> out_dims;

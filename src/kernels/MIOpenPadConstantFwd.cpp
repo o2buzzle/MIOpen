@@ -56,6 +56,7 @@ extern "C" __global__ void PadConstantFwdContiguous(
     const INPUT_TYPE* __restrict__ x,
     OUTPUT_TYPE* __restrict__ y,
     const size_t* __restrict__ x_dims,
+    const size_t* __restrict__ y_dims,
     const size_t* __restrict__ padding,
     const size_t output_size,
     float value)
@@ -71,7 +72,7 @@ extern "C" __global__ void PadConstantFwdContiguous(
     size_t o[5];
 
     //   GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, output);
-    GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, x_dims);
+    GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, y_dims);
 
     //   bool flag = true;
     bool flag = true;
