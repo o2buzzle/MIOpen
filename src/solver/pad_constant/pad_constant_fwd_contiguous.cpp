@@ -37,10 +37,11 @@ namespace miopen {
 namespace solver {
 namespace pad_constant_fwd_contiguous {
 bool PadConstantFwdContiguous::IsApplicable(
-    const ExecutionContext& context,
+    const ExecutionContext& /*context*/,
     const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const
 {
-    if (!problem.IsSameType()) {
+    if(!problem.IsSameType())
+    {
         return false;
     }
 
@@ -48,18 +49,18 @@ bool PadConstantFwdContiguous::IsApplicable(
 }
 
 ConvSolution PadConstantFwdContiguous::GetSolution(
-    const ExecutionContext& context,
+    const ExecutionContext& /*context*/,
     const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const
 {
     auto result = ConvSolution{miopenStatusSuccess};
-    auto ydims = problem.GetYDesc().GetLengths();
+    auto ydims  = problem.GetYDesc().GetLengths();
 
-    auto input_dtype = miopen::GetDataType(problem.GetXDesc().GetType());
+    auto input_dtype  = miopen::GetDataType(problem.GetXDesc().GetType());
     auto output_dtype = miopen::GetDataType(problem.GetYDesc().GetType());
 
     // for xgridsize: 5d -> 1d
     size_t output_size = 1;
-    for (int i = 0; i < 5; i++)
+    for(int i = 0; i < 5; i++)
     {
         output_size *= ydims[i] == 0 ? 1 : ydims[i];
     }
@@ -67,7 +68,8 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
     size_t xlocalsize = 1024;
     // AlignUp blows up, because output_size can be > int_max. Lovely.
     // size_t xgridsize  = AlignUp(output_size, xlocalsize);
-    size_t xgridsize  = (((static_cast<size_t>(output_size) + xlocalsize - 1) / xlocalsize) * xlocalsize);
+    size_t xgridsize =
+        (((static_cast<size_t>(output_size) + xlocalsize - 1) / xlocalsize) * xlocalsize);
     size_t ylocalsize = 1;
     size_t ygridsize  = 1;
 
@@ -75,10 +77,10 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
 
     kernel.kernel_file = "MIOpenPadConstantFwd.cpp";
     kernel.kernel_name = "PadConstantFwdContiguous";
-    
+
     // TODO: Actually understand how to use this properly
     const auto build_params = KernelBuildParameters{
-        {"INPUT_TYPE", input_dtype == "half" ? "half" : "float"}, 
+        {"INPUT_TYPE", input_dtype == "half" ? "half" : "float"},
         {"OUTPUT_TYPE", output_dtype == "half" ? "half" : "float"},
     };
 
@@ -105,7 +107,7 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
             const size_t* d_xdims;
             hipMallocManaged(&d_xdims, xdims.size() * sizeof(size_t));
             memcpy((void*)d_xdims, xdims.data(), xdims.size() * sizeof(size_t));
-    
+
             const size_t* d_ydims;
             hipMallocManaged(&d_ydims, ydims.size() * sizeof(size_t));
             memcpy((void*)d_ydims, ydims.data(), ydims.size() * sizeof(size_t));
@@ -115,7 +117,13 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
             for(unsigned long ydim : ydims)
                 output_size *= ydim;
 
-            kernel(params.x, params.y, d_xdims, d_ydims, params.padding, output_size, params.padding_value);
+            kernel(params.x,
+                   params.y,
+                   d_xdims,
+                   d_ydims,
+                   params.padding,
+                   output_size,
+                   params.padding_value);
             hipFree((void*)d_xdims);
             hipFree((void*)d_ydims);
         };

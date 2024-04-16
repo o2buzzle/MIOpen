@@ -51,14 +51,13 @@ get5DValueAt(const T* x, const size_t* x_dims, size_t n, size_t c, size_t d, siz
              c * x_dims[2] * x_dims[3] * x_dims[4] + d * x_dims[3] * x_dims[4] + h * x_dims[4] + w];
 }
 
-extern "C" __global__ void PadConstantFwdContiguous(
-    const INPUT_TYPE* __restrict__ x,
-    OUTPUT_TYPE* __restrict__ y,
-    const size_t* __restrict__ x_dims,
-    const size_t* __restrict__ y_dims,
-    const size_t* __restrict__ padding,
-    const size_t output_size,
-    float value)
+extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict__ x,
+                                                    OUTPUT_TYPE* __restrict__ y,
+                                                    const size_t* __restrict__ x_dims,
+                                                    const size_t* __restrict__ y_dims,
+                                                    const size_t* __restrict__ padding,
+                                                    const size_t output_size,
+                                                    float value)
 {
     //   size_t gid = get_global_id(0);
     //   if (gid >= output_size) return;
@@ -83,7 +82,7 @@ extern "C" __global__ void PadConstantFwdContiguous(
     for(int i = 0; i < 5; i++)
     {
         o[i] = o[i] - padding[2 * i];
-        flag *= (o[i] >= 0 && o[i] < x_dims[i]);
+        flag *= o[i] < x_dims[i];
     }
 
     //   DTYPE val = flag ? GET_5D_VAL_AT(input, o[0], o[1], o[2], o[3], o[4]) : value;

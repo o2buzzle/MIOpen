@@ -119,12 +119,12 @@ protected:
         auto in_dims = pad_constant_config.GetInput();
         input        = tensor<T>{in_dims}.generate(gen_value);
         input_dev    = handle.Write(input.data);
-        printf("Input tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n",
-               in_dims[0],
-               in_dims[1],
-               in_dims[2],
-               in_dims[3],
-               in_dims[4]);
+        // printf("Input tensor size is reported to be n=%zu c=%zu d=%zu h=%zu w=%zu\n",
+        //        in_dims[0],
+        //        in_dims[1],
+        //        in_dims[2],
+        //        in_dims[3],
+        //        in_dims[4]);
 
         // Generate random padding
         for(size_t& i : padding)
@@ -137,12 +137,12 @@ protected:
         {
             out_dims.push_back(in_dims[i] + 2 * padding[2 * i]);
         }
-        printf("Output tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n",
-               out_dims[0],
-               out_dims[1],
-               out_dims[2],
-               out_dims[3],
-               out_dims[4]);
+        // printf("Output tensor size is reported to be n=%zu c=%zu d=%zu h=%zu w=%zu\n",
+        //        out_dims[0],
+        //        out_dims[1],
+        //        out_dims[2],
+        //        out_dims[3],
+        //        out_dims[4]);
 
         output = tensor<T>{out_dims};
         std::fill(output.begin(), output.end(), std::numeric_limits<T>::quiet_NaN());
@@ -157,12 +157,12 @@ protected:
         auto&& handle = get_handle();
 
         auto out_dims = output.desc.GetLengths();
-        printf("Output tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n",
-               out_dims[0],
-               out_dims[1],
-               out_dims[2],
-               out_dims[3],
-               out_dims[4]);
+        // printf("Output tensor size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n",
+        //        out_dims[0],
+        //        out_dims[1],
+        //        out_dims[2],
+        //        out_dims[3],
+        //        out_dims[4]);
 
         cpu_pad_constant_fwd<T>(input.data.data(),
                                 ref_output.data.data(),
