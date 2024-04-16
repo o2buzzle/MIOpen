@@ -193,17 +193,17 @@ template <typename Tgpu, typename Tref>
 int ConstantPadDriver<Tgpu, Tref>::AddCmdLineArgs()
 {
     inflags.AddInputFlag("forw", 'F', "1", "Only run the Forward Pass (Default=1)", "int");
-    inflags.AddInputFlag("in_n", 'n', "3", "Input tensor dimension N", "int");
-    inflags.AddInputFlag("in_c", 'c', "3", "Input tensor dimension C", "int");
-    inflags.AddInputFlag("in_d", 'd', "0", "Input tensor dimension D", "int");
-    inflags.AddInputFlag("in_h", 'k', "0", "Input tensor dimension H", "int");
-    inflags.AddInputFlag("in_w", 'w', "0", "Input tensor dimension W", "int");
-    inflags.AddInputFlag("pad_n", 'N', "0", "Padding dimension N", "int");
-    inflags.AddInputFlag("pad_c", 'C', "0", "Padding dimension C", "int");
-    inflags.AddInputFlag("pad_d", 'D', "0", "Padding dimension D", "int");
-    inflags.AddInputFlag("pad_h", 'H', "0", "Padding dimension H", "int");
-    inflags.AddInputFlag("pad_w", 'W', "0", "Padding dimension W", "int");
-    inflags.AddInputFlag("value", 'v', "0", "Padding value", "float");
+    inflags.AddInputFlag("in_n", 'n', "3", "Input batch size (N)", "int");
+    inflags.AddInputFlag("in_c", 'c', "3", "Input channels (C)", "int");
+    inflags.AddInputFlag("in_d", 'd', "3", "Input tensor dimension D", "int");
+    inflags.AddInputFlag("in_h", 'k', "3", "Input tensor dimension H", "int");
+    inflags.AddInputFlag("in_w", 'w', "3", "Input tensor dimension W", "int");
+    inflags.AddInputFlag("pad_n", 'N', "1", "Padding batch size (N)", "int");
+    inflags.AddInputFlag("pad_c", 'C', "1", "Padding channels (C)", "int");
+    inflags.AddInputFlag("pad_d", 'D', "1", "Padding dimension D", "int");
+    inflags.AddInputFlag("pad_h", 'H', "1", "Padding dimension H", "int");
+    inflags.AddInputFlag("pad_w", 'W', "1", "Padding dimension W", "int");
+    inflags.AddInputFlag("value", 'v', "0", "Padding value", "string");
 
     inflags.AddInputFlag("iter", 'i', "1", "Number of iterations", "int");
     inflags.AddInputFlag("verify", 'V', "0", "Verify results", "int");
