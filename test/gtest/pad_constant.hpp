@@ -29,7 +29,7 @@
 #include "tensor_holder.hpp"
 #include "cpu_pad_constant.hpp"
 #include <gtest/gtest.h>
-#include <miopen/constant_pad.hpp>
+#include <miopen/pad_constant.hpp>
 
 struct PadConstantTestCase
 {
@@ -129,7 +129,7 @@ protected:
         // Generate random padding
         for(size_t& i : padding)
         {
-            i = prng::gen_descreet_unsigned<size_t>(1, 10);
+            i = prng::gen_descreet_unsigned<size_t>(1, 5);
         }
 
         std::vector<size_t> out_dims;

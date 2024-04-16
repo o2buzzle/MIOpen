@@ -24,30 +24,21 @@
  *
  *******************************************************************************/
 
-#include <miopen/errors.hpp>
-#include <miopen/handle.hpp>
-#include <miopen/logger.hpp>
-#include <miopen/tensor_ops.hpp>
-#include <miopen/constant_pad.hpp>
+#include <miopen/common.hpp>
 
-extern "C" miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
-                                               miopenTensorDescriptor_t xDesc,
-                                               miopenTensorDescriptor_t yDesc,
-                                               const void* x,
-                                               void* y,
-                                               const size_t* padding,
-                                               float value)
-{
-    MIOPEN_LOG_FUNCTION(handle, xDesc, x, padding, value, y);
+#ifndef MIOPEN_PAD_CONSTANT_HPP_
+#define MIOPEN_PAD_CONSTANT_HPP_
 
-    return miopen::try_([&] {
-        miopen::PadConstantForward(
-            miopen::deref(handle), 
-            miopen::deref(xDesc), 
-            miopen::deref(yDesc),
-            DataCast(x), 
-            DataCast(y),
-            padding,
-            value);
-    });
-}
+namespace miopen {
+struct Handle;
+struct TensorDescriptor;
+
+miopenStatus_t PadConstantForward(Handle& handle,
+                                   const TensorDescriptor& xDesc,
+                                   const TensorDescriptor& yDesc,
+                                   ConstData_t x,
+                                   Data_t y,
+                                   const size_t* padding,
+                                   float value);
+} // namespace miopen
+#endif

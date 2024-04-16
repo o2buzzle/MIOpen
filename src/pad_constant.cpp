@@ -29,10 +29,10 @@
 #include <miopen/float_equal.hpp>
 #include <miopen/kernel_cache.hpp>
 #include <miopen/tensor.hpp>
-#include <miopen/constant_pad.hpp>
-#include <miopen/pad_constant_fwd/problem_description.hpp>
-#include <miopen/pad_constant_fwd/invoke_params.hpp>
-#include <miopen/pad_constant_fwd/solvers.hpp>
+#include <miopen/pad_constant.hpp>
+#include <miopen/pad_constant/problem_description.hpp>
+#include <miopen/pad_constant/invoke_params.hpp>
+#include <miopen/pad_constant/solvers.hpp>
 
 namespace miopen {
 

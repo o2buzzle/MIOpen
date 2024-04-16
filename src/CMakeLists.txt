@@ -281,9 +281,9 @@ set( MIOpen_Source
     tensor_api.cpp
     seq_tensor.cpp
 
-    solver/pad_constant_fwd/pad_constant_fwd_contiguous.cpp
-    pad_constant_fwd/problem_description.cpp
-    constant_pad_api.cpp
+    solver/pad_constant/pad_constant_fwd_contiguous.cpp
+    pad_constant/problem_description.cpp
+    pad_constant_api.cpp
 )
 
 if(MIOPEN_ENABLE_AI_KERNEL_TUNING OR MIOPEN_ENABLE_AI_IMMED_MODE_FALLBACK)
@@ -610,7 +610,7 @@ if( MIOPEN_BACKEND MATCHES "OpenCL" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN
         ocl/fusionopconvocl.cpp
         ocl/fusionopbiasbnactivocl.cpp
         sum.cpp
-        constant_pad.cpp
+        pad_constant.cpp
         ${PROJECT_BINARY_DIR}/db_path.cpp
         )
 

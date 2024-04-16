@@ -24,23 +24,30 @@
  *
  *******************************************************************************/
 
-#include "miopen/pad_constant_fwd/problem_description.hpp"
-#include "miopen/names.hpp"
+#include <miopen/errors.hpp>
+#include <miopen/handle.hpp>
+#include <miopen/logger.hpp>
+#include <miopen/tensor_ops.hpp>
+#include <miopen/pad_constant.hpp>
 
-namespace miopen {
-namespace pad_constant_fwd_contiguous {
-    NetworkConfig ProblemDescription::MakeNetworkConfig() const {
-        // Should be the only thing we need? (After all paddings are all the same operation kind)
-        auto dtype = xDesc.GetType();
+extern "C" miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
+                                               miopenTensorDescriptor_t xDesc,
+                                               miopenTensorDescriptor_t yDesc,
+                                               const void* x,
+                                               void* y,
+                                               const size_t* padding,
+                                               float value)
+{
+    MIOPEN_LOG_FUNCTION(handle, xDesc, x, padding, value, y);
 
-        std::ostringstream ss;
-        ss << "dtype" << dtype;
-
-        // no. i blame whoever designed this. why does the cache have launch configs.
-        ss << "xDesc" << xDesc;
-        ss << "yDesc" << yDesc;
-
-        return NetworkConfig{ss.str()};
-    }
-} // namespace pad_constant_fwd_contiguous
-} // namespace miopen
+    return miopen::try_([&] {
+        miopen::PadConstantForward(
+            miopen::deref(handle), 
+            miopen::deref(xDesc), 
+            miopen::deref(yDesc),
+            DataCast(x), 
+            DataCast(y),
+            padding,
+            value);
+    });
+}

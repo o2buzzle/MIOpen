@@ -30,8 +30,8 @@
 #include "miopen/kernel_build_params.hpp"
 #include "miopen/miopen.h"
 #include "miopen/mlo_internal.hpp"
-#include "miopen/pad_constant_fwd/solvers.hpp"
-#include "miopen/pad_constant_fwd/invoke_params.hpp"
+#include "miopen/pad_constant/solvers.hpp"
+#include "miopen/pad_constant/invoke_params.hpp"
 
 namespace miopen {
 namespace solver {
@@ -103,12 +103,12 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
 
             // Copy x_dims to GPU (needed to get position in kernel later)
             const size_t* d_xdims;
-            hipMalloc(&d_xdims, xdims.size() * sizeof(size_t));
-            hipMemcpy((void*)d_xdims, xdims.data(), xdims.size() * sizeof(size_t), hipMemcpyHostToDevice);
+            hipMallocManaged(&d_xdims, xdims.size() * sizeof(size_t));
+            memcpy((void*)d_xdims, xdims.data(), xdims.size() * sizeof(size_t));
     
             const size_t* d_ydims;
-            hipMalloc(&d_ydims, ydims.size() * sizeof(size_t));
-            hipMemcpy((void*)d_ydims, ydims.data(), ydims.size() * sizeof(size_t), hipMemcpyHostToDevice);
+            hipMallocManaged(&d_ydims, ydims.size() * sizeof(size_t));
+            memcpy((void*)d_ydims, ydims.data(), ydims.size() * sizeof(size_t));
 
             // Calculate output size (again)
             size_t output_size = 1;
