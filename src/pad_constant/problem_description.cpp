@@ -29,18 +29,16 @@
 
 namespace miopen {
 namespace pad_constant_fwd_contiguous {
-    NetworkConfig ProblemDescription::MakeNetworkConfig() const {
-        // Should be the only thing we need? (After all paddings are all the same operation kind)
-        auto dtype = xDesc.GetType();
+NetworkConfig ProblemDescription::MakeNetworkConfig() const
+{
+    // Should be the only thing we need? (After all paddings are all the same operation kind)
+    auto dtype = xDesc.GetType();
 
-        std::ostringstream ss;
-        ss << "dtype" << dtype;
+    std::ostringstream ss;
+    ss << "dtype" << dtype;
+    ss << "yDesc" << yDesc;
 
-        // no. i blame whoever designed this. why does the cache have launch configs.
-        ss << "xDesc" << xDesc;
-        ss << "yDesc" << yDesc;
-
-        return NetworkConfig{ss.str()};
-    }
+    return NetworkConfig{ss.str()};
+}
 } // namespace pad_constant_fwd_contiguous
 } // namespace miopen
