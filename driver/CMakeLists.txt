@@ -55,7 +55,7 @@ add_executable(MIOpenDriver
     registry_driver_maker.cpp
     rocrand_wrapper.cpp
     
-    dm_constant_pad.cpp)
+    dm_pad_constant.cpp)
 if(WIN32)
     # Refer to https://en.cppreference.com/w/cpp/language/types for details.
     target_compile_options(MIOpenDriver PRIVATE $<BUILD_INTERFACE:$<$<CXX_COMPILER_ID:Clang>:-U__LP64__>>)
