@@ -59,32 +59,20 @@ extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict
                                                     const size_t output_size,
                                                     float value)
 {
-    //   size_t gid = get_global_id(0);
-    //   if (gid >= output_size) return;
     const uint64_t gid = threadIdx.x + blockIdx.x * blockDim.x;
-
     if(gid >= output_size)
         return;
 
-    //   size_t o[5];
     size_t o[5];
-
-    //   GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, output);
     GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, y_dims);
 
-    //   bool flag = true;
     bool flag = true;
 
-    //   for (int i =0; i <5; i++){
-    //     o[i] = o[i] - padding.val[2*i];
-    //     flag *= (o[i] >= 0 && o[i] < input_tv.size[i]);
-    //   }
     for(int i = 0; i < 5; i++)
     {
         o[i] = o[i] - padding[2 * i];
         flag *= o[i] < x_dims[i];
     }
 
-    //   DTYPE val = flag ? GET_5D_VAL_AT(input, o[0], o[1], o[2], o[3], o[4]) : value;
     y[gid] = flag ? get5DValueAt(x, x_dims, o[0], o[1], o[2], o[3], o[4]) : value;
 }
