@@ -36,7 +36,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
 
     std::ostringstream ss;
     ss << "dtype" << dtype;
-    ss << "yDesc" << yDesc;
+    ss << "yDesc" << yDesc.GetElementSize();
 
     return NetworkConfig{ss.str()};
 }

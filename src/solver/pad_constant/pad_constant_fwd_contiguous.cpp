@@ -59,11 +59,7 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
     auto output_dtype = miopen::GetDataType(problem.GetYDesc().GetType());
 
     // for xgridsize: 5d -> 1d
-    size_t output_size = 1;
-    for(int i = 0; i < 5; i++)
-    {
-        output_size *= ydims[i] == 0 ? 1 : ydims[i];
-    }
+    size_t output_size = problem.GetYDesc().GetElementSize();
 
     size_t xlocalsize = 1024;
     // AlignUp blows up, because output_size can be > int_max. Lovely.
@@ -113,9 +109,7 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
             memcpy((void*)d_ydims, ydims.data(), ydims.size() * sizeof(size_t));
 
             // Calculate output size (again)
-            size_t output_size = 1;
-            for(unsigned long ydim : ydims)
-                output_size *= ydim;
+            size_t output_size = params.yDesc->GetElementSize();
 
             kernel(params.x,
                    params.y,
