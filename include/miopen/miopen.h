@@ -6585,7 +6585,7 @@ MIOPEN_EXPORT miopenStatus_t miopenBackendInitialize(miopenBackendDescriptor_t d
 
 #ifdef MIOPEN_BETA_API
 
-/*! Pad Constant API 
+/*! Pad Constant API
  * @addtogroup pad_constant
  * @brief Pads the input tensor boundaries with a constant value.
  *
@@ -6607,7 +6607,8 @@ MIOPEN_EXPORT miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
                                                   void* y,
                                                   const size_t* padding,
                                                   float value);
-
+/** @} */
+// CLOSEOUT pad_constant DOXYGEN GROUP
 #endif // MIOPEN_BETA_API
 
 #ifdef __cplusplus
