@@ -29,7 +29,7 @@
 
 static Driver* makeDriver(const std::string& base_arg)
 {
-    if(base_arg == "constantpad")
+    if(base_arg == "padconstant")
         return new ConstantPadDriver<float, float>();
     return nullptr;
 }
