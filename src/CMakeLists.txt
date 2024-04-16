@@ -144,6 +144,8 @@ set( MIOpen_Source
     mha/problem_description.cpp
     op_args.cpp
     operator.cpp
+    pad_constant/problem_description.cpp
+    pad_constant_api.cpp
     performance_config.cpp
     pooling/problem_description.cpp
     pooling_api.cpp
@@ -264,6 +266,7 @@ set( MIOpen_Source
     solver/layernorm/forward_layernorm2d_ck.cpp
     solver/layernorm/forward_layernorm4d_ck.cpp
     solver/mha/mha_solver.cpp
+    solver/pad_constant/pad_constant_fwd_contiguous.cpp
     solver/pooling/forward2d.cpp
     solver/pooling/forwardNaive.cpp
     solver/pooling/forwardNd.cpp
@@ -279,12 +282,7 @@ set( MIOpen_Source
     temp_file.cpp
     tensor.cpp
     tensor_api.cpp
-    seq_tensor.cpp
-
-    solver/pad_constant/pad_constant_fwd_contiguous.cpp
-    pad_constant/problem_description.cpp
-    pad_constant_api.cpp
-)
+    seq_tensor.cpp)
 
 if(MIOPEN_ENABLE_AI_KERNEL_TUNING OR MIOPEN_ENABLE_AI_IMMED_MODE_FALLBACK)
     list(APPEND MIOpen_Source conv/heuristics/ai_heuristics.cpp)
@@ -554,7 +552,6 @@ if( MIOPEN_BACKEND MATCHES "OpenCL" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN
         kernels/xform_bidirect_winograd_filter.s
         kernels/xform_bidirect_winograd_out.s
         kernels/UniversalTranspose.cl
-
         kernels/MIOpenPadConstantFwd.cpp)
 
     # Kernels in development lists.

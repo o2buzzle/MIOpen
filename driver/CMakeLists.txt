@@ -45,6 +45,7 @@ add_executable(MIOpenDriver
     dm_groupnorm.cpp
     dm_layernorm.cpp
     dm_lrn.cpp
+    dm_pad_constant.cpp
     dm_pool.cpp
     dm_reduce.cpp
     dm_rnn.cpp
@@ -53,9 +54,7 @@ add_executable(MIOpenDriver
     dm_tensorop.cpp
     main.cpp
     registry_driver_maker.cpp
-    rocrand_wrapper.cpp
-    
-    dm_pad_constant.cpp)
+    rocrand_wrapper.cpp)
 if(WIN32)
     # Refer to https://en.cppreference.com/w/cpp/language/types for details.
     target_compile_options(MIOpenDriver PRIVATE $<BUILD_INTERFACE:$<$<CXX_COMPILER_ID:Clang>:-U__LP64__>>)
