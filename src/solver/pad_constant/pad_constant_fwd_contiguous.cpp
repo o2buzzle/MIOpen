@@ -42,9 +42,7 @@ bool PadConstantFwdContiguous::IsApplicable(
     const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const
 {
     if(!problem.IsSameType())
-    {
         return false;
-    }
 
     return true;
 }
