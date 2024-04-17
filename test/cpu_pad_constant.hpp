@@ -59,13 +59,6 @@ void cpu_pad_constant_fwd(const T* input,
 {
     size_t o[5];
 
-    // printf("Tensor output size is reported to be n=%lu c=%lu d=%lu h=%lu w=%lu\n",
-    //        output_dims[0],
-    //        output_dims[1],
-    //        output_dims[2],
-    //        output_dims[3],
-    //        output_dims[4]);
-
     for(size_t gid = 0;
         gid != output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3] * output_dims[4];
         ++gid)
@@ -83,8 +76,6 @@ void cpu_pad_constant_fwd(const T* input,
         if(flag)
         {
             // This value should be copied from the input tensor
-            // ref_output[gid] = get5DValueAt(input.data.data(), input_dims.data(), o[0], o[1],
-            // o[2], o[3], o[4]);
             output[gid] = get5DValueAt(input, input_dims, o[0], o[1], o[2], o[3], o[4]);
         }
         else
