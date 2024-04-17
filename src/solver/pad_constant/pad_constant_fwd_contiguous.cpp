@@ -97,19 +97,19 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
             decltype(auto) params =
                 invoke_params.CastTo<miopen::pad_constant_fwd_contiguous::InvokeParams>();
 
-            auto xdims = params.xDesc->GetLengths();
-            auto ydims = params.yDesc->GetLengths();
+            auto xdims    = params.xDesc->GetLengths();
+            auto ydims    = params.yDesc->GetLengths();
             auto xstrides = params.xDesc->GetStrides();
             auto ystrides = params.yDesc->GetStrides();
 
             tensor_view_5d_t input_tv, output_tv;
 
-            for (size_t i = 0; i < 5; i++)
+            for(size_t i = 0; i < 5; i++)
             {
-                input_tv.size[i] = xdims[i];
+                input_tv.size[i]   = xdims[i];
                 input_tv.stride[i] = xstrides[i];
 
-                output_tv.size[i] = ydims[i];
+                output_tv.size[i]   = ydims[i];
                 output_tv.stride[i] = ystrides[i];
             }
 
