@@ -123,7 +123,7 @@ protected:
         // Generate random padding
         for(size_t& i : padding)
         {
-            i = prng::gen_descreet_unsigned<size_t>(0, 5);
+            i = prng::gen_descreet_unsigned<size_t>(1, 5);
         }
 
         std::vector<size_t> out_dims;
