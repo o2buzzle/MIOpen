@@ -30,22 +30,11 @@
 #endif
 
 #include "float_types.h"
-
-#define GET_NCDHW(n, c, d, h, w, idx, size) \
-    {                                       \
-        ulong ncdh = (idx) / size[4];       \
-        w          = (idx) % size[4];       \
-        ulong ncd  = ncdh / size[3];        \
-        h          = ncdh % size[3];        \
-        ulong nc   = ncd / size[2];         \
-        d          = ncd % size[2];         \
-        n          = nc / size[1];          \
-        c          = nc % size[1];          \
-    }
+#include "tensor_view_5d.hpp"
 
 template <typename T = float>
 __device__ T
-get5DValueAt(const T* x, const size_t* x_dims, size_t n, size_t c, size_t d, size_t h, size_t w)
+get5DValueAt(const T* x, const uint64_t x_dims[5], size_t n, size_t c, size_t d, size_t h, size_t w)
 {
     return x[n * x_dims[1] * x_dims[2] * x_dims[3] * x_dims[4] +
              c * x_dims[2] * x_dims[3] * x_dims[4] + d * x_dims[3] * x_dims[4] + h * x_dims[4] + w];
@@ -53,8 +42,8 @@ get5DValueAt(const T* x, const size_t* x_dims, size_t n, size_t c, size_t d, siz
 
 extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict__ x,
                                                     OUTPUT_TYPE* __restrict__ y,
-                                                    const size_t* __restrict__ x_dims,
-                                                    const size_t* __restrict__ y_dims,
+                                                    const tensor_view_5d_t x_tv,
+                                                    const tensor_view_5d_t y_tv,
                                                     const size_t* __restrict__ padding,
                                                     const size_t output_size,
                                                     float value)
@@ -64,15 +53,15 @@ extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict
         return;
 
     size_t o[5];
-    GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, y_dims);
+    GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, y_tv.size);
 
     bool flag = true;
 
     for(int i = 0; i < 5; i++)
     {
         o[i] = o[i] - padding[2 * i];
-        flag *= o[i] < x_dims[i];
+        flag *= o[i] < x_tv.size[i];
     }
 
-    y[gid] = flag ? get5DValueAt(x, x_dims, o[0], o[1], o[2], o[3], o[4]) : value;
+    y[gid] = flag ? get5DValueAt(x, x_tv.size, o[0], o[1], o[2], o[3], o[4]) : value;
 }

@@ -32,6 +32,7 @@
 #include "miopen/mlo_internal.hpp"
 #include "miopen/pad_constant/solvers.hpp"
 #include "miopen/pad_constant/invoke_params.hpp"
+#include "miopen/tensor_view_5d.hpp"
 
 namespace miopen {
 namespace solver {
@@ -98,28 +99,30 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
 
             auto xdims = params.xDesc->GetLengths();
             auto ydims = params.yDesc->GetLengths();
+            auto xstrides = params.xDesc->GetStrides();
+            auto ystrides = params.yDesc->GetStrides();
 
-            // Copy x_dims to GPU (needed to get position in kernel later)
-            const size_t* d_xdims;
-            hipMallocManaged(&d_xdims, xdims.size() * sizeof(size_t));
-            memcpy((void*)d_xdims, xdims.data(), xdims.size() * sizeof(size_t));
+            tensor_view_5d_t input_tv, output_tv;
 
-            const size_t* d_ydims;
-            hipMallocManaged(&d_ydims, ydims.size() * sizeof(size_t));
-            memcpy((void*)d_ydims, ydims.data(), ydims.size() * sizeof(size_t));
+            for (size_t i = 0; i < 5; i++)
+            {
+                input_tv.size[i] = xdims[i];
+                input_tv.stride[i] = xstrides[i];
+
+                output_tv.size[i] = ydims[i];
+                output_tv.stride[i] = ystrides[i];
+            }
 
             // Calculate output size (again)
             size_t output_size = params.yDesc->GetElementSize();
 
             kernel(params.x,
                    params.y,
-                   d_xdims,
-                   d_ydims,
+                   input_tv,
+                   output_tv,
                    params.padding,
                    output_size,
                    params.padding_value);
-            hipFree((void*)d_xdims);
-            hipFree((void*)d_ydims);
         };
     };
 
