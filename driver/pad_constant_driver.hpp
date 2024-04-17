@@ -50,10 +50,11 @@
     }
 
 template <typename T>
-T get5DValueAt(const T* x, const size_t* x_dims, size_t n, size_t c, size_t d, size_t h, size_t w)
+T get5DValueAt(
+    const T* x, const size_t* x_strides, size_t n, size_t c, size_t d, size_t h, size_t w)
 {
-    return x[n * x_dims[1] * x_dims[2] * x_dims[3] * x_dims[4] +
-             c * x_dims[2] * x_dims[3] * x_dims[4] + d * x_dims[3] * x_dims[4] + h * x_dims[4] + w];
+    return x[n * x_strides[0] + c * x_strides[1] + d * x_strides[2] + h * x_strides[3] +
+             w * x_strides[4]];
 }
 
 template <typename Tgpu, typename Tcheck>
@@ -70,8 +71,7 @@ void mloConstantPadForwardRunHost(miopenTensorDescriptor_t inputDesc,
 
     auto input_strides = miopen::deref(inputDesc).GetStrides();
 
-    size_t output_size =
-        output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3] * output_dims[4];
+    size_t output_size = miopen::deref(outputDesc).GetElementSize();
 
     for(size_t gid = 0; gid < output_size; ++gid)
     {
@@ -86,7 +86,8 @@ void mloConstantPadForwardRunHost(miopenTensorDescriptor_t inputDesc,
 
         if(flag)
         {
-            output_host[gid] = get5DValueAt(input, input_dims.data(), o[0], o[1], o[2], o[3], o[4]);
+            output_host[gid] =
+                get5DValueAt(input, input_strides.data(), o[0], o[1], o[2], o[3], o[4]);
         }
         else
         {
@@ -182,9 +183,7 @@ int32_t ConstantPadDriver<Tgpu, Tref>::GetandSetData()
 
     SetTensorNd(outputDesc, output_dims, data_type);
 
-    // Parse GetValueString -> (float)value
-    auto value_str = inflags.GetValueStr("value");
-    value          = strtof(value_str.c_str(), nullptr);
+    value = inflags.GetValueDouble("value");
 
     return 0;
 }
