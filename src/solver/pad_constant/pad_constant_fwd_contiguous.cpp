@@ -38,7 +38,7 @@ namespace miopen {
 namespace solver {
 namespace pad_constant_fwd_contiguous {
 bool PadConstantFwdContiguous::IsApplicable(
-    [[maybe_unused]] const ExecutionContext& context,
+    const ExecutionContext& /*context*/,
     const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const
 {
     if(!problem.IsSameType())
@@ -50,7 +50,7 @@ bool PadConstantFwdContiguous::IsApplicable(
 }
 
 ConvSolution PadConstantFwdContiguous::GetSolution(
-    [[maybe_unused]] const ExecutionContext& context,
+    const ExecutionContext& /*context*/,
     const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const
 {
     auto result = ConvSolution{miopenStatusSuccess};
