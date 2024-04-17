@@ -96,7 +96,7 @@ std::vector<PadConstantTestCase> PadConstantTestConfigs()
     // clang-format on
 }
 
-template <typename T = float>
+template <typename T>
 struct PadConstantTest : public ::testing::TestWithParam<PadConstantTestCase>
 {
 protected:
@@ -144,15 +144,16 @@ protected:
     void RunTest()
     {
         auto&& handle = get_handle();
-
         auto out_dims = output.desc.GetLengths();
+
+        float padding_value = 3.5f;
 
         cpu_pad_constant_fwd<T>(input.data.data(),
                                 ref_output.data.data(),
-                                input.desc.GetLengths().data(),
-                                output.desc.GetLengths().data(),
+                                &input.desc,
+                                &output.desc,
                                 padding,
-                                3.5f);
+                                padding_value);
         miopenStatus_t status;
 
         const size_t* pd;
@@ -160,7 +161,7 @@ protected:
         hipMemcpy((void*)pd, padding, 10 * sizeof(size_t), hipMemcpyHostToDevice);
 
         status = miopen::PadConstantForward(
-            handle, input.desc, output.desc, input_dev.get(), output_dev.get(), pd, 3.5f);
+            handle, input.desc, output.desc, input_dev.get(), output_dev.get(), pd, padding_value);
         EXPECT_EQ(status, miopenStatusSuccess);
 
         output.data = handle.Read<T>(output_dev, output.data.size());

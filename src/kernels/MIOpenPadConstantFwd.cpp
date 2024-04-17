@@ -63,5 +63,13 @@ extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict
         flag *= o[i] < x_tv.size[i];
     }
 
-    y[gid] = flag ? get5DValueAt(x, x_tv.size, o[0], o[1], o[2], o[3], o[4]) : value;
+    OUTPUT_TYPE padding_value;
+
+#if PADDING_IS_BFP16 == 1
+    padding_value = float_to_bfloat16(value);
+#else
+    padding_value = (OUTPUT_TYPE)value;
+#endif
+
+    y[gid] = flag ? get5DValueAt(x, x_tv.size, o[0], o[1], o[2], o[3], o[4]) : padding_value;
 }

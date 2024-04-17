@@ -45,6 +45,14 @@ std::string GetFloatArg()
 struct PadConstantTestFloat : PadConstantTest<float>
 {
 };
+
+struct PadConstantTestHalf : PadConstantTest<half>
+{
+};
+
+struct PadConstantTestBfloat16 : PadConstantTest<bfloat16>
+{
+};
 } // namespace pad_constant
 
 using namespace pad_constant;
@@ -59,6 +67,36 @@ TEST_P(PadConstantTestFloat, PadConstantTestFw)
         GTEST_SKIP();
 }
 
+TEST_P(PadConstantTestHalf, PadConstantTestFw)
+{
+    if(miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--half"))
+    {
+        RunTest();
+        Verify();
+    }
+    else
+        GTEST_SKIP();
+}
+
+TEST_P(PadConstantTestBfloat16, PadConstantTestFw)
+{
+    if(miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--bfloat16"))
+    {
+        RunTest();
+        Verify();
+    }
+    else
+        GTEST_SKIP();
+}
+
 INSTANTIATE_TEST_CASE_P(PadConstantTest,
                         PadConstantTestFloat,
+                        testing::ValuesIn(PadConstantTestConfigs()));
+
+INSTANTIATE_TEST_CASE_P(PadConstantTest,
+                        PadConstantTestHalf,
+                        testing::ValuesIn(PadConstantTestConfigs()));
+
+INSTANTIATE_TEST_CASE_P(PadConstantTest,
+                        PadConstantTestBfloat16,
                         testing::ValuesIn(PadConstantTestConfigs()));

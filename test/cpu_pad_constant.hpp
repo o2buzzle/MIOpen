@@ -27,14 +27,16 @@
 #ifndef GUARD_CPU_PAD_CONSTANT_HPP
 #define GUARD_CPU_PAD_CONSTANT_HPP
 
+#include "miopen/tensor.hpp"
 #include <cstddef>
 #include <sys/types.h>
 
 template <typename T>
-T get5DValueAt(const T* x, const size_t* x_dims, size_t n, size_t c, size_t d, size_t h, size_t w)
+T get5DValueAt(
+    const T* x, const size_t* x_strides, size_t n, size_t c, size_t d, size_t h, size_t w)
 {
-    return x[n * x_dims[1] * x_dims[2] * x_dims[3] * x_dims[4] +
-             c * x_dims[2] * x_dims[3] * x_dims[4] + d * x_dims[3] * x_dims[4] + h * x_dims[4] + w];
+    return x[n * x_strides[0] + c * x_strides[1] + d * x_strides[2] + h * x_strides[3] +
+             w * x_strides[4]];
 }
 
 #define GET_NCDHW(n, c, d, h, w, idx, size) \
@@ -52,36 +54,35 @@ T get5DValueAt(const T* x, const size_t* x_dims, size_t n, size_t c, size_t d, s
 template <class T>
 void cpu_pad_constant_fwd(const T* input,
                           T* output,
-                          const size_t* input_dims,
-                          const size_t* output_dims,
-                          const size_t* padding,
-                          T value)
+                          miopen::TensorDescriptor* input_dims,
+                          miopen::TensorDescriptor* output_dims,
+                          const size_t padding[10],
+                          float value)
 {
     size_t o[5];
 
-    for(size_t gid = 0;
-        gid != output_dims[0] * output_dims[1] * output_dims[2] * output_dims[3] * output_dims[4];
-        ++gid)
+    for(size_t gid = 0; gid != output_dims->GetElementSize(); ++gid)
     {
         bool flag = true;
 
-        GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, output_dims);
+        GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, output_dims->GetLengths());
 
         for(int i = 0; i < 5; i++)
         {
             o[i] = o[i] - padding[2 * i];
-            flag *= (o[i] < input_dims[i]);
+            flag *= (o[i] < input_dims->GetLengths()[i]);
         }
 
         if(flag)
         {
             // This value should be copied from the input tensor
-            output[gid] = get5DValueAt(input, input_dims, o[0], o[1], o[2], o[3], o[4]);
+            output[gid] =
+                get5DValueAt(input, input_dims->GetStrides().data(), o[0], o[1], o[2], o[3], o[4]);
         }
         else
         {
             // This value should be constant
-            output[gid] = value;
+            output[gid] = (T)value;
         }
     }
     // how much do you wanna bet on this instantly blowing up?

@@ -77,8 +77,10 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
 
     // TODO: Actually understand how to use this properly
     const auto build_params = KernelBuildParameters{
-        {"INPUT_TYPE", input_dtype == "half" ? "half" : "float"},
-        {"OUTPUT_TYPE", output_dtype == "half" ? "half" : "float"},
+        {"INPUT_TYPE", input_dtype == "bfloat16" ? "ushort" : input_dtype},
+        {"OUTPUT_TYPE", output_dtype == "bfloat16" ? "ushort" : output_dtype},
+        // dirty bfp16 hack, pls make it go away
+        {"PADDING_IS_BFP16", output_dtype == "bfloat16" ? "1" : "0"},
     };
 
     kernel.comp_options = build_params.GenerateFor(kbp::HIP{});
