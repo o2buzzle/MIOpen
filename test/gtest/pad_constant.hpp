@@ -28,6 +28,7 @@
 #include "random.hpp"
 #include "tensor_holder.hpp"
 #include "cpu_pad_constant.hpp"
+#include "verify.hpp"
 #include <gtest/gtest.h>
 #include <miopen/pad_constant.hpp>
 
@@ -167,9 +168,8 @@ protected:
 
     void Verify()
     {
-        for(int i = 0; i < output.data.size(); ++i)
-        {
-            EXPECT_EQ(output.data[i], ref_output.data[i]);
-        }
+        auto error = miopen::rms_range(ref_output, output);
+        EXPECT_TRUE(miopen::range_distance(ref_output) == miopen::range_distance(output));
+        EXPECT_TRUE(error == 0) << "Outputs do not match each other. Error:" << error;
     }
 };
