@@ -68,7 +68,7 @@
  * @defgroup argmax
  * @defgroup groupnorm
  * @defgroup cat
- * @defgroup pad_constant
+ * @defgroup pad
  *
  */
 
@@ -6586,7 +6586,7 @@ MIOPEN_EXPORT miopenStatus_t miopenBackendInitialize(miopenBackendDescriptor_t d
 #ifdef MIOPEN_BETA_API
 
 /*! Pad Constant API
- * @addtogroup pad_constant
+ * @addtogroup pad
  * @brief Pads the input tensor boundaries with a constant value.
  *
  *  @param [in]  handle An instance of miopenHandle_t
@@ -6608,7 +6608,7 @@ MIOPEN_EXPORT miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
                                                   const size_t* padding,
                                                   float value);
 /** @} */
-// CLOSEOUT pad_constant DOXYGEN GROUP
+// CLOSEOUT pad DOXYGEN GROUP
 #endif // MIOPEN_BETA_API
 
 #ifdef __cplusplus
