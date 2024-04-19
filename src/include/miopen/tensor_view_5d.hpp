@@ -55,7 +55,7 @@ struct padding_5d_t
 
 #endif
 
-tensor_view_5d_t get_inner_expanded_tv(const miopen::TensorDescriptor Desc)
+inline tensor_view_5d_t get_inner_expanded_tv(const miopen::TensorDescriptor Desc)
 {
     auto dims    = Desc.GetLengths();
     auto strides = Desc.GetStrides();
