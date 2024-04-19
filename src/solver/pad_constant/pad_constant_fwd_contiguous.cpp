@@ -113,6 +113,10 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
                 output_tv.stride[i] = ystrides[i];
             }
 
+            padding_5d_t padding;
+            for(auto i = 0; i < 10; i++)
+                padding.val[i] = params.padding[i];
+
             // Calculate output size (again)
             size_t output_size = params.yDesc->GetElementSize();
 
@@ -120,7 +124,7 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
                    params.y,
                    input_tv,
                    output_tv,
-                   params.padding,
+                   padding,
                    output_size,
                    params.padding_value);
         };

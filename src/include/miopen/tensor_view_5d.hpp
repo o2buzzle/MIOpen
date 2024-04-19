@@ -34,6 +34,11 @@ struct tensor_view_5d_t
     uint64_t stride[5];
 };
 
+struct padding_5d_t
+{
+    uint64_t val[10];
+};
+
 #define GET_NCDHW(n, c, d, h, w, idx, size) \
     {                                       \
         ulong ncdh = (idx) / size[4];       \

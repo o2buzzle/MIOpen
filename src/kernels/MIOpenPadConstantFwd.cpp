@@ -44,7 +44,7 @@ extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict
                                                     OUTPUT_TYPE* __restrict__ y,
                                                     const tensor_view_5d_t x_tv,
                                                     const tensor_view_5d_t y_tv,
-                                                    const size_t* __restrict__ padding,
+                                                    const padding_5d_t padding,
                                                     const size_t output_size,
                                                     float value)
 {
@@ -59,7 +59,7 @@ extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict
 
     for(int i = 0; i < 5; i++)
     {
-        o[i] = o[i] - padding[2 * i];
+        o[i] = o[i] - padding.val[2 * i];
         flag *= o[i] < x_tv.size[i];
     }
 
