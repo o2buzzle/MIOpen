@@ -28,6 +28,8 @@
 #define GUARD_TENSOR_VIEW_H
 
 #include <cstdint>
+#include <miopen/tensor.hpp>
+
 struct tensor_view_5d_t
 {
     uint64_t size[5];
@@ -52,3 +54,23 @@ struct padding_5d_t
     }
 
 #endif
+
+tensor_view_5d_t get_inner_expanded_tv(const miopen::TensorDescriptor Desc)
+{
+    auto dims    = Desc.GetLengths();
+    auto strides = Desc.GetStrides();
+
+    tensor_view_5d_t tv_5d;
+    for(size_t i = 0; i < strides.size(); ++i)
+    {
+        tv_5d.stride[i] = strides[i];
+        tv_5d.size[i]   = dims[i];
+    }
+    auto rest = strides.size();
+    for(size_t j = rest; j < 5; ++j)
+    {
+        tv_5d.stride[j] = (rest == 0 ? 1 : strides[rest - 1]);
+        tv_5d.size[j]   = 1;
+    }
+    return tv_5d;
+}

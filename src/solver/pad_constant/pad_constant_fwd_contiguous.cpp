@@ -57,14 +57,10 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
     auto input_dtype  = miopen::GetDataType(problem.GetXDesc().GetType());
     auto output_dtype = miopen::GetDataType(problem.GetYDesc().GetType());
 
-    // for xgridsize: 5d -> 1d
     size_t output_size = problem.GetYDesc().GetElementSize();
 
     size_t xlocalsize = 1024;
-    // AlignUp blows up, because output_size can be > int_max. Lovely.
-    // size_t xgridsize  = AlignUp(output_size, xlocalsize);
-    size_t xgridsize =
-        (((static_cast<size_t>(output_size) + xlocalsize - 1) / xlocalsize) * xlocalsize);
+    size_t xgridsize  = AlignUpUL(output_size, xlocalsize);
     size_t ylocalsize = 1;
     size_t ygridsize  = 1;
 
@@ -77,9 +73,10 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
     const auto build_params = KernelBuildParameters{
         {"INPUT_TYPE", input_dtype == "bfloat16" ? "ushort" : input_dtype},
         {"OUTPUT_TYPE", output_dtype == "bfloat16" ? "ushort" : output_dtype},
-        {"MIOPEN_USE_FP32", output_dtype == "float" ? "1" : "0"},
-        {"MIOPEN_USE_FP16", output_dtype == "half" ? "1" : "0"},
-        {"MIOPEN_USE_BFP16", output_dtype == "bfloat16" ? "1" : "0"},
+        {"MIOPEN_USE_FP64", static_cast<int>(output_dtype == "double")},
+        {"MIOPEN_USE_FP32", static_cast<int>(output_dtype == "float")},
+        {"MIOPEN_USE_FP16", static_cast<int>(output_dtype == "half")},
+        {"MIOPEN_USE_BFP16", static_cast<int>(output_dtype == "bfloat16")},
     };
 
     kernel.comp_options = build_params.GenerateFor(kbp::HIP{});
@@ -98,21 +95,8 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
             decltype(auto) params =
                 invoke_params.CastTo<miopen::pad_constant_fwd_contiguous::InvokeParams>();
 
-            auto xdims    = params.xDesc->GetLengths();
-            auto ydims    = params.yDesc->GetLengths();
-            auto xstrides = params.xDesc->GetStrides();
-            auto ystrides = params.yDesc->GetStrides();
-
-            tensor_view_5d_t input_tv, output_tv;
-
-            for(size_t i = 0; i < 5; i++)
-            {
-                input_tv.size[i]   = xdims[i];
-                input_tv.stride[i] = xstrides[i];
-
-                output_tv.size[i]   = ydims[i];
-                output_tv.stride[i] = ystrides[i];
-            }
+            tensor_view_5d_t input_tv  = get_inner_expanded_tv(*params.xDesc);
+            tensor_view_5d_t output_tv = get_inner_expanded_tv(*params.yDesc);
 
             padding_5d_t padding;
             for(auto i = 0; i < 10; i++)
