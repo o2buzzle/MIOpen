@@ -46,7 +46,7 @@ extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict
                                                     const tensor_view_5d_t y_tv,
                                                     const padding_5d_t padding,
                                                     const size_t output_size,
-                                                    float value)
+                                                    FLOAT_ACCUM value)
 {
     const uint64_t gid = threadIdx.x + blockIdx.x * blockDim.x;
     if(gid >= output_size)
@@ -63,13 +63,7 @@ extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict
         flag *= o[i] < x_tv.size[i];
     }
 
-    OUTPUT_TYPE padding_value;
-
-#if PADDING_IS_BFP16 == 1
-    padding_value = float_to_bfloat16(value);
-#else
-    padding_value = (OUTPUT_TYPE)value;
-#endif
+    OUTPUT_TYPE padding_value = CVT_ACCUM2FLOAT(value);
 
     y[gid] = flag ? get5DValueAt(x, x_tv.size, o[0], o[1], o[2], o[3], o[4]) : padding_value;
 }

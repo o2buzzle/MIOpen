@@ -77,8 +77,9 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
     const auto build_params = KernelBuildParameters{
         {"INPUT_TYPE", input_dtype == "bfloat16" ? "ushort" : input_dtype},
         {"OUTPUT_TYPE", output_dtype == "bfloat16" ? "ushort" : output_dtype},
-        // dirty bfp16 hack, pls make it go away
-        {"PADDING_IS_BFP16", output_dtype == "bfloat16" ? "1" : "0"},
+        {"MIOPEN_USE_FP32", output_dtype == "float" ? "1" : "0"},
+        {"MIOPEN_USE_FP16", output_dtype == "half" ? "1" : "0"},
+        {"MIOPEN_USE_BFP16", output_dtype == "bfloat16" ? "1" : "0"},
     };
 
     kernel.comp_options = build_params.GenerateFor(kbp::HIP{});
