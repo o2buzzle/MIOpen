@@ -142,7 +142,6 @@ private:
 
     std::unique_ptr<GPUMem> in_dev;
     std::unique_ptr<GPUMem> out_dev;
-    std::unique_ptr<GPUMem> padding_dev;
 
     std::vector<Tgpu> input;
     std::vector<Tgpu> output;
@@ -266,9 +265,8 @@ int ConstantPadDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
     size_t input_size  = GetTensorSize(inputDesc);
     size_t output_size = GetTensorSize(outputDesc);
 
-    in_dev      = std::unique_ptr<GPUMem>(new GPUMem(0, input_size, sizeof(Tgpu)));
-    out_dev     = std::unique_ptr<GPUMem>(new GPUMem(0, output_size, sizeof(Tgpu)));
-    padding_dev = std::unique_ptr<GPUMem>(new GPUMem(0, 10, sizeof(size_t)));
+    in_dev  = std::unique_ptr<GPUMem>(new GPUMem(0, input_size, sizeof(Tgpu)));
+    out_dev = std::unique_ptr<GPUMem>(new GPUMem(0, output_size, sizeof(Tgpu)));
 
     input       = std::vector<Tgpu>(input_size, static_cast<Tgpu>(0));
     output      = std::vector<Tgpu>(output_size, static_cast<Tgpu>(0));
@@ -286,10 +284,6 @@ int ConstantPadDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
     if(out_dev->ToGPU(GetStream(), output.data()) != 0)
         std::cerr << "ConstantPadDriver: Error copying data to GPU, size: " << out_dev->GetSize()
                   << std::endl;
-
-    if(padding_dev->ToGPU(GetStream(), padding.data()) != 0)
-        std::cerr << "ConstantPadDriver: Error copying data to GPU, size: "
-                  << padding_dev->GetSize() << std::endl;
 
     return 0;
 }
@@ -310,7 +304,7 @@ int ConstantPadDriver<Tgpu, Tref>::RunForwardGPU()
                              outputDesc,
                              in_dev->GetMem(),
                              out_dev->GetMem(),
-                             (const size_t*)padding_dev->GetMem(),
+                             padding.data(),
                              value);
 
         float time = 0.0;
