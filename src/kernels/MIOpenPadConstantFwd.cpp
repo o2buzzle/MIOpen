@@ -40,16 +40,16 @@ __device__ T inline get5DValueAt(
              w * x_strides[4]];
 }
 
-template <typename TI, typename TO>
-__device__ void padconstantfwdcontiguous(const TI* __restrict__ x,
-                                         TO* __restrict__ y,
+template <typename T>
+__device__ void padconstantfwdcontiguous(const T* __restrict__ x,
+                                         T* __restrict__ y,
                                          const tensor_view_5d_t x_tv,
                                          const tensor_view_5d_t y_tv,
                                          const padding_5d_t padding,
                                          const size_t output_size,
-                                         TO value)
+                                         T value)
 {
-    TO padding_value = CVT_ACCUM2FLOAT(value);
+    T padding_value = CVT_ACCUM2FLOAT(value);
 
     const uint64_t gid = threadIdx.x + blockIdx.x * blockDim.x;
     if(gid >= output_size)
@@ -69,14 +69,13 @@ __device__ void padconstantfwdcontiguous(const TI* __restrict__ x,
     y[gid] = flag ? get5DValueAt(x, x_tv.stride, o[0], o[1], o[2], o[3], o[4]) : padding_value;
 }
 
-extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict__ x,
-                                                    OUTPUT_TYPE* __restrict__ y,
+extern "C" __global__ void PadConstantFwdContiguous(const DTYPE* __restrict__ x,
+                                                    DTYPE* __restrict__ y,
                                                     const tensor_view_5d_t x_tv,
                                                     const tensor_view_5d_t y_tv,
                                                     const padding_5d_t padding,
                                                     const size_t output_size,
                                                     FLOAT_ACCUM value)
 {
-    padconstantfwdcontiguous<INPUT_TYPE, OUTPUT_TYPE>(
-        x, y, x_tv, y_tv, padding, output_size, value);
+    padconstantfwdcontiguous<DTYPE>(x, y, x_tv, y_tv, padding, output_size, value);
 }
