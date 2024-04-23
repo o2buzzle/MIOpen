@@ -56,7 +56,8 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
     auto result = ConvSolution{miopenStatusSuccess};
     auto ydims  = problem.GetYDesc().GetLengths();
 
-    auto dtype = miopen::GetDataType(problem.GetXDesc().GetType());
+    auto input_dtype  = miopen::GetDataType(problem.GetXDesc().GetType());
+    auto output_dtype = miopen::GetDataType(problem.GetYDesc().GetType());
 
     size_t output_size = problem.GetYDesc().GetElementSize();
 
@@ -72,11 +73,12 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
 
     // TODO: Actually understand how to use this properly
     const auto build_params = KernelBuildParameters{
-        {"DTYPE", dtype == "bfloat16" ? "ushort" : dtype},
-        {"MIOPEN_USE_FP64", static_cast<int>(dtype == "double")},
-        {"MIOPEN_USE_FP32", static_cast<int>(dtype == "float")},
-        {"MIOPEN_USE_FP16", static_cast<int>(dtype == "half")},
-        {"MIOPEN_USE_BFP16", static_cast<int>(dtype == "bfloat16")},
+        {"INPUT_TYPE", input_dtype == "bfloat16" ? "ushort" : input_dtype},
+        {"OUTPUT_TYPE", output_dtype == "bfloat16" ? "ushort" : output_dtype},
+        {"MIOPEN_USE_FP64", static_cast<int>(output_dtype == "double")},
+        {"MIOPEN_USE_FP32", static_cast<int>(output_dtype == "float")},
+        {"MIOPEN_USE_FP16", static_cast<int>(output_dtype == "half")},
+        {"MIOPEN_USE_BFP16", static_cast<int>(output_dtype == "bfloat16")},
     };
 
     kernel.comp_options = build_params.GenerateFor(kbp::HIP{});
