@@ -156,12 +156,13 @@ protected:
                                 padding_value);
         miopenStatus_t status;
 
-        const size_t* pd;
-        hipMalloc(&pd, 10 * sizeof(size_t));
-        hipMemcpy((void*)pd, padding, 10 * sizeof(size_t), hipMemcpyHostToDevice);
-
-        status = miopen::PadConstantForward(
-            handle, input.desc, output.desc, input_dev.get(), output_dev.get(), pd, padding_value);
+        status = miopen::PadConstantForward(handle,
+                                            input.desc,
+                                            output.desc,
+                                            input_dev.get(),
+                                            output_dev.get(),
+                                            padding,
+                                            padding_value);
         EXPECT_EQ(status, miopenStatusSuccess);
 
         output.data = handle.Read<T>(output_dev, output.data.size());

@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2024 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,7 +59,7 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
 
     size_t output_size = problem.GetYDesc().GetElementSize();
 
-    size_t xlocalsize = 1024;
+    size_t xlocalsize = 256;
     size_t xgridsize  = AlignUpUL(output_size, xlocalsize);
     size_t ylocalsize = 1;
     size_t ygridsize  = 1;

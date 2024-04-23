@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2023 Advanced Micro Devices, Inc.
+ * Copyright (c) 2024 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
 #include "tensor_view_5d.hpp"
 
 template <typename T = float>
-__device__ T
-get5DValueAt(const T* x, const uint64_t x_dims[5], size_t n, size_t c, size_t d, size_t h, size_t w)
+__device__ T inline get5DValueAt(
+    const T* x, const uint64_t x_dims[5], size_t n, size_t c, size_t d, size_t h, size_t w)
 {
     return x[n * x_dims[1] * x_dims[2] * x_dims[3] * x_dims[4] +
              c * x_dims[2] * x_dims[3] * x_dims[4] + d * x_dims[3] * x_dims[4] + h * x_dims[4] + w];
@@ -48,6 +48,8 @@ extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict
                                                     const size_t output_size,
                                                     FLOAT_ACCUM value)
 {
+    OUTPUT_TYPE padding_value = CVT_ACCUM2FLOAT(value);
+
     const uint64_t gid = threadIdx.x + blockIdx.x * blockDim.x;
     if(gid >= output_size)
         return;
@@ -57,13 +59,11 @@ extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict
 
     bool flag = true;
 
-    for(int i = 0; i < 5; i++)
+    for(int i = 0; i < 5; ++i)
     {
         o[i] = o[i] - padding.val[2 * i];
         flag *= o[i] < x_tv.size[i];
     }
-
-    OUTPUT_TYPE padding_value = CVT_ACCUM2FLOAT(value);
 
     y[gid] = flag ? get5DValueAt(x, x_tv.size, o[0], o[1], o[2], o[3], o[4]) : padding_value;
 }

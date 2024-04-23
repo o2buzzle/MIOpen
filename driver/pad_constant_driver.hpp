@@ -32,6 +32,7 @@
 #include "tensor_driver.hpp"
 #include "random.hpp"
 #include "timer.hpp"
+#include <cstdio>
 #include <vector>
 #include <miopen/miopen.h>
 #include <miopen/tensor.hpp>
@@ -226,19 +227,19 @@ std::vector<int> ConstantPadDriver<Tgpu, Tref>::GetInputTensorLengthsFromCmdLine
     }
     else if((in_n != 0) && (in_c != 0) && (in_h != 0) && (in_w != 0))
     {
-        return std::vector<int>({in_n, in_c, 1, in_h, in_w});
+        return std::vector<int>({in_n, in_c, in_h, in_w});
     }
     else if((in_n != 0) && (in_c != 0) && (in_w != 0))
     {
-        return std::vector<int>({in_n, in_c, 1, 1, in_w});
+        return std::vector<int>({in_n, in_c, in_w});
     }
     else if((in_n != 0) && (in_w != 0))
     {
-        return std::vector<int>({in_n, 1, 1, 1, in_w});
+        return std::vector<int>({in_n, in_w});
     }
     else if(in_n != 0)
     {
-        return std::vector<int>({in_n, 1, 1, 1, 1});
+        return std::vector<int>({in_n});
     }
     else
     {
@@ -272,17 +273,13 @@ int ConstantPadDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
     output      = std::vector<Tgpu>(output_size, static_cast<Tgpu>(0));
     output_host = std::vector<Tref>(output_size, static_cast<Tref>(0));
 
-    for(int i = 0; i < input.size(); i++)
+    for(int i = 0; i < input_size; i++)
     {
         input[i] = prng::gen_A_to_B(static_cast<Tgpu>(0.0), static_cast<Tgpu>(1.0));
     }
 
     if(in_dev->ToGPU(GetStream(), input.data()) != 0)
         std::cerr << "ConstantPadDriver: Error copying data to GPU, size: " << in_dev->GetSize()
-                  << std::endl;
-
-    if(out_dev->ToGPU(GetStream(), output.data()) != 0)
-        std::cerr << "ConstantPadDriver: Error copying data to GPU, size: " << out_dev->GetSize()
                   << std::endl;
 
     return 0;
@@ -320,10 +317,10 @@ int ConstantPadDriver<Tgpu, Tref>::RunForwardGPU()
         int iter = inflags.GetValueInt("iter");
 
         if(WALL_CLOCK)
-            std::cout << "Wall-clock time elapsed: " << t.gettime_ms() / iter << " ms" << std::endl;
+            std::cout << "Wall-clock Time Elapsed: " << t.gettime_ms() / iter << " ms" << std::endl;
 
         float kernel_avg_time = iter > 1 ? kernel_total_time / iter : kernel_first_time;
-        std::cout << "Kernel time elapsed: " << kernel_avg_time << " ms" << std::endl;
+        std::cout << "Kernel Time Elapsed: " << kernel_avg_time << " ms" << std::endl;
     }
 
     if(out_dev->FromGPU(GetStream(), output.data()) != 0)
