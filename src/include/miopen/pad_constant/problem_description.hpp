@@ -45,8 +45,18 @@ struct ProblemDescription : ProblemDescriptionBase
 
     NetworkConfig MakeNetworkConfig() const override;
 
-    bool IsSameType() const {
-        if (xDesc.GetType() == yDesc.GetType())
+    bool IsSameType() const
+    {
+        if(xDesc.GetType() == yDesc.GetType())
+            return true;
+        return false;
+    }
+
+    bool IsSameShape() const
+    {
+        auto xSize = xDesc.GetSize();
+        auto ySize = yDesc.GetSize();
+        if(xSize == ySize)
             return true;
         return false;
     }

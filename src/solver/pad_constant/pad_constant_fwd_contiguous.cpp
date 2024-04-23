@@ -43,6 +43,8 @@ bool PadConstantFwdContiguous::IsApplicable(
 {
     if(!problem.IsSameType())
         return false;
+    if(!problem.IsSameShape())
+        return false;
 
     return true;
 }
