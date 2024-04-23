@@ -32,23 +32,24 @@
 #include "float_types.h"
 #include "tensor_view_5d.hpp"
 
-template <typename T = float>
+template <typename T>
 __device__ T inline get5DValueAt(
-    const T* x, const uint64_t x_dims[5], size_t n, size_t c, size_t d, size_t h, size_t w)
+    const T* x, const uint64_t x_strides[5], size_t n, size_t c, size_t d, size_t h, size_t w)
 {
-    return x[n * x_dims[1] * x_dims[2] * x_dims[3] * x_dims[4] +
-             c * x_dims[2] * x_dims[3] * x_dims[4] + d * x_dims[3] * x_dims[4] + h * x_dims[4] + w];
+    return x[n * x_strides[0] + c * x_strides[1] + d * x_strides[2] + h * x_strides[3] +
+             w * x_strides[4]];
 }
 
-extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict__ x,
-                                                    OUTPUT_TYPE* __restrict__ y,
-                                                    const tensor_view_5d_t x_tv,
-                                                    const tensor_view_5d_t y_tv,
-                                                    const padding_5d_t padding,
-                                                    const size_t output_size,
-                                                    FLOAT_ACCUM value)
+template <typename TI, typename TO>
+__device__ void padconstantfwdcontiguous(const TI* __restrict__ x,
+                                         TO* __restrict__ y,
+                                         const tensor_view_5d_t x_tv,
+                                         const tensor_view_5d_t y_tv,
+                                         const padding_5d_t padding,
+                                         const size_t output_size,
+                                         TO value)
 {
-    OUTPUT_TYPE padding_value = CVT_ACCUM2FLOAT(value);
+    TO padding_value = CVT_ACCUM2FLOAT(value);
 
     const uint64_t gid = threadIdx.x + blockIdx.x * blockDim.x;
     if(gid >= output_size)
@@ -65,5 +66,17 @@ extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict
         flag *= o[i] < x_tv.size[i];
     }
 
-    y[gid] = flag ? get5DValueAt(x, x_tv.size, o[0], o[1], o[2], o[3], o[4]) : padding_value;
+    y[gid] = flag ? get5DValueAt(x, x_tv.stride, o[0], o[1], o[2], o[3], o[4]) : padding_value;
+}
+
+extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict__ x,
+                                                    OUTPUT_TYPE* __restrict__ y,
+                                                    const tensor_view_5d_t x_tv,
+                                                    const tensor_view_5d_t y_tv,
+                                                    const padding_5d_t padding,
+                                                    const size_t output_size,
+                                                    FLOAT_ACCUM value)
+{
+    padconstantfwdcontiguous<INPUT_TYPE, OUTPUT_TYPE>(
+        x, y, x_tv, y_tv, padding, output_size, value);
 }
