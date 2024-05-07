@@ -61,9 +61,56 @@ struct ProblemDescription : ProblemDescriptionBase
         return false;
     }
 
+    bool IsContiguous() const
+    {
+        auto n_strides = xDesc.GetStrides().size();
+        return xDesc.GetStrides()[n_strides - 1] == 1 && yDesc.GetStrides()[n_strides - 1] == 1;
+    }
+
 private:
     const TensorDescriptor& xDesc;
     const TensorDescriptor& yDesc;
 };
 } // namespace pad_constant_fwd_contiguous
+
+namespace pad_constant_bwd {
+struct ProblemDescription : ProblemDescriptionBase
+{
+    ProblemDescription(const TensorDescriptor& xDesc_, const TensorDescriptor& yDesc_)
+        : xDesc(xDesc_), yDesc(yDesc_)
+    {
+    }
+
+    const TensorDescriptor& GetXDesc() const { return xDesc; }
+    const TensorDescriptor& GetYDesc() const { return yDesc; }
+
+    NetworkConfig MakeNetworkConfig() const override;
+
+    bool IsSameType() const
+    {
+        if(xDesc.GetType() == yDesc.GetType())
+            return true;
+        return false;
+    }
+
+    bool IsSameShape() const
+    {
+        auto xSize = xDesc.GetSize();
+        auto ySize = yDesc.GetSize();
+        if(xSize == ySize)
+            return true;
+        return false;
+    }
+
+    bool IsContiguous() const
+    {
+        auto n_strides = xDesc.GetStrides().size();
+        return xDesc.GetStrides()[n_strides - 1] == 1 && yDesc.GetStrides()[n_strides - 1] == 1;
+    }
+
+private:
+    const TensorDescriptor& xDesc;
+    const TensorDescriptor& yDesc;
+};
+} // namespace pad_constant_bwd
 } // namespace miopen

@@ -57,7 +57,8 @@ enum class Primitive
     Cat,
     Mha,
     Softmax,
-    PadConstantFwdContiguous
+    PadConstantFwdContiguous,
+    PadConstantBwd
 };
 
 struct MIOPEN_EXPORT Id

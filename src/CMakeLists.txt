@@ -266,7 +266,7 @@ set( MIOpen_Source
     solver/layernorm/forward_layernorm2d_ck.cpp
     solver/layernorm/forward_layernorm4d_ck.cpp
     solver/mha/mha_solver.cpp
-    solver/pad_constant/pad_constant_fwd_contiguous.cpp
+    solver/pad_constant/pad_constant.cpp
     solver/pooling/forward2d.cpp
     solver/pooling/forwardNaive.cpp
     solver/pooling/forwardNd.cpp
@@ -547,13 +547,14 @@ if( MIOPEN_BACKEND MATCHES "OpenCL" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN
         kernels/MIOpenBatchNormActivInfer.cl
         kernels/MIOpenCTCLoss.cl
         kernels/MIOpenDropout.cl
+        kernels/MIOpenPadConstant.cpp
         kernels/xform_data.s
         kernels/xform_filter.s
         kernels/xform_bidirect_winograd_data.s
         kernels/xform_bidirect_winograd_filter.s
         kernels/xform_bidirect_winograd_out.s
         kernels/UniversalTranspose.cl
-        kernels/MIOpenPadConstantFwd.cpp)
+        )
 
     # Kernels in development lists.
     # Should be ALWAYS empty in develop branch (at the time of PR merge)

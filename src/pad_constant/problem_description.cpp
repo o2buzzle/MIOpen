@@ -35,10 +35,24 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     auto dtype = xDesc.GetType();
 
     std::ostringstream ss;
+    ss << "fwd-";
     ss << "dtype" << dtype;
     ss << "yDesc" << yDesc.GetElementSize();
 
     return NetworkConfig{ss.str()};
 }
 } // namespace pad_constant_fwd_contiguous
+namespace pad_constant_bwd {
+NetworkConfig ProblemDescription::MakeNetworkConfig() const
+{
+    auto dtype = yDesc.GetType();
+
+    std::ostringstream ss;
+    ss << "bwd-";
+    ss << "dtype" << dtype;
+    ss << "yDesc" << yDesc.GetElementSize();
+
+    return NetworkConfig{ss.str()};
+}
+} // namespace pad_constant_bwd
 } // namespace miopen

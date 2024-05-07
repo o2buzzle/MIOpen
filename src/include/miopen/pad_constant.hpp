@@ -34,11 +34,19 @@ struct Handle;
 struct TensorDescriptor;
 
 miopenStatus_t PadConstantForward(Handle& handle,
+                                  const TensorDescriptor& xDesc,
+                                  const TensorDescriptor& yDesc,
+                                  ConstData_t x,
+                                  Data_t y,
+                                  const size_t* padding,
+                                  float value);
+
+miopenStatus_t PadConstantBackward(Handle& handle,
                                    const TensorDescriptor& xDesc,
                                    const TensorDescriptor& yDesc,
-                                   ConstData_t x,
-                                   Data_t y,
-                                   const size_t* padding,
-                                   float value);
+                                   Data_t dx,
+                                   ConstData_t dy,
+                                   const size_t* padding);
+
 } // namespace miopen
 #endif

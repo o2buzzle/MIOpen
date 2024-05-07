@@ -24,36 +24,12 @@
  *
  *******************************************************************************/
 
-#ifndef GUARD_TENSOR_VIEW_H
-#define GUARD_TENSOR_VIEW_H
+#ifndef GUARD_TENSOR_VIEW_HOST
+#define GUARD_TENSOR_VIEW_HOST
 
 #include <cstdint>
 #include <miopen/tensor.hpp>
-
-struct tensor_view_5d_t
-{
-    uint64_t size[5];
-    uint64_t stride[5];
-};
-
-struct padding_5d_t
-{
-    uint64_t val[10];
-};
-
-#define GET_NCDHW(n, c, d, h, w, idx, size) \
-    {                                       \
-        ulong ncdh = (idx) / size[4];       \
-        w          = (idx) % size[4];       \
-        ulong ncd  = ncdh / size[3];        \
-        h          = ncdh % size[3];        \
-        ulong nc   = ncd / size[2];         \
-        d          = ncd % size[2];         \
-        n          = nc / size[1];          \
-        c          = nc % size[1];          \
-    }
-
-#endif
+#include "../kernels/tensor_view_5d.hpp"
 
 inline tensor_view_5d_t get_inner_expanded_tv(const miopen::TensorDescriptor Desc)
 {
@@ -74,3 +50,5 @@ inline tensor_view_5d_t get_inner_expanded_tv(const miopen::TensorDescriptor Des
     }
     return tv_5d;
 }
+
+#endif

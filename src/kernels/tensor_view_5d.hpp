@@ -27,6 +27,8 @@
 #ifndef GUARD_TENSOR_VIEW_H
 #define GUARD_TENSOR_VIEW_H
 
+#include <hip/hip_runtime.h>
+
 struct tensor_view_5d_t
 {
     uint64_t size[5];
@@ -49,5 +51,26 @@ struct padding_5d_t
         n          = nc / size[1];          \
         c          = nc % size[1];          \
     }
+
+template <typename T, typename U>
+__device__ T inline get5DValueAt(const T* x, const uint64_t* x_strides, U n, U c, U d, U h, U w)
+{
+    return x[n * x_strides[0] + c * x_strides[1] + d * x_strides[2] + h * x_strides[3] +
+             w * x_strides[4]];
+}
+
+template <typename T>
+__device__ void inline set5DValueAt(T* x, const tensor_view_5d_t& x_tv, size_t idx, T val)
+{
+    uint64_t o[5];
+    o[4] = x_tv.stride[0] *
+           (size_t)((idx) / x_tv.size[4] / x_tv.size[3] / x_tv.size[2] / x_tv.size[1]);
+    o[3] = x_tv.stride[1] *
+           ((size_t)((idx) / x_tv.size[4] / x_tv.size[3] / x_tv.size[2]) % x_tv.size[1]);
+    o[2] = x_tv.stride[2] * ((size_t)((idx) / x_tv.size[4] / x_tv.size[3]) % x_tv.size[2]);
+    o[1] = x_tv.stride[3] * ((size_t)((idx) / x_tv.size[4]) % x_tv.size[3]);
+    o[0] = x_tv.stride[4] * ((idx) % x_tv.size[4]);
+    x[o[0] + o[1] + o[2] + o[3] + o[4]] = val;
+}
 
 #endif

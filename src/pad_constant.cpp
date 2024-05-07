@@ -24,6 +24,7 @@
  *
  *******************************************************************************/
 
+#include "miopen/common.hpp"
 #include <miopen/datatype.hpp>
 #include <miopen/find_solution.hpp>
 #include <miopen/float_equal.hpp>
@@ -67,4 +68,31 @@ miopenStatus_t PadConstantForward(Handle& handle,
     return miopenStatusSuccess;
 }
 
+miopenStatus_t PadConstantBackward(Handle& handle,
+                                   const TensorDescriptor& xDesc,
+                                   const TensorDescriptor& yDesc,
+                                   Data_t dx,
+                                   ConstData_t dy,
+                                   const size_t* padding)
+{
+    auto ctx           = ExecutionContext{&handle};
+    const auto problem = pad_constant_bwd::ProblemDescription{xDesc, yDesc};
+
+    const auto invoke_params = [&]() {
+        auto tmp    = pad_constant_bwd::InvokeParams{};
+        tmp.xDesc   = &xDesc;
+        tmp.yDesc   = &yDesc;
+        tmp.x       = dx;
+        tmp.y       = dy;
+        tmp.padding = padding;
+        return tmp;
+    }();
+
+    const auto algo    = AlgorithmName{"PadConstantBwd"};
+    const auto solvers = solver::SolverContainer<solver::pad_constant_bwd::PadConstantBwd>{};
+
+    solvers.ExecutePrimitive(handle, problem, algo, invoke_params);
+
+    return miopenStatusSuccess;
+}
 } // namespace miopen

@@ -25,10 +25,12 @@
  *******************************************************************************/
 
 #include "get_handle.hpp"
+#include "miopen/allocator.hpp"
 #include "random.hpp"
 #include "tensor_holder.hpp"
 #include "cpu_pad_constant.hpp"
 #include "verify.hpp"
+#include <cstdio>
 #include <gtest/gtest.h>
 #include <miopen/pad_constant.hpp>
 
@@ -78,22 +80,31 @@ struct PadConstantTestCase
 
 std::vector<PadConstantTestCase> PadConstantTestConfigs()
 {
-    // clang-format off
-    return {
-        { 8,    120,  0,  0,   1},  
-        { 8,    120,  0,  0,   1},
-        { 8,    1023, 0,  0,   1},  
-        { 8,    1024, 0,  0,   768},
-        { 8,    1023, 0,  0,   1},
-        { 8,    1024, 0,  0,   768},
-        { 16,   1024, 0,  0,   768},  
-        { 16,   1024, 0,  0,   768},
-        { 48,   8,    0,  512, 512}, 
-        { 48,   8,    0,  512, 512},
-        { 16, 311,    0,  98,  512},
-        { 16, 311,    0,  98,  512}
-    };
-    // clang-format on
+    return {{8, 120, 1, 1, 1},
+            {8, 120, 1, 1, 1},
+            {8, 1023, 1, 1, 1},
+            {8, 1024, 1, 1, 768},
+            {8, 1023, 1, 1, 1},
+            {8, 1024, 1, 1, 768},
+            {16, 1024, 1, 1, 768},
+            {16, 1024, 1, 1, 768},
+            {48, 8, 1, 512, 512},
+            {48, 8, 1, 512, 512},
+            {16, 311, 1, 98, 512},
+            {16, 311, 1, 98, 512}};
+}
+
+inline std::vector<size_t> GetStrides(std::vector<size_t> input, bool contiguous)
+{
+    if(!contiguous)
+        std::swap(input.front(), input.back());
+    std::vector<size_t> strides(input.size());
+    strides.back() = 1;
+    for(int i = input.size() - 2; i >= 0; --i)
+        strides[i] = strides[i + 1] * input[i + 1];
+    if(!contiguous)
+        std::swap(strides.front(), strides.back());
+    return strides;
 }
 
 template <typename T>
@@ -103,11 +114,13 @@ protected:
     PadConstantTestCase pad_constant_config;
     tensor<T> input;
     tensor<T> output;
+    tensor<T> backward_output;
 
     tensor<T> ref_output;
 
     miopen::Allocator::ManageDataPtr input_dev;
     miopen::Allocator::ManageDataPtr output_dev;
+    miopen::Allocator::ManageDataPtr backward_output_dev;
 
     size_t padding[10];
 
@@ -118,8 +131,11 @@ protected:
         auto gen_value      = [](auto...) { return prng::gen_descreet_uniform_sign<T>(1e-2, 100); };
 
         auto in_dims = pad_constant_config.GetInput();
-        input        = tensor<T>{in_dims}.generate(gen_value);
-        input_dev    = handle.Write(input.data);
+
+        auto strides = GetStrides(in_dims, false);
+        input        = tensor<T>{in_dims, strides}.generate(gen_value);
+
+        input_dev = handle.Write(input.data);
 
         // Generate random padding
         for(size_t& i : padding)
@@ -136,6 +152,11 @@ protected:
         output = tensor<T>{out_dims};
         std::fill(output.begin(), output.end(), std::numeric_limits<T>::quiet_NaN());
         output_dev = handle.Write(output.data);
+
+        backward_output = tensor<T>{in_dims, strides};
+        std::fill(
+            backward_output.begin(), backward_output.end(), std::numeric_limits<T>::quiet_NaN());
+        backward_output_dev = handle.Write(backward_output.data);
 
         ref_output = tensor<T>{out_dims};
         std::fill(ref_output.begin(), ref_output.end(), std::numeric_limits<T>::quiet_NaN());
@@ -164,14 +185,31 @@ protected:
                                             padding,
                                             padding_value);
         EXPECT_EQ(status, miopenStatusSuccess);
-
         output.data = handle.Read<T>(output_dev, output.data.size());
+
+        status = miopen::PadConstantBackward(handle,
+                                             backward_output.desc,
+                                             output.desc,
+                                             backward_output_dev.get(),
+                                             output_dev.get(),
+                                             padding);
+        EXPECT_EQ(status, miopenStatusSuccess);
+
+        backward_output.data = handle.Read<T>(backward_output_dev, backward_output.data.size());
+
+        hipDeviceSynchronize();
     }
 
     void Verify()
     {
+        // printf("Forward pass verification\n");
         auto error = miopen::rms_range(ref_output, output);
         EXPECT_TRUE(miopen::range_distance(ref_output) == miopen::range_distance(output));
+        EXPECT_TRUE(error == 0) << "Outputs do not match each other. Error:" << error;
+
+        // printf("Backward pass verification\n");
+        error = miopen::rms_range(backward_output, input);
+        EXPECT_TRUE(miopen::range_distance(backward_output) == miopen::range_distance(input));
         EXPECT_TRUE(error == 0) << "Outputs do not match each other. Error:" << error;
     }
 };

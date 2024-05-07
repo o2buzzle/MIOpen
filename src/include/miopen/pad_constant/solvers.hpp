@@ -32,18 +32,41 @@
 namespace miopen {
 namespace solver {
 namespace pad_constant_fwd_contiguous {
-using PadConstantFwdContiguousSolver = NonTunableSolverBase<ExecutionContext, miopen::pad_constant_fwd_contiguous::ProblemDescription>;
+using PadConstantFwdContiguousSolver =
+    NonTunableSolverBase<ExecutionContext, miopen::pad_constant_fwd_contiguous::ProblemDescription>;
 
 struct PadConstantFwdContiguous final : PadConstantFwdContiguousSolver
 {
-    const std::string& SolverDbId() const override { return GetSolverDbId<PadConstantFwdContiguous>(); }
+    const std::string& SolverDbId() const override
+    {
+        return GetSolverDbId<PadConstantFwdContiguous>();
+    }
+
+    bool IsApplicable(
+        const ExecutionContext& context,
+        const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const override;
+
+    ConvSolution GetSolution(
+        const ExecutionContext& context,
+        const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const override;
+};
+} // namespace pad_constant_fwd_contiguous
+
+namespace pad_constant_bwd {
+using PadConstantBwdSolver =
+    NonTunableSolverBase<ExecutionContext, miopen::pad_constant_bwd::ProblemDescription>;
+
+struct PadConstantBwd final : PadConstantBwdSolver
+{
+    const std::string& SolverDbId() const override { return GetSolverDbId<PadConstantBwd>(); }
 
     bool IsApplicable(const ExecutionContext& context,
-                      const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const override;
+                      const miopen::pad_constant_bwd::ProblemDescription& problem) const override;
 
-    ConvSolution GetSolution(const ExecutionContext& context,
-                             const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const override; 
+    ConvSolution
+    GetSolution(const ExecutionContext& context,
+                const miopen::pad_constant_bwd::ProblemDescription& problem) const override;
 };
-}  // namespace pad_constant_fwd_contiguous
-}  // namespace solver
-}  // namespace miopen
+} // namespace pad_constant_bwd
+} // namespace solver
+} // namespace miopen

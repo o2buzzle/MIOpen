@@ -73,18 +73,10 @@ void cpu_pad_constant_fwd(const T* input,
             flag *= (o[i] < input_dims->GetLengths()[i]);
         }
 
-        if(flag)
-        {
-            // This value should be copied from the input tensor
-            output[gid] =
-                get5DValueAt(input, input_dims->GetStrides().data(), o[0], o[1], o[2], o[3], o[4]);
-        }
-        else
-        {
-            // This value should be constant
-            output[gid] = (T)value;
-        }
+        output[gid] =
+            flag
+                ? get5DValueAt(input, input_dims->GetStrides().data(), o[0], o[1], o[2], o[3], o[4])
+                : (T)value;
     }
-    // how much do you wanna bet on this instantly blowing up?
 }
 #endif

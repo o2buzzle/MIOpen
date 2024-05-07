@@ -513,7 +513,7 @@ typedef enum
     miopenActivationABS      = 5, /*!< Absolute value \f$abs(x)\f$ */
     miopenActivationPOWER = 6, /*!< Scaled and shifted power \f$(\alpha + \beta * x)^{gamma}\f$ */
     miopenActivationCLIPPEDRELU =
-        7,                     /*!< Clipped Rectified Linear Unit \f$ min(\alpha, max(0,x)) \f$ */
+        7, /*!< Clipped Rectified Linear Unit \f$ min(\alpha, max(0,x)) \f$ */
     miopenActivationLEAKYRELU =
         8, /*!< Leaky Rectified Linear Unit \f$ \alpha * x | x <= 0; x | x > 0 \f$ */
     miopenActivationELU =
@@ -6585,7 +6585,7 @@ MIOPEN_EXPORT miopenStatus_t miopenBackendInitialize(miopenBackendDescriptor_t d
 
 #ifdef MIOPEN_BETA_API
 
-/*! Pad Constant API
+/*! Pad Constant Forward API
  * @addtogroup pad
  * @brief Pads the input tensor boundaries with a constant value.
  *
@@ -6607,6 +6607,27 @@ MIOPEN_EXPORT miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
                                                   void* y,
                                                   const size_t* padding,
                                                   float value);
+
+/* @addtogroup pad
+ * @brief Pads the input tensor boundaries with a constant value (backward pass)
+ *
+ *  @param [in]  handle An instance of miopenHandle_t
+ *  @param [in]  xDesc Descriptor of the input tensor
+ *  @param [in]  x Input
+ *  @param [in]  padding The size of the padding
+ *  @param [out] y Output
+ *
+ *  @retval miopenStatusSuccess        The memory was destroyed successfully
+ *  @retval miopenStatusBadParm        An invalid or inconsistent argument value is encountered.
+ */
+
+MIOPEN_EXPORT miopenStatus_t miopenPadConstantBwd(miopenHandle_t handle,
+                                                  miopenTensorDescriptor_t xDesc,
+                                                  miopenTensorDescriptor_t yDesc,
+                                                  void* x,
+                                                  const void* y,
+                                                  const size_t* padding);
+
 /** @} */
 // CLOSEOUT pad DOXYGEN GROUP
 #endif // MIOPEN_BETA_API

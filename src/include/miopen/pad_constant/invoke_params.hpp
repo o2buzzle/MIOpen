@@ -41,12 +41,30 @@ struct InvokeParams : public miopen::InvokeParams
     ConstData_t x = nullptr;
     Data_t y      = nullptr;
 
-    const size_t* padding  = nullptr;
-    float padding_value = 0.0f;
+    const size_t* padding = nullptr;
+    float padding_value   = 0.0f;
 
     // We should be able to go directly from x -> padded x (aka. y), so no need for extra workspace
     std::size_t GetWorkspaceSize() const { return 0; }
     Data_t GetWorkspace() const { return nullptr; }
 };
 } // namespace pad_constant_fwd_contiguous
+
+namespace pad_constant_bwd {
+struct InvokeParams : public miopen::InvokeParams
+{
+    InvokeParams() = default;
+
+    const TensorDescriptor* xDesc = nullptr;
+    const TensorDescriptor* yDesc = nullptr;
+
+    Data_t x      = nullptr;
+    ConstData_t y = nullptr;
+
+    const size_t* padding = nullptr;
+
+    std::size_t GetWorkspaceSize() const { return 0; }
+    Data_t GetWorkspace() const { return nullptr; }
+};
+} // namespace pad_constant_bwd
 } // namespace miopen
