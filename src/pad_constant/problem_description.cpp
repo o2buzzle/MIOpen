@@ -35,6 +35,8 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     auto dtype = xDesc.GetType();
 
     std::ostringstream ss;
+    if(IsContiguous())
+        ss << "contiguous-";
     ss << "fwd-";
     ss << "dtype" << dtype;
     ss << "yDesc" << yDesc.GetElementSize();
@@ -48,6 +50,8 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     auto dtype = yDesc.GetType();
 
     std::ostringstream ss;
+    if(IsContiguous())
+        ss << "contiguous-";
     ss << "bwd-";
     ss << "dtype" << dtype;
     ss << "yDesc" << yDesc.GetElementSize();

@@ -276,7 +276,7 @@ int ConstantPadDriver<Tgpu, Tref>::AddCmdLineArgs()
     inflags.AddInputFlag("pad_w", 'W', "1", "Padding dimension W", "int");
     inflags.AddInputFlag("value", 'v', "0", "Padding value", "string");
 
-    inflags.AddInputFlag("iter", 'i', "1", "Number of iterations", "int");
+    inflags.AddInputFlag("iter", 'i', "10", "Number of iterations", "int");
     inflags.AddInputFlag("verify", 'V', "0", "Verify results", "int");
     inflags.AddInputFlag("time", 't', "0", "Enable/Disable time measurement", "int");
     inflags.AddInputFlag("wall", 'l', "0", "Enable/Disable walltime measurement", "int");
@@ -395,7 +395,8 @@ int ConstantPadDriver<Tgpu, Tref>::RunForwardGPU()
         if(WALL_CLOCK)
             std::cout << "Wall-clock Time Elapsed: " << t.gettime_ms() / iter << " ms" << std::endl;
 
-        float kernel_avg_time = iter > 1 ? kernel_total_time / iter : kernel_first_time;
+        float kernel_avg_time =
+            iter > 1 ? (kernel_total_time - kernel_first_time) / (iter - 1) : kernel_first_time;
         std::cout << "Kernel Time Elapsed: " << kernel_avg_time << " ms" << std::endl;
     }
 
@@ -479,10 +480,12 @@ int ConstantPadDriver<Tgpu, Tref>::RunBackwardGPU()
         int iter = inflags.GetValueInt("iter");
 
         if(WALL_CLOCK)
-            std::cout << "Wall-clock Time Elapsed: " << t.gettime_ms() / iter << " ms" << std::endl;
+            std::cout << "Wall-clock Backward Time Elapsed: " << t.gettime_ms() / iter << " ms"
+                      << std::endl;
 
-        float kernel_avg_time = iter > 1 ? kernel_total_time / iter : kernel_first_time;
-        std::cout << "Kernel Time Elapsed: " << kernel_avg_time << " ms" << std::endl;
+        float kernel_avg_time =
+            iter > 1 ? (kernel_total_time - kernel_first_time) / (iter - 1) : kernel_first_time;
+        std::cout << "Kernel Backward Time Elapsed: " << kernel_avg_time << " ms" << std::endl;
     }
 
     if(backward_out_dev->FromGPU(GetStream(), backward_output.data()) != 0)
