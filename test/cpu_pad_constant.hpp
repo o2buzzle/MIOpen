@@ -40,7 +40,7 @@ T get5DValueAt(
 }
 
 template <typename T>
-void inline getNCDHW(const T* ncdhw, const T idx, const T size[5])
+void inline getNCDHW(T* ncdhw, const T idx, const T size[5])
 {
     ulong ncdh = (idx) / size[4];
     ncdhw[4]   = (idx) % size[4];
