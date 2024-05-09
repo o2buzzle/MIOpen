@@ -61,11 +61,21 @@ struct ProblemDescription : ProblemDescriptionBase
         return false;
     }
 
-    bool IsContiguous() const
+    bool checkContiguous(const TensorDescriptor& x) const
     {
-        auto n_strides = xDesc.GetStrides().size();
-        return xDesc.GetStrides()[n_strides - 1] == 1 && yDesc.GetStrides()[n_strides - 1] == 1;
+        size_t s = 1;
+        for(int i = x.GetSize() - 1; i >= 0; --i)
+        {
+            if(s != x.GetStrides()[i])
+            {
+                return false;
+            }
+            s *= x.GetLengths()[i];
+        }
+        return true;
     }
+
+    bool IsContiguous() const { return checkContiguous(xDesc) && checkContiguous(yDesc); }
 
 private:
     const TensorDescriptor& xDesc;
@@ -102,11 +112,21 @@ struct ProblemDescription : ProblemDescriptionBase
         return false;
     }
 
-    bool IsContiguous() const
+    bool checkContiguous(const TensorDescriptor& x) const
     {
-        auto n_strides = xDesc.GetStrides().size();
-        return xDesc.GetStrides()[n_strides - 1] == 1 && yDesc.GetStrides()[n_strides - 1] == 1;
+        size_t s = 1;
+        for(int i = x.GetSize() - 1; i >= 0; --i)
+        {
+            if(s != x.GetStrides()[i])
+            {
+                return false;
+            }
+            s *= x.GetLengths()[i];
+        }
+        return true;
     }
+
+    bool IsContiguous() const { return checkContiguous(xDesc) && checkContiguous(yDesc); }
 
 private:
     const TensorDescriptor& xDesc;

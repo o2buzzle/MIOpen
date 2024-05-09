@@ -48,7 +48,7 @@ __device__ void padconstantfwd(const TI* __restrict__ x,
         return;
 
     size_t o[5];
-    GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, y_tv.size);
+    getNCDHW(o, gid, y_tv.size);
     bool flag = true;
 
     for(int i = 0; i < 5; ++i)
@@ -79,7 +79,7 @@ __device__ void padconstantfwdcontiguous(const TI* __restrict__ x,
         return;
 
     size_t o[5];
-    GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, y_tv.size);
+    getNCDHW(o, gid, y_tv.size);
     bool flag = true;
 
     for(int i = 0; i < 5; ++i)
@@ -105,7 +105,7 @@ __device__ void padconstantbwd(TI* __restrict__ x_grad,
         return;
 
     size_t o[5];
-    GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, x_grad_tv.size);
+    getNCDHW(o, gid, y_tv.size);
     bool flag = true;
 
     for(int i = 0; i < 5; ++i)
@@ -135,7 +135,7 @@ __device__ void padconstantbwdcontiguous(TI* __restrict__ x_grad,
         return;
 
     size_t o[5];
-    GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, x_grad_tv.size);
+    getNCDHW(o, gid, y_tv.size);
     bool flag = true;
 
     for(int i = 0; i < 5; ++i)

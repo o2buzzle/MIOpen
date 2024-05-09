@@ -40,17 +40,18 @@ struct padding_5d_t
     uint64_t val[10];
 };
 
-#define GET_NCDHW(n, c, d, h, w, idx, size) \
-    {                                       \
-        ulong ncdh = (idx) / size[4];       \
-        w          = (idx) % size[4];       \
-        ulong ncd  = ncdh / size[3];        \
-        h          = ncdh % size[3];        \
-        ulong nc   = ncd / size[2];         \
-        d          = ncd % size[2];         \
-        n          = nc / size[1];          \
-        c          = nc % size[1];          \
-    }
+template <typename T>
+__device__ void inline getNCDHW(T* ncdhw, const T idx, const T size[5])
+{
+    ulong ncdh = (idx) / size[4];
+    ncdhw[4]   = (idx) % size[4];
+    ulong ncd  = ncdh / size[3];
+    ncdhw[3]   = ncdh % size[3];
+    ulong nc   = ncd / size[2];
+    ncdhw[2]   = ncd % size[2];
+    ncdhw[1]   = nc / size[1];
+    ncdhw[0]   = nc % size[1];
+}
 
 template <typename T, typename U>
 __device__ T inline get5DValueAt(const T* x, const uint64_t* x_strides, U n, U c, U d, U h, U w)

@@ -39,17 +39,18 @@ T get5DValueAt(
              w * x_strides[4]];
 }
 
-#define GET_NCDHW(n, c, d, h, w, idx, size) \
-    {                                       \
-        ulong ncdh = (idx) / size[4];       \
-        w          = (idx) % size[4];       \
-        ulong ncd  = ncdh / size[3];        \
-        h          = ncdh % size[3];        \
-        ulong nc   = ncd / size[2];         \
-        d          = ncd % size[2];         \
-        n          = nc / size[1];          \
-        c          = nc % size[1];          \
-    }
+template <typename T>
+void inline getNCDHW(const T* ncdhw, const T idx, const T size[5])
+{
+    ulong ncdh = (idx) / size[4];
+    ncdhw[4]   = (idx) % size[4];
+    ulong ncd  = ncdh / size[3];
+    ncdhw[3]   = ncdh % size[3];
+    ulong nc   = ncd / size[2];
+    ncdhw[2]   = ncd % size[2];
+    ncdhw[1]   = nc / size[1];
+    ncdhw[0]   = nc % size[1];
+}
 
 template <class T>
 void cpu_pad_constant_fwd(const T* input,
@@ -64,8 +65,7 @@ void cpu_pad_constant_fwd(const T* input,
     for(size_t gid = 0; gid != output_dims->GetElementSize(); ++gid)
     {
         bool flag = true;
-
-        GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, output_dims->GetLengths());
+        getNCDHW(o, gid, output_dims->GetLengths().data());
 
         for(int i = 0; i < 5; i++)
         {

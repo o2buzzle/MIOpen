@@ -38,17 +38,18 @@
 #include <miopen/tensor.hpp>
 #include <../test/verify.hpp>
 
-#define GET_NCDHW(n, c, d, h, w, idx, size) \
-    {                                       \
-        ulong ncdh = (idx) / size[4];       \
-        w          = (idx) % size[4];       \
-        ulong ncd  = ncdh / size[3];        \
-        h          = ncdh % size[3];        \
-        ulong nc   = ncd / size[2];         \
-        d          = ncd % size[2];         \
-        n          = nc / size[1];          \
-        c          = nc % size[1];          \
-    }
+template <typename T>
+void inline getNCDHW(T* ncdhw, const T idx, const T size[5])
+{
+    ulong ncdh = (idx) / size[4];
+    ncdhw[4]   = (idx) % size[4];
+    ulong ncd  = ncdh / size[3];
+    ncdhw[3]   = ncdh % size[3];
+    ulong nc   = ncd / size[2];
+    ncdhw[2]   = ncd % size[2];
+    ncdhw[1]   = nc / size[1];
+    ncdhw[0]   = nc % size[1];
+}
 
 template <typename T>
 inline T
@@ -90,7 +91,7 @@ void mloConstantPadForwardRunHost(miopenTensorDescriptor_t inputDesc,
     for(size_t gid = 0; gid < output_size; ++gid)
     {
         bool flag = true;
-        GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, output_dims);
+        getNCDHW(o, gid, output_dims.data());
 
         for(int i = 0; i < 5; i++)
         {
@@ -124,7 +125,7 @@ void mloConstantPadBackwardRunHost(miopenTensorDescriptor_t backwardOutputDesc,
     for(size_t gid = 0; gid < backward_output_size; ++gid)
     {
         bool flag = true;
-        GET_NCDHW(o[0], o[1], o[2], o[3], o[4], gid, backward_output_dims);
+        getNCDHW(o, gid, backward_output_dims.data());
 
         for(int i = 0; i < 5; i++)
         {
@@ -259,21 +260,25 @@ int32_t ConstantPadDriver<Tgpu, Tref>::GetandSetData()
     return 0;
 }
 
+inline std::vector<std::string> split(const std::string& s, char delim)
+{
+    std::vector<std::string> elems;
+    std::stringstream ss(s);
+    std::string item;
+    while(std::getline(ss, item, delim))
+    {
+        elems.push_back(item);
+    }
+    return elems;
+}
+
 template <typename Tgpu, typename Tref>
 int ConstantPadDriver<Tgpu, Tref>::AddCmdLineArgs()
 {
     inflags.AddInputFlag("forw", 'F', "0", "Only run the Forward Pass (Default=1)", "int");
     inflags.AddInputFlag("contiguous", 'Z', "1", "Use contiguous tensor", "int");
-    inflags.AddInputFlag("in_n", 'n', "3", "Input batch size (N)", "int");
-    inflags.AddInputFlag("in_c", 'c', "3", "Input channels (C)", "int");
-    inflags.AddInputFlag("in_d", 'd', "3", "Input tensor dimension D", "int");
-    inflags.AddInputFlag("in_h", 'k', "3", "Input tensor dimension H", "int");
-    inflags.AddInputFlag("in_w", 'w', "3", "Input tensor dimension W", "int");
-    inflags.AddInputFlag("pad_n", 'N', "1", "Padding batch size (N)", "int");
-    inflags.AddInputFlag("pad_c", 'C', "1", "Padding channels (C)", "int");
-    inflags.AddInputFlag("pad_d", 'D', "1", "Padding dimension D", "int");
-    inflags.AddInputFlag("pad_h", 'H', "1", "Padding dimension H", "int");
-    inflags.AddInputFlag("pad_w", 'W', "1", "Padding dimension W", "int");
+    inflags.AddInputFlag("in", 'I', "3,3,3,3,3", "Input batch size (n,c,d,h,w)", "int");
+    inflags.AddInputFlag("pad", 'P', "1,1,1,1,1", "Padding batch size (n,c,d,h,w)", "int");
     inflags.AddInputFlag("value", 'v', "0", "Padding value", "string");
 
     inflags.AddInputFlag("iter", 'i', "10", "Number of iterations", "int");
@@ -287,11 +292,19 @@ int ConstantPadDriver<Tgpu, Tref>::AddCmdLineArgs()
 template <typename Tgpu, typename Tref>
 std::vector<int> ConstantPadDriver<Tgpu, Tref>::GetInputTensorLengthsFromCmdLine()
 {
-    int in_n = inflags.GetValueInt("in_n");
-    int in_c = inflags.GetValueInt("in_c");
-    int in_d = inflags.GetValueInt("in_d");
-    int in_h = inflags.GetValueInt("in_h");
-    int in_w = inflags.GetValueInt("in_w");
+    auto in_str = inflags.GetValueStr("in");
+
+    // Parse the comma_separated string
+    int in_n = 0, in_c = 0, in_d = 0, in_h = 0, in_w = 0;
+    std::vector<std::string> in = split(in_str, ',');
+
+    assert(in.size() == 5);
+
+    in_n = std::stoi(in[0]);
+    in_c = std::stoi(in[1]);
+    in_d = std::stoi(in[2]);
+    in_h = std::stoi(in[3]);
+    in_w = std::stoi(in[4]);
 
     if((in_n != 0) && (in_c != 0) && (in_d != 0) && (in_h != 0) && (in_w != 0))
     {
@@ -324,11 +337,18 @@ template <typename Tgpu, typename Tref>
 std::vector<size_t> ConstantPadDriver<Tgpu, Tref>::GetPaddingsFromCmdLine()
 {
     std::vector<size_t> paddings = std::vector<size_t>(10);
-    paddings[0]                  = inflags.GetValueInt("pad_n");
-    paddings[2]                  = inflags.GetValueInt("pad_c");
-    paddings[4]                  = inflags.GetValueInt("pad_d");
-    paddings[6]                  = inflags.GetValueInt("pad_h");
-    paddings[8]                  = inflags.GetValueInt("pad_w");
+
+    auto pad                   = inflags.GetValueStr("pad");
+    std::vector<std::string> p = split(pad, ',');
+
+    assert(p.size() == 5);
+
+    paddings[0] = std::stoi(p[4]);
+    paddings[2] = std::stoi(p[3]);
+    paddings[4] = std::stoi(p[2]);
+    paddings[6] = std::stoi(p[1]);
+    paddings[8] = std::stoi(p[0]);
+
     return paddings;
 }
 
