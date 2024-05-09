@@ -47,8 +47,8 @@ void inline getNCDHW(T* ncdhw, const T idx, const T size[5])
     ncdhw[3]   = ncdh % size[3];
     ulong nc   = ncd / size[2];
     ncdhw[2]   = ncd % size[2];
-    ncdhw[1]   = nc / size[1];
-    ncdhw[0]   = nc % size[1];
+    ncdhw[1]   = nc % size[1];
+    ncdhw[0]   = nc / size[1];
 }
 
 template <typename T>
