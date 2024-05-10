@@ -81,8 +81,12 @@ struct ProblemDescription : ProblemDescriptionBase
 
     bool IsImprovementOverROCm() const
     {
-        // Appears to be faster if we don't pad the first two
-        return padding[0] == 0 && padding[2] == 0;
+        if(IsContiguous())
+            // No contiguous case is faster
+            return false;
+        else
+            // Appears to be faster if we don't pad the first two
+            return padding[0] == 0 && padding[2] == 0;
     }
 
 private:
