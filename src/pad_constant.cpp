@@ -46,7 +46,7 @@ miopenStatus_t PadConstantForward(Handle& handle,
                                   float value)
 {
     auto ctx           = ExecutionContext{&handle};
-    const auto problem = pad_constant_fwd_contiguous::ProblemDescription{xDesc, yDesc};
+    const auto problem = pad_constant_fwd_contiguous::ProblemDescription{xDesc, yDesc, padding};
 
     const auto invoke_params = [&]() {
         auto tmp          = pad_constant_fwd_contiguous::InvokeParams{};
@@ -76,7 +76,7 @@ miopenStatus_t PadConstantBackward(Handle& handle,
                                    const size_t* padding)
 {
     auto ctx           = ExecutionContext{&handle};
-    const auto problem = pad_constant_bwd::ProblemDescription{xDesc, yDesc};
+    const auto problem = pad_constant_bwd::ProblemDescription{xDesc, yDesc, padding};
 
     const auto invoke_params = [&]() {
         auto tmp    = pad_constant_bwd::InvokeParams{};

@@ -312,19 +312,19 @@ std::vector<int> ConstantPadDriver<Tgpu, Tref>::GetInputTensorLengthsFromCmdLine
     }
     else if((in_n != 0) && (in_c != 0) && (in_h != 0) && (in_w != 0))
     {
-        return std::vector<int>({in_n, in_c, in_h, in_w});
+        return std::vector<int>({in_n, in_c, 1, in_h, in_w});
     }
     else if((in_n != 0) && (in_c != 0) && (in_w != 0))
     {
-        return std::vector<int>({in_n, in_c, in_w});
+        return std::vector<int>({in_n, in_c, 1, 1, in_w});
     }
     else if((in_n != 0) && (in_w != 0))
     {
-        return std::vector<int>({in_n, in_w});
+        return std::vector<int>({in_n, 1, 1, 1, in_w});
     }
     else if(in_n != 0)
     {
-        return std::vector<int>({in_n});
+        return std::vector<int>({in_n, 1, 1, 1, 1});
     }
     else
     {
@@ -343,6 +343,7 @@ std::vector<size_t> ConstantPadDriver<Tgpu, Tref>::GetPaddingsFromCmdLine()
 
     assert(p.size() == 5);
 
+    // Reversed to be consistent with how PyTorch pads (it pads last dimensions first)
     paddings[0] = std::stoi(p[4]);
     paddings[2] = std::stoi(p[3]);
     paddings[4] = std::stoi(p[2]);

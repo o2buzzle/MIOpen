@@ -35,8 +35,10 @@ namespace miopen {
 namespace pad_constant_fwd_contiguous {
 struct ProblemDescription : ProblemDescriptionBase
 {
-    ProblemDescription(const TensorDescriptor& xDesc_, const TensorDescriptor& yDesc_)
-        : xDesc(xDesc_), yDesc(yDesc_)
+    ProblemDescription(const TensorDescriptor& xDesc_,
+                       const TensorDescriptor& yDesc_,
+                       const size_t* padding_)
+        : xDesc(xDesc_), yDesc(yDesc_), padding(padding_)
     {
     }
 
@@ -77,17 +79,26 @@ struct ProblemDescription : ProblemDescriptionBase
 
     bool IsContiguous() const { return checkContiguous(xDesc) && checkContiguous(yDesc); }
 
+    bool IsImprovementOverROCm() const
+    {
+        // Appears to be faster if we don't pad the first two
+        return padding[0] == 0 && padding[2] == 0;
+    }
+
 private:
     const TensorDescriptor& xDesc;
     const TensorDescriptor& yDesc;
+    const size_t* padding;
 };
 } // namespace pad_constant_fwd_contiguous
 
 namespace pad_constant_bwd {
 struct ProblemDescription : ProblemDescriptionBase
 {
-    ProblemDescription(const TensorDescriptor& xDesc_, const TensorDescriptor& yDesc_)
-        : xDesc(xDesc_), yDesc(yDesc_)
+    ProblemDescription(const TensorDescriptor& xDesc_,
+                       const TensorDescriptor& yDesc_,
+                       const size_t* padding_)
+        : xDesc(xDesc_), yDesc(yDesc_), padding(padding_)
     {
     }
 
@@ -128,9 +139,31 @@ struct ProblemDescription : ProblemDescriptionBase
 
     bool IsContiguous() const { return checkContiguous(xDesc) && checkContiguous(yDesc); }
 
+    bool IsImprovementOverROCm() const
+    {
+        if(IsContiguous())
+        {
+            // Contiguous case
+            // No winning over ROCm, only ~7% of tested cases get > 20% improvement
+            return false;
+        }
+        else
+        {
+            // Non contiguous case
+            // We win over ROCm unless the only padding dimension is n
+            if(padding[8] != 0 && padding[6] == 0 && padding[4] == 0 && padding[2] == 0 &&
+               padding[0] == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+
 private:
     const TensorDescriptor& xDesc;
     const TensorDescriptor& yDesc;
+    const size_t* padding;
 };
 } // namespace pad_constant_bwd
 } // namespace miopen

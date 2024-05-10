@@ -45,6 +45,8 @@ bool PadConstantFwdContiguous::IsApplicable(
         return false;
     if(!problem.IsSameShape())
         return false;
+    if(!problem.IsImprovementOverROCm())
+        return false;
 
     return true;
 }
@@ -133,6 +135,8 @@ bool PadConstantBwd::IsApplicable(const ExecutionContext& /*context*/,
     if(!problem.IsSameType())
         return false;
     if(!problem.IsSameShape())
+        return false;
+    if(!problem.IsImprovementOverROCm())
         return false;
 
     return true;
