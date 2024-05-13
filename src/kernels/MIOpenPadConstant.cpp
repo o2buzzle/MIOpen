@@ -57,9 +57,6 @@ __device__ void padconstantfwd(const TI* __restrict__ x,
         flag *= o[i] < x_tv.size[i];
     }
 
-    // y[gid] = flag ? get5DValueAt<TO>(x, x_tv.stride, o[0], o[1], o[2], o[3], o[4]) :
-    // padding_value;
-
     TO val = flag ? get5DValueAt<TO>(x, x_tv.stride, o[0], o[1], o[2], o[3], o[4]) : padding_value;
     set5DValueAt<TO>(y, y_tv, gid, val);
 }
