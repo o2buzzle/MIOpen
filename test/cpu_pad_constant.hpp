@@ -35,29 +35,74 @@
 template <class T>
 void cpu_pad_constant_fwd(const T* input,
                           T* output,
-                          miopen::TensorDescriptor* input_dims,
-                          miopen::TensorDescriptor* output_dims,
+                          miopen::TensorDescriptor* input_desc,
+                          miopen::TensorDescriptor* output_desc,
                           const size_t padding[10],
                           float value)
 {
     size_t o[5];
 
-    for(size_t gid = 0; gid != output_dims->GetElementSize(); ++gid)
+    for(size_t gid = 0; gid != output_desc->GetElementSize(); ++gid)
     {
         bool flag = true;
 
-        getNCDHW(o, gid, output_dims->GetLengths().data());
+        getNCDHW(o, gid, output_desc->GetLengths().data());
 
         for(int i = 0; i < 5; i++)
         {
             o[i] = o[i] - padding[2 * i];
-            flag *= (o[i] < input_dims->GetLengths()[i]);
+            flag *= (o[i] < input_desc->GetLengths()[i]);
         }
 
         output[gid] =
             flag
-                ? get5DValueAt(input, input_dims->GetStrides().data(), o[0], o[1], o[2], o[3], o[4])
+                ? get5DValueAt(input, input_desc->GetStrides().data(), o[0], o[1], o[2], o[3], o[4])
                 : (T)value;
     }
 }
 #endif
+
+template <class T>
+void cpu_pad_consant_bwd(T* input_grad,
+                         T* backward_output,
+                         miopen::TensorDescriptor* backward_output_desc,
+                         miopen::TensorDescriptor* input_grad_desc,
+                         const size_t padding[10])
+{
+    // Setup the tensorView (for set5dValueAt)
+    tensor_view_5d_t o_tv;
+    for(int i = 0; i < 5; i++)
+    {
+        o_tv.size[i]   = backward_output_desc->GetLengths()[i];
+        o_tv.stride[i] = backward_output_desc->GetStrides()[i];
+    }
+
+    size_t o[5];
+
+    auto backward_output_dims    = backward_output_desc->GetLengths();
+    auto backward_output_strides = backward_output_desc->GetStrides();
+
+    auto input_grad_dims    = input_grad_desc->GetLengths();
+    auto input_grad_strides = input_grad_desc->GetStrides();
+
+    size_t backward_output_size = backward_output_desc->GetElementSize();
+
+    for(size_t gid = 0; gid < backward_output_size; ++gid)
+    {
+        bool flag = true;
+        getNCDHW(o, gid, backward_output_dims.data());
+
+        for(int i = 0; i < 5; i++)
+        {
+            o[i] = o[i] + padding[2 * i];
+            flag *= (o[i] < input_grad_dims[i]);
+        }
+
+        if(flag)
+        {
+            auto val = get5DValueAt<T>(
+                input_grad, input_grad_strides.data(), o[0], o[1], o[2], o[3], o[4]);
+            set5DValueAt(backward_output, o_tv, gid, val);
+        }
+    }
+}

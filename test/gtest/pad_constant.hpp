@@ -27,9 +27,9 @@
 #include "get_handle.hpp"
 #include "miopen/allocator.hpp"
 #include "random.hpp"
+#include "verify.hpp"
 #include "tensor_holder.hpp"
 #include "cpu_pad_constant.hpp"
-#include "verify.hpp"
 #include <cstdio>
 #include <gtest/gtest.h>
 #include <miopen/pad_constant.hpp>
@@ -117,6 +117,7 @@ protected:
     tensor<T> backward_output;
 
     tensor<T> ref_output;
+    tensor<T> ref_backward_output;
 
     miopen::Allocator::ManageDataPtr input_dev;
     miopen::Allocator::ManageDataPtr output_dev;
@@ -146,7 +147,7 @@ protected:
         std::vector<size_t> out_dims;
         for(size_t i = 0; i < 5; i++)
         {
-            out_dims.push_back(in_dims[i] + 2 * padding[2 * i]);
+            out_dims.push_back(in_dims[i] + padding[2 * i] + padding[2 * i + 1]);
         }
 
         output = tensor<T>{out_dims};
@@ -160,7 +161,12 @@ protected:
 
         ref_output = tensor<T>{out_dims};
         std::fill(ref_output.begin(), ref_output.end(), std::numeric_limits<T>::quiet_NaN());
-    };
+
+        ref_backward_output = tensor<T>{in_dims, strides};
+        std::fill(ref_backward_output.begin(),
+                  ref_backward_output.end(),
+                  std::numeric_limits<T>::quiet_NaN());
+    }
 
     void RunTest()
     {
@@ -175,6 +181,13 @@ protected:
                                 &output.desc,
                                 padding,
                                 padding_value);
+
+        cpu_pad_consant_bwd<T>(ref_backward_output.data.data(),
+                               backward_output.data.data(),
+                               &backward_output.desc,
+                               &output.desc,
+                               padding);
+
         miopenStatus_t status;
 
         status = miopen::PadConstantForward(handle,

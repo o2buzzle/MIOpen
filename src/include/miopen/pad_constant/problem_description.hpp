@@ -29,6 +29,7 @@
 #include "miopen/names.hpp"
 #include "miopen/problem_description_base.hpp"
 #include "miopen/tensor.hpp"
+#include <cstddef>
 #include <miopen/miopen.h>
 
 namespace miopen {
@@ -81,12 +82,29 @@ struct ProblemDescription : ProblemDescriptionBase
 
     bool IsImprovementOverROCm() const
     {
+        return true;
         if(IsContiguous())
             // No contiguous case is faster
             return false;
         else
-            // Appears to be faster if we don't pad the first two
-            return padding[0] == 0 && padding[2] == 0;
+            // Appears to be faster if we don't pad n
+            return padding[0] == 0 && padding[1] == 0;
+    }
+
+    bool IsPaddingValid() const
+    {
+        std::vector<size_t> input_and_padding = std::vector<size_t>(yDesc.GetLengths().size());
+
+        for(int i = 0; i < xDesc.GetLengths().size(); i++)
+        {
+            input_and_padding[i] = xDesc.GetLengths()[i] + padding[2 * i] + padding[2 * i + 1];
+            if(input_and_padding[i] != yDesc.GetLengths()[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 private:
@@ -145,6 +163,7 @@ struct ProblemDescription : ProblemDescriptionBase
 
     bool IsImprovementOverROCm() const
     {
+        return true;
         if(IsContiguous())
         {
             // Contiguous case
@@ -162,6 +181,22 @@ struct ProblemDescription : ProblemDescriptionBase
             }
             return true;
         }
+    }
+
+    bool IsPaddingValid() const
+    {
+        std::vector<size_t> input_and_padding = std::vector<size_t>(yDesc.GetLengths().size());
+
+        for(int i = 0; i < xDesc.GetLengths().size(); i++)
+        {
+            input_and_padding[i] = yDesc.GetLengths()[i] - padding[2 * i] - padding[2 * i + 1];
+            if(input_and_padding[i] != xDesc.GetLengths()[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 private:
