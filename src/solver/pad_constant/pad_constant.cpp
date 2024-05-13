@@ -45,8 +45,6 @@ bool PadConstantFwdContiguous::IsApplicable(
         return false;
     if(!problem.IsSameShape())
         return false;
-    if(!problem.IsPaddingValid())
-        return false;
     if(!problem.IsImprovementOverROCm())
         return false;
 
@@ -134,12 +132,6 @@ namespace pad_constant_bwd {
 bool PadConstantBwd::IsApplicable(const ExecutionContext& /*context*/,
                                   const miopen::pad_constant_bwd::ProblemDescription& problem) const
 {
-    if(!problem.IsSameType())
-        return false;
-    if(!problem.IsSameShape())
-        return false;
-    if(!problem.IsPaddingValid())
-        return false;
     if(!problem.IsImprovementOverROCm())
         return false;
 

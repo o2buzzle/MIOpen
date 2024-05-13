@@ -39,6 +39,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
         ss << "contiguous-";
     ss << "fwd-";
     ss << "dtype" << dtype;
+    ss << "xDesc" << xDesc.GetElementSize();
     ss << "yDesc" << yDesc.GetElementSize();
 
     return NetworkConfig{ss.str()};
@@ -54,6 +55,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
         ss << "contiguous-";
     ss << "bwd-";
     ss << "dtype" << dtype;
+    ss << "xDesc" << xDesc.GetElementSize();
     ss << "yDesc" << yDesc.GetElementSize();
 
     return NetworkConfig{ss.str()};

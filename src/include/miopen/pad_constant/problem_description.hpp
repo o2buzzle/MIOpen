@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "miopen/errors.hpp"
 #include "miopen/names.hpp"
 #include "miopen/problem_description_base.hpp"
 #include "miopen/tensor.hpp"
@@ -41,6 +42,13 @@ struct ProblemDescription : ProblemDescriptionBase
                        const size_t* padding_)
         : xDesc(xDesc_), yDesc(yDesc_), padding(padding_)
     {
+        // Consistency checks
+        if(!IsPaddingValid())
+            MIOPEN_THROW("Padding is not valid");
+        if(!IsSameShape())
+            MIOPEN_THROW("Tensors do not have the same shapes");
+        if(!IsSameType())
+            MIOPEN_THROW("Tensor values do not have the same type");
     }
 
     const TensorDescriptor& GetXDesc() const { return xDesc; }
@@ -102,7 +110,6 @@ struct ProblemDescription : ProblemDescriptionBase
                 return false;
             }
         }
-
         return true;
     }
 
@@ -121,6 +128,12 @@ struct ProblemDescription : ProblemDescriptionBase
                        const size_t* padding_)
         : xDesc(xDesc_), yDesc(yDesc_), padding(padding_)
     {
+        if(!IsPaddingValid())
+            MIOPEN_THROW("Padding is not valid");
+        if(!IsSameShape())
+            MIOPEN_THROW("Tensors do not have the same shapes");
+        if(!IsSameType())
+            MIOPEN_THROW("Tensor values do not have the same type");
     }
 
     const TensorDescriptor& GetXDesc() const { return xDesc; }
@@ -202,7 +215,6 @@ struct ProblemDescription : ProblemDescriptionBase
                 return false;
             }
         }
-
         return true;
     }
 
