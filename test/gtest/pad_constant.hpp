@@ -202,12 +202,10 @@ protected:
 
     void Verify()
     {
-        // printf("Forward pass verification\n");
         auto error = miopen::rms_range(ref_output, output);
         EXPECT_TRUE(miopen::range_distance(ref_output) == miopen::range_distance(output));
         EXPECT_TRUE(error == 0) << "Outputs do not match each other. Error:" << error;
 
-        // printf("Backward pass verification\n");
         error = miopen::rms_range(backward_output, input);
         EXPECT_TRUE(miopen::range_distance(backward_output) == miopen::range_distance(input));
         EXPECT_TRUE(error == 0) << "Outputs do not match each other. Error:" << error;
