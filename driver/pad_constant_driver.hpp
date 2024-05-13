@@ -322,15 +322,20 @@ std::vector<size_t> ConstantPadDriver<Tgpu, Tref>::GetPaddingsFromCmdLine()
     auto pad                   = inflags.GetValueStr("pad");
     std::vector<std::string> p = split(pad, ',');
 
-    assert(p.size() == 10);
+    if(p.size() % 2 != 0)
+        throw std::runtime_error("Padding must be of even length");
 
-    // Reversed to be consistent with how PyTorch pads (it pads last dimensions first)
+    // Processes padding input so that it is consistent with how PyTorch pads
+    // Reverses output (pad_right, pad_left, pad_bottom, pad_top, pad_front, pad_back, etc.)
     for(int i = 0; i < 10; ++i)
     {
-        paddings[9 - i] = std::stoi(p[i]);
+        if(i < p.size())
+            paddings[9 - i] = std::stoi(p[i]);
+        else
+            paddings[9 - i] = 0;
     }
 
-    // Reverse each pair of paddings
+    // Now reverse each pair of paddings
     for(int i = 0; i < 5; ++i)
     {
         std::swap(paddings[2 * i], paddings[2 * i + 1]);
