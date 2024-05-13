@@ -41,7 +41,7 @@ struct padding_5d_t
 };
 
 template <typename T>
-__device__ void inline getNCDHW(T* ncdhw, const T idx, const T size[5])
+__host__ __device__ void inline getNCDHW(T* ncdhw, const T idx, const T size[5])
 {
     ulong ncdh = (idx) / size[4];
     ncdhw[4]   = (idx) % size[4];
@@ -54,14 +54,15 @@ __device__ void inline getNCDHW(T* ncdhw, const T idx, const T size[5])
 }
 
 template <typename T, typename U>
-__device__ T inline get5DValueAt(const T* x, const uint64_t* x_strides, U n, U c, U d, U h, U w)
+__host__
+    __device__ T inline get5DValueAt(const T* x, const uint64_t* x_strides, U n, U c, U d, U h, U w)
 {
     return x[n * x_strides[0] + c * x_strides[1] + d * x_strides[2] + h * x_strides[3] +
              w * x_strides[4]];
 }
 
 template <typename T>
-__device__ void inline set5DValueAt(T* x, const tensor_view_5d_t& x_tv, size_t idx, T val)
+__host__ __device__ void inline set5DValueAt(T* x, const tensor_view_5d_t& x_tv, size_t idx, T val)
 {
     uint64_t o[5];
     o[4] = x_tv.stride[0] *
