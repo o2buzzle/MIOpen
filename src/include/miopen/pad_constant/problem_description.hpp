@@ -82,12 +82,11 @@ struct ProblemDescription : ProblemDescriptionBase
 
     bool IsImprovementOverROCm() const
     {
-        return true;
         if(IsContiguous())
             // No contiguous case is faster
             return false;
         else
-            // Appears to be faster if we don't pad n
+            // Appears to be faster if n isn't padded
             return padding[0] == 0 && padding[1] == 0;
     }
 
@@ -163,7 +162,6 @@ struct ProblemDescription : ProblemDescriptionBase
 
     bool IsImprovementOverROCm() const
     {
-        return true;
         if(IsContiguous())
         {
             // Contiguous case
@@ -173,11 +171,20 @@ struct ProblemDescription : ProblemDescriptionBase
         else
         {
             // Non contiguous case
-            // We win over ROCm unless the only padding dimension is n
-            if(padding[8] != 0 && padding[6] == 0 && padding[4] == 0 && padding[2] == 0 &&
-               padding[0] == 0)
+            // We win over ROCm unless the only padded dimension is n
+            bool all_zero = true;
+            for(int i = 0; i < 10; i++)
             {
-                return false;
+                if(i == 9 || i == 8)
+                {
+                    if(all_zero && padding[i] != 0)
+                        return false;
+                }
+                else
+                {
+                    if(padding[i] != 0)
+                        all_zero = false;
+                }
             }
             return true;
         }
