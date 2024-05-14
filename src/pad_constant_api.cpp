@@ -55,8 +55,8 @@ extern "C" miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
 }
 
 extern "C" miopenStatus_t miopenPadConstantBwd(miopenHandle_t handle,
-                                               miopenTensorDescriptor_t xDesc,
-                                               miopenTensorDescriptor_t yDesc,
+                                               miopenTensorDescriptor_t dxDesc,
+                                               miopenTensorDescriptor_t dyDesc,
                                                void* dx,
                                                const void* dy,
                                                const size_t* padding,
@@ -66,8 +66,8 @@ extern "C" miopenStatus_t miopenPadConstantBwd(miopenHandle_t handle,
 
     return miopen::try_([&] {
         miopen::PadConstantBackward(miopen::deref(handle),
-                                    miopen::deref(xDesc),
-                                    miopen::deref(yDesc),
+                                    miopen::deref(dxDesc),
+                                    miopen::deref(dyDesc),
                                     DataCast(dx),
                                     DataCast(dy),
                                     padding,

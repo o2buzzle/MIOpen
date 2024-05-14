@@ -6627,8 +6627,8 @@ MIOPEN_EXPORT miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
  */
 
 MIOPEN_EXPORT miopenStatus_t miopenPadConstantBwd(miopenHandle_t handle,
-                                                  miopenTensorDescriptor_t xDesc,
-                                                  miopenTensorDescriptor_t yDesc,
+                                                  miopenTensorDescriptor_t dxDesc,
+                                                  miopenTensorDescriptor_t dyDesc,
                                                   void* dx,
                                                   const void* dy,
                                                   const size_t* padding,
