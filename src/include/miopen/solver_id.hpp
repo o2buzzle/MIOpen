@@ -57,7 +57,7 @@ enum class Primitive
     Cat,
     Mha,
     Softmax,
-    PadConstantFwdContiguous,
+    PadConstantFwd,
     PadConstantBwd
 };
 

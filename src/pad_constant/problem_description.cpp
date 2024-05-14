@@ -28,7 +28,7 @@
 #include "miopen/names.hpp"
 
 namespace miopen {
-namespace pad_constant_fwd_contiguous {
+namespace pad_constant_fwd {
 NetworkConfig ProblemDescription::MakeNetworkConfig() const
 {
     // Should be the only thing we need? (After all paddings are all the same operation kind)
@@ -44,7 +44,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
 
     return NetworkConfig{ss.str()};
 }
-} // namespace pad_constant_fwd_contiguous
+} // namespace pad_constant_fwd
 namespace pad_constant_bwd {
 NetworkConfig ProblemDescription::MakeNetworkConfig() const
 {

@@ -46,10 +46,10 @@ miopenStatus_t PadConstantForward(Handle& handle,
                                   float value)
 {
     auto ctx           = ExecutionContext{&handle};
-    const auto problem = pad_constant_fwd_contiguous::ProblemDescription{xDesc, yDesc, padding};
+    const auto problem = pad_constant_fwd::ProblemDescription{xDesc, yDesc, padding};
 
     const auto invoke_params = [&]() {
-        auto tmp          = pad_constant_fwd_contiguous::InvokeParams{};
+        auto tmp          = pad_constant_fwd::InvokeParams{};
         tmp.xDesc         = &xDesc;
         tmp.yDesc         = &yDesc;
         tmp.x             = x;
@@ -59,9 +59,8 @@ miopenStatus_t PadConstantForward(Handle& handle,
         return tmp;
     }();
 
-    const auto algo = AlgorithmName{"PadConstantFwdContiguous"};
-    const auto solvers =
-        solver::SolverContainer<solver::pad_constant_fwd_contiguous::PadConstantFwdContiguous>{};
+    const auto algo    = AlgorithmName{"PadConstantFwd"};
+    const auto solvers = solver::SolverContainer<solver::pad_constant_fwd::PadConstantFwd>{};
 
     solvers.ExecutePrimitive(handle, problem, algo, invoke_params);
 

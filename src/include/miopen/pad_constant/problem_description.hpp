@@ -34,7 +34,7 @@
 #include <miopen/miopen.h>
 
 namespace miopen {
-namespace pad_constant_fwd_contiguous {
+namespace pad_constant_fwd {
 struct ProblemDescription : ProblemDescriptionBase
 {
     ProblemDescription(const TensorDescriptor& xDesc_,
@@ -94,7 +94,7 @@ struct ProblemDescription : ProblemDescriptionBase
             // No contiguous case is faster
             return false;
         else
-            // Appears to be faster if n isn't padded
+            // Slower if n is padded (at all)
             return padding[0] == 0 && padding[1] == 0;
     }
 
@@ -118,7 +118,7 @@ private:
     const TensorDescriptor& yDesc;
     const size_t* padding;
 };
-} // namespace pad_constant_fwd_contiguous
+} // namespace pad_constant_fwd
 
 namespace pad_constant_bwd {
 struct ProblemDescription : ProblemDescriptionBase

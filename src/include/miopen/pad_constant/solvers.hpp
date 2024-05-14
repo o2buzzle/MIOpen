@@ -31,26 +31,22 @@
 
 namespace miopen {
 namespace solver {
-namespace pad_constant_fwd_contiguous {
-using PadConstantFwdContiguousSolver =
-    NonTunableSolverBase<ExecutionContext, miopen::pad_constant_fwd_contiguous::ProblemDescription>;
+namespace pad_constant_fwd {
+using PadConstantFwdSolver =
+    NonTunableSolverBase<ExecutionContext, miopen::pad_constant_fwd::ProblemDescription>;
 
-struct PadConstantFwdContiguous final : PadConstantFwdContiguousSolver
+struct PadConstantFwd final : PadConstantFwdSolver
 {
-    const std::string& SolverDbId() const override
-    {
-        return GetSolverDbId<PadConstantFwdContiguous>();
-    }
+    const std::string& SolverDbId() const override { return GetSolverDbId<PadConstantFwd>(); }
 
-    bool IsApplicable(
-        const ExecutionContext& context,
-        const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const override;
+    bool IsApplicable(const ExecutionContext& context,
+                      const miopen::pad_constant_fwd::ProblemDescription& problem) const override;
 
-    ConvSolution GetSolution(
-        const ExecutionContext& context,
-        const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const override;
+    ConvSolution
+    GetSolution(const ExecutionContext& context,
+                const miopen::pad_constant_fwd::ProblemDescription& problem) const override;
 };
-} // namespace pad_constant_fwd_contiguous
+} // namespace pad_constant_fwd
 
 namespace pad_constant_bwd {
 using PadConstantBwdSolver =

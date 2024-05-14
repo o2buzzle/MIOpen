@@ -117,7 +117,6 @@ protected:
     tensor<T> backward_output;
 
     tensor<T> ref_output;
-    tensor<T> ref_backward_output;
 
     miopen::Allocator::ManageDataPtr input_dev;
     miopen::Allocator::ManageDataPtr output_dev;
@@ -138,10 +137,11 @@ protected:
 
         input_dev = handle.Write(input.data);
 
-        // Generate random padding
-        for(size_t& i : padding)
+        memset(padding, 0, sizeof(padding));
+        // Generate random padding for the first 3 dims
+        for(size_t i = 2; i < 9; i++)
         {
-            i = prng::gen_descreet_unsigned<size_t>(1, 5);
+            padding[i] = prng::gen_descreet_unsigned<size_t>(1, 5);
         }
 
         std::vector<size_t> out_dims;
@@ -161,11 +161,6 @@ protected:
 
         ref_output = tensor<T>{out_dims};
         std::fill(ref_output.begin(), ref_output.end(), std::numeric_limits<T>::quiet_NaN());
-
-        ref_backward_output = tensor<T>{in_dims, strides};
-        std::fill(ref_backward_output.begin(),
-                  ref_backward_output.end(),
-                  std::numeric_limits<T>::quiet_NaN());
     }
 
     void RunTest()
@@ -181,13 +176,6 @@ protected:
                                 &output.desc,
                                 padding,
                                 padding_value);
-
-        cpu_pad_consant_bwd<T>(ref_backward_output.data.data(),
-                               backward_output.data.data(),
-                               &backward_output.desc,
-                               &output.desc,
-                               padding);
-
         miopenStatus_t status;
 
         status = miopen::PadConstantForward(handle,
@@ -200,6 +188,8 @@ protected:
         EXPECT_EQ(status, miopenStatusSuccess);
         output.data = handle.Read<T>(output_dev, output.data.size());
 
+        // We're feeding output as backward input gradient
+        // On PadConstant this *should* cause backward output to be equal to input
         status = miopen::PadConstantBackward(handle,
                                              backward_output.desc,
                                              output.desc,

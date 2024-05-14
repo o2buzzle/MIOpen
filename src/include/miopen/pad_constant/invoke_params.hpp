@@ -30,7 +30,7 @@
 #include <miopen/miopen.h>
 
 namespace miopen {
-namespace pad_constant_fwd_contiguous {
+namespace pad_constant_fwd {
 struct InvokeParams : public miopen::InvokeParams
 {
     InvokeParams() = default;
@@ -48,7 +48,7 @@ struct InvokeParams : public miopen::InvokeParams
     std::size_t GetWorkspaceSize() const { return 0; }
     Data_t GetWorkspace() const { return nullptr; }
 };
-} // namespace pad_constant_fwd_contiguous
+} // namespace pad_constant_fwd
 
 namespace pad_constant_bwd {
 struct InvokeParams : public miopen::InvokeParams

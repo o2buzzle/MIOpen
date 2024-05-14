@@ -36,10 +36,9 @@
 
 namespace miopen {
 namespace solver {
-namespace pad_constant_fwd_contiguous {
-bool PadConstantFwdContiguous::IsApplicable(
-    const ExecutionContext& /*context*/,
-    const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const
+namespace pad_constant_fwd {
+bool PadConstantFwd::IsApplicable(const ExecutionContext& /*context*/,
+                                  const miopen::pad_constant_fwd::ProblemDescription& problem) const
 {
     if(!problem.IsSameType())
         return false;
@@ -51,9 +50,9 @@ bool PadConstantFwdContiguous::IsApplicable(
     return true;
 }
 
-ConvSolution PadConstantFwdContiguous::GetSolution(
-    const ExecutionContext& /*context*/,
-    const miopen::pad_constant_fwd_contiguous::ProblemDescription& problem) const
+ConvSolution
+PadConstantFwd::GetSolution(const ExecutionContext& /*context*/,
+                            const miopen::pad_constant_fwd::ProblemDescription& problem) const
 {
     auto result = ConvSolution{miopenStatusSuccess};
 
@@ -101,8 +100,7 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
     result.invoker_factory = [](const std::vector<Kernel>& kernels) {
         return [=](const Handle& handle_, const AnyInvokeParams& invoke_params) {
             decltype(auto) kernel = handle_.Run(kernels.front());
-            decltype(auto) params =
-                invoke_params.CastTo<miopen::pad_constant_fwd_contiguous::InvokeParams>();
+            decltype(auto) params = invoke_params.CastTo<miopen::pad_constant_fwd::InvokeParams>();
 
             tensor_view_5d_t input_tv  = get_inner_expanded_tv(*params.xDesc);
             tensor_view_5d_t output_tv = get_inner_expanded_tv(*params.yDesc);
@@ -125,7 +123,7 @@ ConvSolution PadConstantFwdContiguous::GetSolution(
 
     return result;
 }
-} // namespace pad_constant_fwd_contiguous
+} // namespace pad_constant_fwd
 
 namespace pad_constant_bwd {
 
