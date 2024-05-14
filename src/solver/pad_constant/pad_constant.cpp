@@ -44,6 +44,8 @@ bool PadConstantFwd::IsApplicable(const ExecutionContext& /*context*/,
         return false;
     if(!problem.IsSameShape())
         return false;
+    if(!problem.IsPaddingValid())
+        return false;
     if(!problem.IsImprovementOverROCm())
         return false;
 
@@ -70,13 +72,9 @@ PadConstantFwd::GetSolution(const ExecutionContext& /*context*/,
 
     kernel.kernel_file = "MIOpenPadConstant.cpp";
     if(problem.IsContiguous())
-    {
         kernel.kernel_name = "PadConstantFwdContiguous";
-    }
     else
-    {
         kernel.kernel_name = "PadConstantFwd";
-    }
 
     const auto build_params = KernelBuildParameters{
         {"INPUT_TYPE", input_dtype == "bfloat16" ? "ushort" : input_dtype},
@@ -106,7 +104,8 @@ PadConstantFwd::GetSolution(const ExecutionContext& /*context*/,
             tensor_view_5d_t output_tv = get_inner_expanded_tv(*params.yDesc);
 
             padding_5d_t padding;
-            for(auto i = 0; i < 10; i++)
+            memset(padding.val, 0, sizeof(padding.val));
+            for(auto i = 0; i < params.padding_size; i++)
                 padding.val[i] = params.padding[i];
 
             size_t output_size = params.yDesc->GetElementSize();
@@ -130,6 +129,12 @@ namespace pad_constant_bwd {
 bool PadConstantBwd::IsApplicable(const ExecutionContext& /*context*/,
                                   const miopen::pad_constant_bwd::ProblemDescription& problem) const
 {
+    if(!problem.IsSameType())
+        return false;
+    if(!problem.IsSameShape())
+        return false;
+    if(!problem.IsPaddingValid())
+        return false;
     if(!problem.IsImprovementOverROCm())
         return false;
 
@@ -156,13 +161,9 @@ PadConstantBwd::GetSolution(const ExecutionContext& /*context*/,
 
     kernel.kernel_file = "MIOpenPadConstant.cpp";
     if(problem.IsContiguous())
-    {
         kernel.kernel_name = "PadConstantBwdContiguous";
-    }
     else
-    {
         kernel.kernel_name = "PadConstantBwd";
-    }
 
     const auto build_params = KernelBuildParameters{
         {"INPUT_TYPE", input_dtype == "bfloat16" ? "ushort" : input_dtype},

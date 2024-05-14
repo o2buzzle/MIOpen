@@ -24,6 +24,7 @@
  *
  *******************************************************************************/
 
+#include "miopen/common.hpp"
 #include <miopen/errors.hpp>
 #include <miopen/handle.hpp>
 #include <miopen/logger.hpp>
@@ -36,9 +37,10 @@ extern "C" miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
                                                const void* x,
                                                void* y,
                                                const size_t* padding,
+                                               const int padding_size,
                                                float value)
 {
-    MIOPEN_LOG_FUNCTION(handle, xDesc, x, padding, value, y);
+    MIOPEN_LOG_FUNCTION(handle, xDesc, x, y, padding, padding_size, value);
 
     return miopen::try_([&] {
         miopen::PadConstantForward(miopen::deref(handle),
@@ -47,6 +49,7 @@ extern "C" miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
                                    DataCast(x),
                                    DataCast(y),
                                    padding,
+                                   padding_size,
                                    value);
     });
 }
@@ -54,18 +57,20 @@ extern "C" miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
 extern "C" miopenStatus_t miopenPadConstantBwd(miopenHandle_t handle,
                                                miopenTensorDescriptor_t xDesc,
                                                miopenTensorDescriptor_t yDesc,
-                                               void* x,
-                                               const void* y,
-                                               const size_t* padding)
+                                               void* dx,
+                                               const void* dy,
+                                               const size_t* padding,
+                                               const int padding_size)
 {
-    MIOPEN_LOG_FUNCTION(handle, xDesc, x, y, padding);
+    MIOPEN_LOG_FUNCTION(handle, xDesc, dx, dy, padding, padding_size);
 
     return miopen::try_([&] {
         miopen::PadConstantBackward(miopen::deref(handle),
                                     miopen::deref(xDesc),
                                     miopen::deref(yDesc),
-                                    DataCast(x),
-                                    DataCast(y),
-                                    padding);
+                                    DataCast(dx),
+                                    DataCast(dy),
+                                    padding,
+                                    padding_size);
     });
 }

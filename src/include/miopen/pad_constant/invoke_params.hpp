@@ -27,6 +27,7 @@
 #include "miopen/common.hpp"
 #include "miopen/invoke_params.hpp"
 #include "miopen/tensor.hpp"
+#include <cstddef>
 #include <miopen/miopen.h>
 
 namespace miopen {
@@ -42,6 +43,7 @@ struct InvokeParams : public miopen::InvokeParams
     Data_t y      = nullptr;
 
     const size_t* padding = nullptr;
+    int padding_size      = 0;
     float padding_value   = 0.0f;
 
     // We should be able to go directly from x -> padded x (aka. y), so no need for extra workspace
@@ -62,6 +64,7 @@ struct InvokeParams : public miopen::InvokeParams
     ConstData_t y = nullptr;
 
     const size_t* padding = nullptr;
+    int padding_size      = 0;
 
     std::size_t GetWorkspaceSize() const { return 0; }
     Data_t GetWorkspace() const { return nullptr; }

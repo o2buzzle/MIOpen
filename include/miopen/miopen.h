@@ -6592,9 +6592,10 @@ MIOPEN_EXPORT miopenStatus_t miopenBackendInitialize(miopenBackendDescriptor_t d
  *  @param [in]  handle An instance of miopenHandle_t
  *  @param [in]  xDesc Descriptor of the input tensor
  *  @param [in]  x Input
- *  @param [in]  padding The size of the padding
- *  @param [in]  value The padding value
  *  @param [out] y Padded output
+ *  @param [in]  padding Padding dimension array
+ *  @param [in]  padding_size The size of the padding
+ *  @param [in]  value The padding value
  *
  *  @retval miopenStatusSuccess        The memory was destroyed successfully
  *  @retval miopenStatusBadParm        An invalid or inconsistent argument value is encountered.
@@ -6606,17 +6607,20 @@ MIOPEN_EXPORT miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
                                                   const void* x,
                                                   void* y,
                                                   const size_t* padding,
+                                                  const int padding_size,
                                                   float value);
 
-/* @addtogroup pad
+/*! Pad Constant Backward API
+ * @addtogroup pad
  * @brief Pads the input tensor boundaries with a constant value (backward pass)
  *
  *  @param [in]  handle An instance of miopenHandle_t
- *  @param [in]  xDesc Descriptor of the input tensor
- *  @param [in]  yDesc Descriptor of the output tensor
- *  @param [out] Output tensor
- *  @param [in]  Input tensor
- *  @param [in]  padding The size of the padding
+ *  @param [in]  xDesc Descriptor of the output tensor
+ *  @param [in]  yDesc Descriptor of the input gradient tensor
+ *  @param [out] dx Output tensor
+ *  @param [in]  dy Input gradiant tensor
+ *  @param [in]  padding Padding dimension array
+ *  @param [in]  padding_size The size of the padding array
  *
  *  @retval miopenStatusSuccess        The memory was destroyed successfully
  *  @retval miopenStatusBadParm        An invalid or inconsistent argument value is encountered.
@@ -6625,9 +6629,10 @@ MIOPEN_EXPORT miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
 MIOPEN_EXPORT miopenStatus_t miopenPadConstantBwd(miopenHandle_t handle,
                                                   miopenTensorDescriptor_t xDesc,
                                                   miopenTensorDescriptor_t yDesc,
-                                                  void* x,
-                                                  const void* y,
-                                                  const size_t* padding);
+                                                  void* dx,
+                                                  const void* dy,
+                                                  const size_t* padding,
+                                                  const int padding_size);
 
 /** @} */
 // CLOSEOUT pad DOXYGEN GROUP

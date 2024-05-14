@@ -39,8 +39,9 @@ struct ProblemDescription : ProblemDescriptionBase
 {
     ProblemDescription(const TensorDescriptor& xDesc_,
                        const TensorDescriptor& yDesc_,
-                       const size_t* padding_)
-        : xDesc(xDesc_), yDesc(yDesc_), padding(padding_)
+                       const size_t* padding_,
+                       const int padding_size_ = 0)
+        : xDesc(xDesc_), yDesc(yDesc_), padding(padding_), padding_size(padding_size_)
     {
         // Consistency checks
         if(!IsPaddingValid())
@@ -100,6 +101,9 @@ struct ProblemDescription : ProblemDescriptionBase
 
     bool IsPaddingValid() const
     {
+        if(padding_size % 2 != 0)
+            return false;
+
         std::vector<size_t> input_and_padding = std::vector<size_t>(yDesc.GetLengths().size());
 
         for(int i = 0; i < xDesc.GetLengths().size(); i++)
@@ -117,6 +121,7 @@ private:
     const TensorDescriptor& xDesc;
     const TensorDescriptor& yDesc;
     const size_t* padding;
+    const int padding_size;
 };
 } // namespace pad_constant_fwd
 
@@ -125,8 +130,9 @@ struct ProblemDescription : ProblemDescriptionBase
 {
     ProblemDescription(const TensorDescriptor& xDesc_,
                        const TensorDescriptor& yDesc_,
-                       const size_t* padding_)
-        : xDesc(xDesc_), yDesc(yDesc_), padding(padding_)
+                       const size_t* padding_,
+                       const int padding_size_ = 0)
+        : xDesc(xDesc_), yDesc(yDesc_), padding(padding_), padding_size(padding_size_)
     {
         if(!IsPaddingValid())
             MIOPEN_THROW("Padding is not valid");
@@ -205,6 +211,9 @@ struct ProblemDescription : ProblemDescriptionBase
 
     bool IsPaddingValid() const
     {
+        if(padding_size % 2 != 0)
+            return false;
+
         std::vector<size_t> input_and_padding = std::vector<size_t>(yDesc.GetLengths().size());
 
         for(int i = 0; i < xDesc.GetLengths().size(); i++)
@@ -222,6 +231,7 @@ private:
     const TensorDescriptor& xDesc;
     const TensorDescriptor& yDesc;
     const size_t* padding;
+    const int padding_size;
 };
 } // namespace pad_constant_bwd
 } // namespace miopen

@@ -25,6 +25,7 @@
  *******************************************************************************/
 
 #include "miopen/common.hpp"
+#include <cstddef>
 #include <miopen/datatype.hpp>
 #include <miopen/find_solution.hpp>
 #include <miopen/float_equal.hpp>
@@ -43,10 +44,11 @@ miopenStatus_t PadConstantForward(Handle& handle,
                                   ConstData_t x,
                                   Data_t y,
                                   const size_t* padding,
+                                  const int padding_size,
                                   float value)
 {
     auto ctx           = ExecutionContext{&handle};
-    const auto problem = pad_constant_fwd::ProblemDescription{xDesc, yDesc, padding};
+    const auto problem = pad_constant_fwd::ProblemDescription{xDesc, yDesc, padding, padding_size};
 
     const auto invoke_params = [&]() {
         auto tmp          = pad_constant_fwd::InvokeParams{};
@@ -55,6 +57,7 @@ miopenStatus_t PadConstantForward(Handle& handle,
         tmp.x             = x;
         tmp.y             = y;
         tmp.padding       = padding;
+        tmp.padding_size  = padding_size;
         tmp.padding_value = value;
         return tmp;
     }();
@@ -72,18 +75,20 @@ miopenStatus_t PadConstantBackward(Handle& handle,
                                    const TensorDescriptor& yDesc,
                                    Data_t dx,
                                    ConstData_t dy,
-                                   const size_t* padding)
+                                   const size_t* padding,
+                                   const int padding_size)
 {
     auto ctx           = ExecutionContext{&handle};
-    const auto problem = pad_constant_bwd::ProblemDescription{xDesc, yDesc, padding};
+    const auto problem = pad_constant_bwd::ProblemDescription{xDesc, yDesc, padding, padding_size};
 
     const auto invoke_params = [&]() {
-        auto tmp    = pad_constant_bwd::InvokeParams{};
-        tmp.xDesc   = &xDesc;
-        tmp.yDesc   = &yDesc;
-        tmp.x       = dx;
-        tmp.y       = dy;
-        tmp.padding = padding;
+        auto tmp         = pad_constant_bwd::InvokeParams{};
+        tmp.xDesc        = &xDesc;
+        tmp.yDesc        = &yDesc;
+        tmp.x            = dx;
+        tmp.y            = dy;
+        tmp.padding      = padding;
+        tmp.padding_size = padding_size;
         return tmp;
     }();
 

@@ -184,6 +184,7 @@ protected:
                                             input_dev.get(),
                                             output_dev.get(),
                                             padding,
+                                            10,
                                             padding_value);
         EXPECT_EQ(status, miopenStatusSuccess);
         output.data = handle.Read<T>(output_dev, output.data.size());
@@ -195,7 +196,8 @@ protected:
                                              output.desc,
                                              backward_output_dev.get(),
                                              output_dev.get(),
-                                             padding);
+                                             padding,
+                                             10);
         EXPECT_EQ(status, miopenStatusSuccess);
 
         backward_output.data = handle.Read<T>(backward_output_dev, backward_output.data.size());

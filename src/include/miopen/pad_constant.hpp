@@ -39,6 +39,7 @@ miopenStatus_t PadConstantForward(Handle& handle,
                                   ConstData_t x,
                                   Data_t y,
                                   const size_t* padding,
+                                  const int padding_size,
                                   float value);
 
 miopenStatus_t PadConstantBackward(Handle& handle,
@@ -46,7 +47,8 @@ miopenStatus_t PadConstantBackward(Handle& handle,
                                    const TensorDescriptor& yDesc,
                                    Data_t dx,
                                    ConstData_t dy,
-                                   const size_t* padding);
+                                   const size_t* padding,
+                                   const int padding_size);
 
 } // namespace miopen
 #endif
