@@ -40,7 +40,7 @@ extern "C" miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
                                                const int padding_size,
                                                float value)
 {
-    MIOPEN_LOG_FUNCTION(handle, xDesc, x, y, padding, padding_size, value);
+    MIOPEN_LOG_FUNCTION(handle, xDesc, yDesc, x, y, padding, padding_size, value);
 
     return miopen::try_([&] {
         miopen::PadConstantForward(miopen::deref(handle),
@@ -62,7 +62,7 @@ extern "C" miopenStatus_t miopenPadConstantBwd(miopenHandle_t handle,
                                                const size_t* padding,
                                                const int padding_size)
 {
-    MIOPEN_LOG_FUNCTION(handle, xDesc, dx, dy, padding, padding_size);
+    MIOPEN_LOG_FUNCTION(handle, dxDesc, dyDesc, dx, dy, padding, padding_size);
 
     return miopen::try_([&] {
         miopen::PadConstantBackward(miopen::deref(handle),

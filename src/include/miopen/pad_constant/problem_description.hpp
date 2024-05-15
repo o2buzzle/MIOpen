@@ -73,21 +73,7 @@ struct ProblemDescription : ProblemDescriptionBase
         return false;
     }
 
-    bool checkContiguous(const TensorDescriptor& x) const
-    {
-        size_t s = 1;
-        for(int i = x.GetSize() - 1; i >= 0; --i)
-        {
-            if(s != x.GetStrides()[i])
-            {
-                return false;
-            }
-            s *= x.GetLengths()[i];
-        }
-        return true;
-    }
-
-    bool IsContiguous() const { return checkContiguous(xDesc) && checkContiguous(yDesc); }
+    bool IsContiguous() const { return xDesc.IsContiguous() && yDesc.IsContiguous(); }
 
     bool IsImprovementOverROCm() const
     {
@@ -163,21 +149,7 @@ struct ProblemDescription : ProblemDescriptionBase
         return false;
     }
 
-    bool checkContiguous(const TensorDescriptor& x) const
-    {
-        size_t s = 1;
-        for(int i = x.GetSize() - 1; i >= 0; --i)
-        {
-            if(s != x.GetStrides()[i])
-            {
-                return false;
-            }
-            s *= x.GetLengths()[i];
-        }
-        return true;
-    }
-
-    bool IsContiguous() const { return checkContiguous(xDesc) && checkContiguous(yDesc); }
+    bool IsContiguous() const { return xDesc.IsContiguous() && yDesc.IsContiguous(); }
 
     bool IsImprovementOverROCm() const
     {
