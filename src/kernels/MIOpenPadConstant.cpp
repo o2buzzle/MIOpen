@@ -89,9 +89,9 @@ __device__ void padconstantfwdcontiguous(const TI* __restrict__ x,
 }
 
 template <typename TI, typename TO>
-__device__ void padconstantbwd(TI* __restrict__ x_grad,
+__device__ void padconstantbwd(TI* __restrict__ dx,
                                const TO* __restrict__ y_grad,
-                               const tensor_view_5d_t x_grad_tv,
+                               const tensor_view_5d_t dx_tv,
                                const tensor_view_5d_t y_grad_tv,
                                const padding_5d_t padding,
                                const size_t input_size)
@@ -102,7 +102,7 @@ __device__ void padconstantbwd(TI* __restrict__ x_grad,
         return;
 
     uint64_t o[5];
-    getNCDHW(o, gid, x_grad_tv.size);
+    getNCDHW(o, gid, dx_tv.size);
     bool flag = true;
 
     for(int i = 0; i < 5; ++i)
@@ -114,14 +114,14 @@ __device__ void padconstantbwd(TI* __restrict__ x_grad,
     if(flag)
     {
         TI val = get5DValueAt<TI>(y_grad, y_grad_tv.stride, o[0], o[1], o[2], o[3], o[4]);
-        set5DValueAt<TI>(x_grad, x_grad_tv, gid, val);
+        set5DValueAt<TI>(dx, dx_tv, gid, val);
     }
 }
 
 template <typename TI, typename TO>
-__device__ void padconstantbwdcontiguous(TI* __restrict__ x_grad,
+__device__ void padconstantbwdcontiguous(TI* __restrict__ dx,
                                          const TO* __restrict__ y_grad,
-                                         const tensor_view_5d_t x_grad_tv,
+                                         const tensor_view_5d_t dx_tv,
                                          const tensor_view_5d_t y_grad_tv,
                                          const padding_5d_t padding,
                                          const size_t input_size)
@@ -132,7 +132,7 @@ __device__ void padconstantbwdcontiguous(TI* __restrict__ x_grad,
         return;
 
     uint64_t o[5];
-    getNCDHW(o, gid, x_grad_tv.size);
+    getNCDHW(o, gid, dx_tv.size);
     bool flag = true;
 
     for(int i = 0; i < 5; ++i)
@@ -142,7 +142,7 @@ __device__ void padconstantbwdcontiguous(TI* __restrict__ x_grad,
     }
 
     if(flag)
-        x_grad[gid] = get5DValueAt<TI>(y_grad, y_grad_tv.stride, o[0], o[1], o[2], o[3], o[4]);
+        dx[gid] = get5DValueAt<TI>(y_grad, y_grad_tv.stride, o[0], o[1], o[2], o[3], o[4]);
 }
 
 extern "C" __global__ void PadConstantFwd(const INPUT_TYPE* __restrict__ x,
@@ -168,24 +168,23 @@ extern "C" __global__ void PadConstantFwdContiguous(const INPUT_TYPE* __restrict
         x, y, x_tv, y_tv, padding, output_size, value);
 }
 
-extern "C" __global__ void PadConstantBwd(OUTPUT_TYPE* __restrict__ x_grad,
+extern "C" __global__ void PadConstantBwd(OUTPUT_TYPE* __restrict__ dx,
                                           const INPUT_TYPE* __restrict__ y_grad,
-                                          const tensor_view_5d_t x_grad_tv,
+                                          const tensor_view_5d_t dx_tv,
                                           const tensor_view_5d_t y_grad_tv,
                                           const padding_5d_t padding,
                                           const size_t input_size)
 {
-    padconstantbwd<OUTPUT_TYPE, INPUT_TYPE>(
-        x_grad, y_grad, x_grad_tv, y_grad_tv, padding, input_size);
+    padconstantbwd<OUTPUT_TYPE, INPUT_TYPE>(dx, y_grad, dx_tv, y_grad_tv, padding, input_size);
 }
 
-extern "C" __global__ void PadConstantBwdContiguous(OUTPUT_TYPE* __restrict__ x_grad,
+extern "C" __global__ void PadConstantBwdContiguous(OUTPUT_TYPE* __restrict__ dx,
                                                     const INPUT_TYPE* __restrict__ y_grad,
-                                                    const tensor_view_5d_t x_grad_tv,
+                                                    const tensor_view_5d_t dx_tv,
                                                     const tensor_view_5d_t y_grad_tv,
                                                     const padding_5d_t padding,
                                                     const size_t input_size)
 {
     padconstantbwdcontiguous<OUTPUT_TYPE, INPUT_TYPE>(
-        x_grad, y_grad, x_grad_tv, y_grad_tv, padding, input_size);
+        dx, y_grad, dx_tv, y_grad_tv, padding, input_size);
 }
