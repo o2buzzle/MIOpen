@@ -114,11 +114,11 @@ private:
 namespace pad_constant_bwd {
 struct ProblemDescription : ProblemDescriptionBase
 {
-    ProblemDescription(const TensorDescriptor& xDesc_,
-                       const TensorDescriptor& yDesc_,
+    ProblemDescription(const TensorDescriptor& dxDesc_,
+                       const TensorDescriptor& dyDesc_,
                        const size_t* padding_,
                        const int padding_size_ = 0)
-        : xDesc(xDesc_), yDesc(yDesc_), padding(padding_), padding_size(padding_size_)
+        : dxDesc(dxDesc_), dyDesc(dyDesc_), padding(padding_), padding_size(padding_size_)
     {
         if(!IsPaddingValid())
             MIOPEN_THROW("Padding is not valid");
@@ -128,28 +128,28 @@ struct ProblemDescription : ProblemDescriptionBase
             MIOPEN_THROW("Tensor values do not have the same type");
     }
 
-    const TensorDescriptor& GetXDesc() const { return xDesc; }
-    const TensorDescriptor& GetYDesc() const { return yDesc; }
+    const TensorDescriptor& GetXDesc() const { return dxDesc; }
+    const TensorDescriptor& GetYDesc() const { return dyDesc; }
 
     NetworkConfig MakeNetworkConfig() const override;
 
     bool IsSameType() const
     {
-        if(xDesc.GetType() == yDesc.GetType())
+        if(dxDesc.GetType() == dyDesc.GetType())
             return true;
         return false;
     }
 
     bool IsSameShape() const
     {
-        auto xSize = xDesc.GetSize();
-        auto ySize = yDesc.GetSize();
+        auto xSize = dxDesc.GetSize();
+        auto ySize = dyDesc.GetSize();
         if(xSize == ySize)
             return true;
         return false;
     }
 
-    bool IsContiguous() const { return xDesc.IsContiguous() && yDesc.IsContiguous(); }
+    bool IsContiguous() const { return dxDesc.IsContiguous() && dyDesc.IsContiguous(); }
 
     bool IsImprovementOverROCm() const
     {
@@ -186,12 +186,12 @@ struct ProblemDescription : ProblemDescriptionBase
         if(padding_size % 2 != 0)
             return false;
 
-        std::vector<size_t> input_and_padding = std::vector<size_t>(yDesc.GetLengths().size());
+        std::vector<size_t> input_and_padding = std::vector<size_t>(dyDesc.GetLengths().size());
 
-        for(int i = 0; i < xDesc.GetLengths().size(); i++)
+        for(int i = 0; i < dxDesc.GetLengths().size(); i++)
         {
-            input_and_padding[i] = yDesc.GetLengths()[i] - padding[2 * i] - padding[2 * i + 1];
-            if(input_and_padding[i] != xDesc.GetLengths()[i])
+            input_and_padding[i] = dyDesc.GetLengths()[i] - padding[2 * i] - padding[2 * i + 1];
+            if(input_and_padding[i] != dxDesc.GetLengths()[i])
             {
                 return false;
             }
@@ -200,8 +200,8 @@ struct ProblemDescription : ProblemDescriptionBase
     }
 
 private:
-    const TensorDescriptor& xDesc;
-    const TensorDescriptor& yDesc;
+    const TensorDescriptor& dxDesc;
+    const TensorDescriptor& dyDesc;
     const size_t* padding;
     const int padding_size;
 };

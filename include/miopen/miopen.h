@@ -6591,6 +6591,7 @@ MIOPEN_EXPORT miopenStatus_t miopenBackendInitialize(miopenBackendDescriptor_t d
  *
  *  @param [in]  handle An instance of miopenHandle_t
  *  @param [in]  xDesc Descriptor of the input tensor
+ *  @param [in]  yDesc Descriptor of the output tensor
  *  @param [in]  x Input
  *  @param [out] y Padded output
  *  @param [in]  padding Padding dimension array
@@ -6615,8 +6616,8 @@ MIOPEN_EXPORT miopenStatus_t miopenPadConstantFwd(miopenHandle_t handle,
  * @brief Pads the input tensor boundaries with a constant value (backward pass)
  *
  *  @param [in]  handle An instance of miopenHandle_t
- *  @param [in]  xDesc Descriptor of the output tensor
- *  @param [in]  yDesc Descriptor of the input gradient tensor
+ *  @param [in]  dxDesc Descriptor of the output tensor
+ *  @param [in]  dyDesc Descriptor of the input gradient tensor
  *  @param [out] dx Output tensor
  *  @param [in]  dy Input gradiant tensor
  *  @param [in]  padding Padding dimension array

@@ -48,15 +48,15 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
 namespace pad_constant_bwd {
 NetworkConfig ProblemDescription::MakeNetworkConfig() const
 {
-    auto dtype = yDesc.GetType();
+    auto dtype = dyDesc.GetType();
 
     std::ostringstream ss;
     if(IsContiguous())
         ss << "contiguous-";
     ss << "bwd-";
     ss << "dtype" << dtype;
-    ss << "xDesc" << xDesc.GetElementSize();
-    ss << "yDesc" << yDesc.GetElementSize();
+    ss << "xDesc" << dxDesc.GetElementSize();
+    ss << "yDesc" << dyDesc.GetElementSize();
 
     return NetworkConfig{ss.str()};
 }

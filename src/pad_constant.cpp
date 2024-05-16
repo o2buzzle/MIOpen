@@ -71,22 +71,23 @@ miopenStatus_t PadConstantForward(Handle& handle,
 }
 
 miopenStatus_t PadConstantBackward(Handle& handle,
-                                   const TensorDescriptor& xDesc,
-                                   const TensorDescriptor& yDesc,
+                                   const TensorDescriptor& dxDesc,
+                                   const TensorDescriptor& dyDesc,
                                    Data_t dx,
                                    ConstData_t dy,
                                    const size_t* padding,
                                    const int padding_size)
 {
-    auto ctx           = ExecutionContext{&handle};
-    const auto problem = pad_constant_bwd::ProblemDescription{xDesc, yDesc, padding, padding_size};
+    auto ctx = ExecutionContext{&handle};
+    const auto problem =
+        pad_constant_bwd::ProblemDescription{dxDesc, dyDesc, padding, padding_size};
 
     const auto invoke_params = [&]() {
         auto tmp         = pad_constant_bwd::InvokeParams{};
-        tmp.xDesc        = &xDesc;
-        tmp.yDesc        = &yDesc;
-        tmp.x            = dx;
-        tmp.y            = dy;
+        tmp.dxDesc       = &dxDesc;
+        tmp.dyDesc       = &dyDesc;
+        tmp.dx           = dx;
+        tmp.dy           = dy;
         tmp.padding      = padding;
         tmp.padding_size = padding_size;
         return tmp;

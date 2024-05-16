@@ -189,17 +189,17 @@ PadConstantBwd::GetSolution(const ExecutionContext& /*context*/,
             decltype(auto) kernel = handle_.Run(kernels.front());
             decltype(auto) params = invoke_params.CastTo<miopen::pad_constant_bwd::InvokeParams>();
 
-            tensor_view_5d_t input_tv  = get_inner_expanded_tv(*params.xDesc);
-            tensor_view_5d_t output_tv = get_inner_expanded_tv(*params.yDesc);
+            tensor_view_5d_t input_tv  = get_inner_expanded_tv(*params.dxDesc);
+            tensor_view_5d_t output_tv = get_inner_expanded_tv(*params.dyDesc);
 
             padding_5d_t padding;
             for(auto i = 0; i < 10; i++)
                 padding.val[i] = params.padding[i];
 
             // Calculate output size (again)
-            size_t input_size = params.xDesc->GetElementSize();
+            size_t input_size = params.dxDesc->GetElementSize();
 
-            kernel(params.x, params.y, input_tv, output_tv, padding, input_size);
+            kernel(params.dx, params.dy, input_tv, output_tv, padding, input_size);
         };
     };
 
