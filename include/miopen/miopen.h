@@ -68,6 +68,7 @@
  * @defgroup argmax
  * @defgroup groupnorm
  * @defgroup cat
+ * @defgroup loss
  *
  */
 
@@ -512,7 +513,7 @@ typedef enum
     miopenActivationABS      = 5, /*!< Absolute value \f$abs(x)\f$ */
     miopenActivationPOWER = 6, /*!< Scaled and shifted power \f$(\alpha + \beta * x)^{gamma}\f$ */
     miopenActivationCLIPPEDRELU =
-        7, /*!< Clipped Rectified Linear Unit \f$ min(\alpha, max(0,x)) \f$ */
+        7,                     /*!< Clipped Rectified Linear Unit \f$ min(\alpha, max(0,x)) \f$ */
     miopenActivationLEAKYRELU =
         8, /*!< Leaky Rectified Linear Unit \f$ \alpha * x | x <= 0; x | x > 0 \f$ */
     miopenActivationELU =
@@ -6577,10 +6578,56 @@ MIOPEN_EXPORT miopenStatus_t miopenBackendDestroyDescriptor(miopenBackendDescrip
 MIOPEN_EXPORT miopenStatus_t miopenBackendInitialize(miopenBackendDescriptor_t descriptor,
                                                      miopenBackendDescriptorType_t descriptorType,
                                                      size_t sizeInBytes);
-
 /** @} */
 // CLOSEOUT BackendAPI DOXYGEN GROUP
 #endif // MIOPEN_BETA_API
+
+#ifdef MIOPEN_BETA_API
+/*! MSELoss APIs
+ * @addtogroup loss
+ * @brief MSELoss forward functon
+ *
+ * MSELoss forward, unreduced function
+ * @param  [in]  handle         An instance of miopenHandle_t
+ * @param  [in]  xDesc          Tensor descriptor
+ * @param  [in]  yDesc          Tensor descriptor
+ * @param  [in]  zDesc          Tensor descriptor
+ * @param  [in]  x              Pointer to the data
+ * @param  [in]  y              Pointer to the data
+ * @param  [out] z              Pointer to the output data
+ * @param  [in]  lossScale      Loss scale factor
+ */
+MIOPEN_EXPORT miopenStatus_t miopenMSELossForward(miopenHandle_t handle,
+                                                  miopenTensorDescriptor_t xDesc,
+                                                  miopenTensorDescriptor_t yDesc,
+                                                  miopenTensorDescriptor_t zDesc,
+                                                  const void* x,
+                                                  const void* y,
+                                                  void* z,
+                                                  const float lossScale = 1.0f);
+/*!
+ * @addtogroup loss
+ * @brief MSELoss backward function
+ *
+ * MSELoss backward, unreduced function
+
+ */
+
+MIOPEN_EXPORT miopenStatus_t miopenMSELossBackward(miopenHandle_t handle,
+                                                   miopenTensorDescriptor_t xDesc,
+                                                   miopenTensorDescriptor_t yDesc,
+                                                   miopenTensorDescriptor_t dzDesc,
+                                                   miopenTensorDescriptor_t dxDesc,
+                                                   miopenTensorDescriptor_t dyDesc,
+                                                   const void* x,
+                                                   const void* y,
+                                                   const void* dz,
+                                                   void* dx,
+                                                   void* dy,
+                                                   const float lossScale = 1.0f);
+
+/*! @} */
+#endif
 
 #ifdef __cplusplus
 }
