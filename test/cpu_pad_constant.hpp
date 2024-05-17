@@ -31,78 +31,75 @@
 #include <cstddef>
 #include <sys/types.h>
 #include "../src/kernels/tensor_view_5d.hpp"
+#include "miopen/tensor_view_5d.hpp"
 
 template <class T>
 void cpu_pad_constant_fwd(const T* input,
                           T* output,
                           miopen::TensorDescriptor* input_desc,
                           miopen::TensorDescriptor* output_desc,
-                          const size_t padding[10],
+                          std::vector<size_t> padding_vec,
                           float value)
 {
+    auto input_tv  = get_inner_expanded_tv(*input_desc);
+    auto output_tv = get_inner_expanded_tv(*output_desc);
+
+    padding_5d_t padding;
+    memset(padding.val, 0, sizeof(padding.val));
+    for(auto i = 0; i < padding_vec.size(); i++)
+        padding.val[10 - padding_vec.size() + i] = padding_vec[i];
+
     size_t o[5];
 
     for(size_t gid = 0; gid != output_desc->GetElementSize(); ++gid)
     {
         bool flag = true;
-
-        getNCDHW(o, gid, output_desc->GetLengths().data());
-
+        getNCDHW(o, gid, output_tv.size);
         for(int i = 0; i < 5; i++)
         {
-            o[i] = o[i] - padding[2 * i];
-            flag *= (o[i] < input_desc->GetLengths()[i]);
+            o[i] = o[i] - padding.val[2 * i];
+            flag *= (o[i] < input_tv.size[i]);
         }
 
-        output[gid] =
-            flag
-                ? get5DValueAt(input, input_desc->GetStrides().data(), o[0], o[1], o[2], o[3], o[4])
-                : (T)value;
+        auto val =
+            flag ? get5DValueAt(input, input_tv.stride, o[0], o[1], o[2], o[3], o[4]) : (T)value;
+
+        set5DValueAt(output, output_tv, gid, val);
     }
 }
 #endif
 
 template <class T>
-void cpu_pad_consant_bwd(T* input_grad,
-                         T* backward_output,
-                         miopen::TensorDescriptor* backward_output_desc,
-                         miopen::TensorDescriptor* input_grad_desc,
-                         const size_t padding[10])
+void cpu_pad_constant_bwd(T* input_grad,
+                          T* backward_output,
+                          miopen::TensorDescriptor* backward_output_desc,
+                          miopen::TensorDescriptor* input_grad_desc,
+                          std::vector<size_t> padding_vec)
 {
-    // Setup the tensorView (for set5dValueAt)
-    tensor_view_5d_t o_tv;
-    for(int i = 0; i < 5; i++)
-    {
-        o_tv.size[i]   = backward_output_desc->GetLengths()[i];
-        o_tv.stride[i] = backward_output_desc->GetStrides()[i];
-    }
+    auto output_tv = get_inner_expanded_tv(*backward_output_desc);
+    auto input_tv  = get_inner_expanded_tv(*input_grad_desc);
+
+    padding_5d_t padding;
+    memset(padding.val, 0, sizeof(padding.val));
+    for(auto i = 0; i < padding_vec.size(); i++)
+        padding.val[10 - padding_vec.size() + i] = padding_vec[i];
 
     size_t o[5];
-
-    auto backward_output_dims    = backward_output_desc->GetLengths();
-    auto backward_output_strides = backward_output_desc->GetStrides();
-
-    auto input_grad_dims    = input_grad_desc->GetLengths();
-    auto input_grad_strides = input_grad_desc->GetStrides();
-
     size_t backward_output_size = backward_output_desc->GetElementSize();
 
     for(size_t gid = 0; gid < backward_output_size; ++gid)
     {
         bool flag = true;
-        getNCDHW(o, gid, backward_output_dims.data());
+        getNCDHW(o, gid, output_tv.size);
 
         for(int i = 0; i < 5; i++)
         {
-            o[i] = o[i] + padding[2 * i];
-            flag *= (o[i] < input_grad_dims[i]);
+            o[i] = o[i] + padding.val[2 * i];
+            flag *= (o[i] < input_tv.size[i]);
         }
 
-        if(flag)
-        {
-            auto val = get5DValueAt<T>(
-                input_grad, input_grad_strides.data(), o[0], o[1], o[2], o[3], o[4]);
-            set5DValueAt(backward_output, o_tv, gid, val);
-        }
+        T val = flag ? get5DValueAt<T>(input_grad, input_tv.stride, o[0], o[1], o[2], o[3], o[4])
+                     : (T)0;
+        set5DValueAt(backward_output, output_tv, gid, val);
     }
 }

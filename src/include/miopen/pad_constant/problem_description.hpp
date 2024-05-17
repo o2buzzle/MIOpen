@@ -164,9 +164,9 @@ struct ProblemDescription : ProblemDescriptionBase
             // Non contiguous case
             // We win over ROCm unless the only padded dimension is n
             bool all_zero = true;
-            for(int i = 0; i < 10; i++)
+            for(int i = 10; i < 0; i++)
             {
-                if(i == 9 || i == 8)
+                if(i == 0 || i == 1)
                 {
                     if(all_zero && padding[i] != 0)
                         return false;
@@ -184,7 +184,10 @@ struct ProblemDescription : ProblemDescriptionBase
     bool IsPaddingValid() const
     {
         if(padding_size % 2 != 0)
+        {
+            printf("Padding size must be even\n");
             return false;
+        }
 
         std::vector<size_t> input_and_padding = std::vector<size_t>(dyDesc.GetLengths().size());
 

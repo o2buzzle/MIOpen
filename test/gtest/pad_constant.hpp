@@ -56,19 +56,19 @@ struct PadConstantTestCase
         }
         else if((N != 0) && (C != 0) && (H != 0) && (W != 0))
         {
-            return std::vector<size_t>({N, C, 1, H, W});
+            return std::vector<size_t>({N, C, H, W});
         }
         else if((N != 0) && (C != 0) && (W != 0))
         {
-            return std::vector<size_t>({N, C, 1, 1, W});
+            return std::vector<size_t>({N, C, W});
         }
         else if((N != 0) && (W != 0))
         {
-            return std::vector<size_t>({N, 1, 1, 1, W});
+            return std::vector<size_t>({N, W});
         }
         else if(N != 0)
         {
-            return std::vector<size_t>({N, 1, 1, 1, 1});
+            return std::vector<size_t>({N});
         }
         else
         {
@@ -80,16 +80,13 @@ struct PadConstantTestCase
 
 std::vector<PadConstantTestCase> PadConstantTestConfigs()
 {
-    return {{8, 120, 1, 1, 1},
-            {8, 120, 1, 1, 1},
-            {8, 1023, 1, 1, 1},
-            {8, 1024, 1, 1, 768},
-            {8, 1023, 1, 1, 1},
-            {8, 1024, 1, 1, 768},
-            {16, 1024, 1, 1, 768},
-            {16, 1024, 1, 1, 768},
-            {48, 8, 1, 512, 512},
-            {48, 8, 1, 512, 512},
+    return {{8, 512, 0, 0, 384},
+            {8, 511, 0, 0, 1},
+            {8, 512, 0, 0, 384},
+            {16, 512, 0, 0, 384},
+            {16, 512, 0, 0, 8},
+            {48, 8, 0, 512, 512},
+            {48, 8, 0, 512, 512},
             {16, 311, 1, 98, 512},
             {16, 311, 1, 98, 512}};
 }
@@ -117,12 +114,13 @@ protected:
     tensor<T> backward_output;
 
     tensor<T> ref_output;
+    tensor<T> ref_backward_output;
 
     miopen::Allocator::ManageDataPtr input_dev;
     miopen::Allocator::ManageDataPtr output_dev;
     miopen::Allocator::ManageDataPtr backward_output_dev;
 
-    size_t padding[10];
+    std::vector<size_t> padding = std::vector<size_t>(2, 0);
 
     void SetUp() override
     {
@@ -134,18 +132,16 @@ protected:
 
         auto strides = GetStrides(in_dims, false);
         input        = tensor<T>{in_dims, strides}.generate(gen_value);
+        input_dev    = handle.Write(input.data);
 
-        input_dev = handle.Write(input.data);
-
-        memset(padding, 0, sizeof(padding));
         // Generate random padding for the first 3 dims
-        for(size_t i = 2; i < 9; i++)
+        for(size_t i = 2; i < input.desc.GetLengths().size() * 2; i++)
         {
-            padding[i] = prng::gen_descreet_unsigned<size_t>(1, 5);
+            padding.push_back(prng::gen_descreet_unsigned<size_t>(1, 5));
         }
 
         std::vector<size_t> out_dims;
-        for(size_t i = 0; i < 5; i++)
+        for(size_t i = 0; i < input.desc.GetLengths().size(); i++)
         {
             out_dims.push_back(in_dims[i] + padding[2 * i] + padding[2 * i + 1]);
         }
@@ -161,6 +157,11 @@ protected:
 
         ref_output = tensor<T>{out_dims};
         std::fill(ref_output.begin(), ref_output.end(), std::numeric_limits<T>::quiet_NaN());
+
+        ref_backward_output = tensor<T>{in_dims, strides};
+        std::fill(ref_backward_output.begin(),
+                  ref_backward_output.end(),
+                  std::numeric_limits<T>::quiet_NaN());
     }
 
     void RunTest()
@@ -183,21 +184,28 @@ protected:
                                             output.desc,
                                             input_dev.get(),
                                             output_dev.get(),
-                                            padding,
-                                            10,
+                                            padding.data(),
+                                            padding.size(),
                                             padding_value);
         EXPECT_EQ(status, miopenStatusSuccess);
         output.data = handle.Read<T>(output_dev, output.data.size());
 
         // We're feeding output as backward input gradient
         // On PadConstant this *should* cause backward output to be equal to input
+        cpu_pad_constant_bwd<T>(output.data.data(),
+                                ref_backward_output.data.data(),
+                                &input.desc,
+                                &output.desc,
+                                padding);
+
         status = miopen::PadConstantBackward(handle,
                                              backward_output.desc,
                                              output.desc,
                                              backward_output_dev.get(),
                                              output_dev.get(),
-                                             padding,
-                                             10);
+                                             padding.data(),
+                                             padding.size());
+
         EXPECT_EQ(status, miopenStatusSuccess);
 
         backward_output.data = handle.Read<T>(backward_output_dev, backward_output.data.size());
@@ -211,8 +219,9 @@ protected:
         EXPECT_TRUE(miopen::range_distance(ref_output) == miopen::range_distance(output));
         EXPECT_TRUE(error == 0) << "Outputs do not match each other. Error:" << error;
 
-        error = miopen::rms_range(backward_output, input);
-        EXPECT_TRUE(miopen::range_distance(backward_output) == miopen::range_distance(input));
+        error = miopen::rms_range(backward_output, ref_backward_output);
+        EXPECT_TRUE(miopen::range_distance(backward_output) ==
+                    miopen::range_distance(ref_backward_output));
         EXPECT_TRUE(error == 0) << "Outputs do not match each other. Error:" << error;
     }
 };
