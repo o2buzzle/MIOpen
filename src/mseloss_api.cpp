@@ -40,6 +40,17 @@ extern "C" miopenStatus_t miopenMSELossForward(miopenHandle_t handle,
                                                const float lossScale)
 {
     MIOPEN_LOG_FUNCTION(xDesc, yDesc, zDesc, x, y, z, lossScale);
+
+    return miopen::try_([&] {
+        miopen::miopenMSELossForward(miopen::deref(handle),
+                                     miopen::deref(xDesc),
+                                     miopen::deref(yDesc),
+                                     miopen::deref(zDesc),
+                                     DataCast(x),
+                                     DataCast(y),
+                                     DataCast(z),
+                                     lossScale);
+    });
 }
 
 extern "C" miopenStatus_t miopenMSELossBackward(miopenHandle_t handle,
@@ -56,4 +67,19 @@ extern "C" miopenStatus_t miopenMSELossBackward(miopenHandle_t handle,
                                                 const float lossScale)
 {
     MIOPEN_LOG_FUNCTION(xDesc, yDesc, dzDesc, dxDesc, dyDesc, x, y, dz, dx, dy, lossScale);
+
+    return miopen::try_([&] {
+        miopen::miopenMSELossBackward(miopen::deref(handle),
+                                      miopen::deref(xDesc),
+                                      miopen::deref(yDesc),
+                                      miopen::deref(dzDesc),
+                                      miopen::deref(dxDesc),
+                                      miopen::deref(dyDesc),
+                                      DataCast(x),
+                                      DataCast(y),
+                                      DataCast(dz),
+                                      DataCast(dx),
+                                      DataCast(dy),
+                                      lossScale);
+    });
 }

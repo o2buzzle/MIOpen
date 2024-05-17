@@ -38,7 +38,7 @@ using MSELossForwardSolver =
 
 struct MSELossForward final : MSELossForwardSolver
 {
-    const std::string& SolverDbId() const override { return GetSolverDbId<MSELoss>(); }
+    const std::string& SolverDbId() const override { return GetSolverDbId<MSELossForward>(); }
 
     bool IsApplicable(const ExecutionContext& context,
                       const miopen::mseloss::forward::ProblemDescription& problem) const override;
@@ -54,7 +54,7 @@ using MSELossBackwardSolver =
 
 struct MSELossBackward final : MSELossBackwardSolver
 {
-    const std::string& SolverDbId() const override { return GetSolverDbId<MSELoss>(); }
+    const std::string& SolverDbId() const override { return GetSolverDbId<MSELossBackward>(); }
 
     bool IsApplicable(const ExecutionContext& context,
                       const miopen::mseloss::backward::ProblemDescription& problem) const override;

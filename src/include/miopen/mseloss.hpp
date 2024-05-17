@@ -37,7 +37,7 @@ miopenStatus_t miopenMSELossForward(Handle& handle,
                                     const void* x,
                                     const void* y,
                                     void* z,
-                                    const float lossScale = 1.0f);
+                                    float lossScale = 1.0f);
 
 miopenStatus_t miopenMSELossBackward(Handle& handle,
                                      const TensorDescriptor& xDesc,
@@ -50,5 +50,5 @@ miopenStatus_t miopenMSELossBackward(Handle& handle,
                                      const void* dz,
                                      void* dx,
                                      void* dy,
-                                     const float lossScale = 1.0f);
+                                     float lossScale = 1.0f);
 } // namespace miopen

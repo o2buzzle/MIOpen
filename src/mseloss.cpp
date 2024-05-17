@@ -41,7 +41,7 @@ miopenStatus_t miopenMSELossForward(Handle& handle,
                                     const void* x,
                                     const void* y,
                                     void* z,
-                                    const float lossScale)
+                                    float lossScale)
 {
     const auto problem =
         miopen::mseloss::forward::ProblemDescription{xDesc, yDesc, zDesc, x, y, z, lossScale};
@@ -77,7 +77,7 @@ miopenStatus_t miopenMSELossBackward(Handle& handle,
                                      const void* dz,
                                      void* dx,
                                      void* dy,
-                                     const float lossScale)
+                                     float lossScale)
 {
 
     const auto problem = mseloss::backward::ProblemDescription{
