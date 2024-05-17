@@ -29,9 +29,11 @@
 
 #include "InputFlags.hpp"
 #include "driver.hpp"
+#include "miopen/tensor_view_5d.hpp"
 #include "tensor_driver.hpp"
 #include "random.hpp"
 #include "timer.hpp"
+#include <cstddef>
 #include <cstdio>
 #include <vector>
 #include <miopen/miopen.h>
@@ -54,25 +56,19 @@ void mloConstantPadForwardRunHost(miopenTensorDescriptor_t inputDesc,
     size_t o[5];
     auto input_dims  = miopen::deref(inputDesc).GetLengths();
     auto output_dims = miopen::deref(outputDesc).GetLengths();
-
     auto input_strides  = miopen::deref(inputDesc).GetStrides();
     auto output_strides = miopen::deref(outputDesc).GetStrides();
 
     size_t output_size = miopen::deref(outputDesc).GetElementSize();
 
-    tensor_view_5d_t tv;
-    for(int i = 0; i < 5; i++)
-    {
-        tv.size[i]   = output_dims[i];
-        tv.stride[i] = output_strides[i];
-    }
+    tensor_view_5d_t tv = get_inner_expanded_tv(miopen::deref(outputDesc));
 
     for(size_t gid = 0; gid < output_size; ++gid)
     {
         bool flag = true;
         getNCDHW(o, gid, output_dims.data());
 
-        for(int i = 0; i < 5; i++)
+        for(int i = 0; i < input_dims.size(); i++)
         {
             o[i] = o[i] - padding[2 * i];
             flag *= (o[i] < input_dims[i]);
@@ -168,7 +164,7 @@ public:
 
     int GetandSetData() override;
     std::vector<int> GetInputTensorLengthsFromCmdLine();
-    std::vector<size_t> GetPaddingsFromCmdLine();
+    std::vector<size_t> GetPaddingsFromCmdLine(size_t input_dims_size);
 
     int AllocateBuffersAndCopy() override;
 
@@ -224,10 +220,10 @@ int32_t ConstantPadDriver<Tgpu, Tref>::ParseCmdLineArgs(int argc, char* argv[])
 template <typename Tgpu, typename Tref>
 int32_t ConstantPadDriver<Tgpu, Tref>::GetandSetData()
 {
-    padding                = GetPaddingsFromCmdLine();
+    std::vector<int> input_dims = GetInputTensorLengthsFromCmdLine();
+    padding                = GetPaddingsFromCmdLine(input_dims.size());
     bool makeNonContiguous = inflags.GetValueInt("contiguous") == 0;
 
-    std::vector<int> input_dims = GetInputTensorLengthsFromCmdLine();
     auto strides                = GetStrides(input_dims, makeNonContiguous);
 
     SetTensorNd(inputDesc, input_dims, strides, data_type);
@@ -244,6 +240,25 @@ int32_t ConstantPadDriver<Tgpu, Tref>::GetandSetData()
     SetTensorNd(outputDesc, output_dims, data_type);
 
     value = inflags.GetValueDouble("value");
+
+    printf("Input dims:");
+    for (int input_dim : input_dims)
+    {
+        printf(" %d", input_dim);
+    }
+    printf("\n");
+    printf("Padding:");
+    for (unsigned long i : padding)
+    {
+        printf(" %lu", i);
+    }
+    printf("\n");
+    printf("Output dims:");
+    for (int output_dim : output_dims)
+    {
+        printf(" %d", output_dim);
+    }
+    printf("\n");
 
     return 0;
 }
@@ -283,58 +298,47 @@ std::vector<int> ConstantPadDriver<Tgpu, Tref>::GetInputTensorLengthsFromCmdLine
     auto in_str = inflags.GetValueStr("in");
 
     // Parse the comma_separated string
-    int in_n = 0, in_c = 0, in_d = 0, in_h = 0, in_w = 0;
     std::vector<std::string> in = split(in_str, ',');
 
-    assert(in.size() == 5);
+    switch (in.size())
+    {
+        case 5:
+        return std::vector<int>({std::stoi(in[0]), std::stoi(in[1]), std::stoi(in[2]), std::stoi(in[3]), std::stoi(in[4])});
 
-    in_n = std::stoi(in[0]);
-    in_c = std::stoi(in[1]);
-    in_d = std::stoi(in[2]);
-    in_h = std::stoi(in[3]);
-    in_w = std::stoi(in[4]);
+        case 4:
+        return std::vector<int>({std::stoi(in[0]), std::stoi(in[1]), std::stoi(in[2]), std::stoi(in[3])});
 
-    if((in_n != 0) && (in_c != 0) && (in_d != 0) && (in_h != 0) && (in_w != 0))
-    {
-        return std::vector<int>({in_n, in_c, in_d, in_h, in_w});
-    }
-    else if((in_n != 0) && (in_c != 0) && (in_h != 0) && (in_w != 0))
-    {
-        return std::vector<int>({in_n, in_c, 1, in_h, in_w});
-    }
-    else if((in_n != 0) && (in_c != 0) && (in_w != 0))
-    {
-        return std::vector<int>({in_n, in_c, 1, 1, in_w});
-    }
-    else if((in_n != 0) && (in_w != 0))
-    {
-        return std::vector<int>({in_n, 1, 1, 1, in_w});
-    }
-    else if(in_n != 0)
-    {
-        return std::vector<int>({in_n, 1, 1, 1, 1});
-    }
-    else
-    {
-        std::cerr << "Error Input Tensor Lengths\n" << std::endl;
-        return std::vector<int>({0});
+        case 3:
+        return std::vector<int>({std::stoi(in[0]), std::stoi(in[1]), std::stoi(in[2])});
+
+        case 2:
+        return std::vector<int>({std::stoi(in[0]), std::stoi(in[1])});
+
+        case 1:
+        return std::vector<int>({std::stoi(in[0])});
+
+        default:
+        std::cerr << "Error: Invalid input dimensions" << std::endl;
+        return std::vector({0});
+        break;
     }
 }
 
 template <typename Tgpu, typename Tref>
-std::vector<size_t> ConstantPadDriver<Tgpu, Tref>::GetPaddingsFromCmdLine()
+std::vector<size_t> ConstantPadDriver<Tgpu, Tref>::GetPaddingsFromCmdLine(size_t input_dims_size)
 {
-    std::vector<size_t> paddings = std::vector<size_t>();
-
+    // Input would be in PyTorch format (pad_left, pad_right, pad_up, pad_down, pad_front, pad_back, etc.)
+    // We would need to flip it into ours (basically backwards of PyTorch format)
+    // Eg: (1,2,1,2,1,2,0,0,0,0) -> (0,0,0,0,2,1,2,1,2,1)
+    std::vector<size_t> paddings = std::vector<size_t>(static_cast<size_t>(input_dims_size) * 2, 0);
     auto pad                   = inflags.GetValueStr("pad");
     std::vector<std::string> p = split(pad, ',');
-    std::reverse(p.begin(), p.end());
+    assert(p.size() % 2 == 0);
 
-    // Processes padding input so that it is consistent with how PyTorch pads
-    // Reverses output (pad_right, pad_left, pad_bottom, pad_top, pad_front, pad_back, etc.)
-    for(auto& item : p)
+    auto offset = paddings.size() - p.size();
+    for(size_t i = 0; i < p.size(); i++)
     {
-        paddings.push_back(std::stoi(item));
+        paddings[i + offset] = std::stoi(p[i]);
     }
     // Reverse each pair
     for(size_t i = 0; i < paddings.size(); i += 2)
