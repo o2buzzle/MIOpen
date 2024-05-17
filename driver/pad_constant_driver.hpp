@@ -51,33 +51,32 @@ void mloConstantPadForwardRunHost(miopenTensorDescriptor_t inputDesc,
 {
     if(padding_vec.size() % 2 != 0)
         throw std::runtime_error("padding_vec size must be even");
-    auto padding = padding_vec.data();
+
+    padding_5d_t padding;
+    memset(padding.val, 0, sizeof(padding.val));
+    for(auto i = 0; i < padding_vec.size(); i++)
+        padding.val[10 - padding_vec.size() + i] = padding_vec[i];
 
     size_t o[5];
-    auto input_dims  = miopen::deref(inputDesc).GetLengths();
-    auto output_dims = miopen::deref(outputDesc).GetLengths();
-    auto input_strides  = miopen::deref(inputDesc).GetStrides();
-    auto output_strides = miopen::deref(outputDesc).GetStrides();
-
     size_t output_size = miopen::deref(outputDesc).GetElementSize();
 
-    tensor_view_5d_t tv = get_inner_expanded_tv(miopen::deref(outputDesc));
+    tensor_view_5d_t input_tv  = get_inner_expanded_tv(miopen::deref(inputDesc));
+    tensor_view_5d_t output_tv = get_inner_expanded_tv(miopen::deref(outputDesc));
 
     for(size_t gid = 0; gid < output_size; ++gid)
     {
         bool flag = true;
-        getNCDHW(o, gid, output_dims.data());
+        getNCDHW(o, gid, output_tv.size);
 
-        for(int i = 0; i < input_dims.size(); i++)
+        for(int i = 0; i < 5; i++)
         {
-            o[i] = o[i] - padding[2 * i];
-            flag *= (o[i] < input_dims[i]);
+            o[i] = o[i] - padding.val[2 * i];
+            flag *= (o[i] < input_tv.size[i]);
         }
 
         auto val =
-            flag ? get5DValueAt<Tgpu>(input, input_strides.data(), o[0], o[1], o[2], o[3], o[4])
-                 : value;
-        set5DValueAt(output_host, tv, gid, val);
+            flag ? get5DValueAt<Tgpu>(input, input_tv.stride, o[0], o[1], o[2], o[3], o[4]) : value;
+        set5DValueAt(output_host, output_tv, gid, val);
     }
 }
 
@@ -91,41 +90,33 @@ void mloConstantPadBackwardRunHost(miopenTensorDescriptor_t backwardOutputDesc,
     if(padding_vec.size() % 2 != 0)
         throw std::runtime_error("padding size should be even");
 
-    auto padding = padding_vec.data();
+    padding_5d_t padding;
+    memset(padding.val, 0, sizeof(padding.val));
+    for(auto i = 0; i < padding_vec.size(); i++)
+        padding.val[10 - padding_vec.size() + i] = padding_vec[i];
 
     size_t o[5];
 
-    auto backward_output_dims    = miopen::deref(backwardOutputDesc).GetLengths();
-    auto backward_output_strides = miopen::deref(backwardOutputDesc).GetStrides();
-
-    auto input_grad_dims    = miopen::deref(inputGradDesc).GetLengths();
-    auto input_grad_strides = miopen::deref(inputGradDesc).GetStrides();
-
     size_t backward_output_size = miopen::deref(backwardOutputDesc).GetElementSize();
-
-    tensor_view_5d_t tv;
-    for(int i = 0; i < 5; i++)
-    {
-        tv.size[i]   = backward_output_dims[i];
-        tv.stride[i] = backward_output_strides[i];
-    }
+    tensor_view_5d_t input_tv   = get_inner_expanded_tv(miopen::deref(inputGradDesc));
+    tensor_view_5d_t output_tv  = get_inner_expanded_tv(miopen::deref(backwardOutputDesc));
 
     for(size_t gid = 0; gid < backward_output_size; ++gid)
     {
         bool flag = true;
-        getNCDHW(o, gid, backward_output_dims.data());
+        getNCDHW(o, gid, output_tv.size);
 
         for(int i = 0; i < 5; i++)
         {
-            o[i] = o[i] + padding[2 * i];
-            flag *= (o[i] < input_grad_dims[i]);
+            o[i] = o[i] + padding.val[2 * i];
+            flag *= (o[i] < input_tv.size[i]);
         }
 
         if(flag)
         {
-            auto val = get5DValueAt<Tcheck>(
-                input_grad, input_grad_strides.data(), o[0], o[1], o[2], o[3], o[4]);
-            set5DValueAt(backward_output_host, tv, gid, val);
+            auto val =
+                get5DValueAt<Tcheck>(input_grad, input_tv.stride, o[0], o[1], o[2], o[3], o[4]);
+            set5DValueAt(backward_output_host, output_tv, gid, val);
         }
     }
 }
@@ -221,10 +212,10 @@ template <typename Tgpu, typename Tref>
 int32_t ConstantPadDriver<Tgpu, Tref>::GetandSetData()
 {
     std::vector<int> input_dims = GetInputTensorLengthsFromCmdLine();
-    padding                = GetPaddingsFromCmdLine(input_dims.size());
-    bool makeNonContiguous = inflags.GetValueInt("contiguous") == 0;
+    padding                     = GetPaddingsFromCmdLine(input_dims.size());
+    bool makeNonContiguous      = inflags.GetValueInt("contiguous") == 0;
 
-    auto strides                = GetStrides(input_dims, makeNonContiguous);
+    auto strides = GetStrides(input_dims, !makeNonContiguous);
 
     SetTensorNd(inputDesc, input_dims, strides, data_type);
     SetTensorNd(backwardOutputDesc, input_dims, strides, data_type);
@@ -240,25 +231,6 @@ int32_t ConstantPadDriver<Tgpu, Tref>::GetandSetData()
     SetTensorNd(outputDesc, output_dims, data_type);
 
     value = inflags.GetValueDouble("value");
-
-    printf("Input dims:");
-    for (int input_dim : input_dims)
-    {
-        printf(" %d", input_dim);
-    }
-    printf("\n");
-    printf("Padding:");
-    for (unsigned long i : padding)
-    {
-        printf(" %lu", i);
-    }
-    printf("\n");
-    printf("Output dims:");
-    for (int output_dim : output_dims)
-    {
-        printf(" %d", output_dim);
-    }
-    printf("\n");
 
     return 0;
 }
@@ -300,24 +272,26 @@ std::vector<int> ConstantPadDriver<Tgpu, Tref>::GetInputTensorLengthsFromCmdLine
     // Parse the comma_separated string
     std::vector<std::string> in = split(in_str, ',');
 
-    switch (in.size())
+    switch(in.size())
     {
-        case 5:
-        return std::vector<int>({std::stoi(in[0]), std::stoi(in[1]), std::stoi(in[2]), std::stoi(in[3]), std::stoi(in[4])});
+    case 5:
+        return std::vector<int>({std::stoi(in[0]),
+                                 std::stoi(in[1]),
+                                 std::stoi(in[2]),
+                                 std::stoi(in[3]),
+                                 std::stoi(in[4])});
 
-        case 4:
-        return std::vector<int>({std::stoi(in[0]), std::stoi(in[1]), std::stoi(in[2]), std::stoi(in[3])});
+    case 4:
+        return std::vector<int>(
+            {std::stoi(in[0]), std::stoi(in[1]), std::stoi(in[2]), std::stoi(in[3])});
 
-        case 3:
-        return std::vector<int>({std::stoi(in[0]), std::stoi(in[1]), std::stoi(in[2])});
+    case 3: return std::vector<int>({std::stoi(in[0]), std::stoi(in[1]), std::stoi(in[2])});
 
-        case 2:
-        return std::vector<int>({std::stoi(in[0]), std::stoi(in[1])});
+    case 2: return std::vector<int>({std::stoi(in[0]), std::stoi(in[1])});
 
-        case 1:
-        return std::vector<int>({std::stoi(in[0])});
+    case 1: return std::vector<int>({std::stoi(in[0])});
 
-        default:
+    default:
         std::cerr << "Error: Invalid input dimensions" << std::endl;
         return std::vector({0});
         break;
@@ -327,12 +301,12 @@ std::vector<int> ConstantPadDriver<Tgpu, Tref>::GetInputTensorLengthsFromCmdLine
 template <typename Tgpu, typename Tref>
 std::vector<size_t> ConstantPadDriver<Tgpu, Tref>::GetPaddingsFromCmdLine(size_t input_dims_size)
 {
-    // Input would be in PyTorch format (pad_left, pad_right, pad_up, pad_down, pad_front, pad_back, etc.)
-    // We would need to flip it into ours (basically backwards of PyTorch format)
-    // Eg: (1,2,1,2,1,2,0,0,0,0) -> (0,0,0,0,2,1,2,1,2,1)
+    // Input would be in PyTorch format (pad_left, pad_right, pad_up, pad_down, pad_front, pad_back,
+    // etc.) We would need to flip it into ours (basically backwards of PyTorch format) Eg:
+    // (1,2,1,2,1,2,0,0,0,0) -> (0,0,0,0,2,1,2,1,2,1)
     std::vector<size_t> paddings = std::vector<size_t>(static_cast<size_t>(input_dims_size) * 2, 0);
-    auto pad                   = inflags.GetValueStr("pad");
-    std::vector<std::string> p = split(pad, ',');
+    auto pad                     = inflags.GetValueStr("pad");
+    std::vector<std::string> p   = split(pad, ',');
     assert(p.size() % 2 == 0);
 
     auto offset = paddings.size() - p.size();
@@ -436,6 +410,10 @@ template <typename Tgpu, typename Tref>
 int ConstantPadDriver<Tgpu, Tref>::VerifyForward()
 {
     RunForwardCPU();
+
+    // for (int i = 0; i < output.size(); i++)
+    //     printf("output[%d] = %f\n", i, output[i]);
+
     for(int i = 0; i < output.size(); i++)
     {
         if(output[i] != output_host[i])
@@ -508,6 +486,9 @@ template <typename Tgpu, typename Tref>
 int ConstantPadDriver<Tgpu, Tref>::VerifyBackward()
 {
     RunBackwardCPU();
+
+    // for (int i = 0; i < backward_output.size(); i++)
+    //     printf("backward_output[%d] = %f\n", i, backward_output[i]);
 
     for(int i = 0; i < backward_output_host.size(); i++)
     {

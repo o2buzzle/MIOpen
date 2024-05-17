@@ -106,7 +106,7 @@ PadConstantFwd::GetSolution(const ExecutionContext& /*context*/,
             padding_5d_t padding;
             memset(padding.val, 0, sizeof(padding.val));
             for(auto i = 0; i < params.padding_size; i++)
-                padding.val[i] = params.padding[i];
+                padding.val[10 - params.padding_size + i] = params.padding[i];
 
             size_t output_size = params.yDesc->GetElementSize();
 
@@ -147,13 +147,13 @@ PadConstantBwd::GetSolution(const ExecutionContext& /*context*/,
 {
     auto result = ConvSolution{miopenStatusSuccess};
 
-    auto input_dtype  = miopen::GetDataType(problem.GetXDesc().GetType());
-    auto output_dtype = miopen::GetDataType(problem.GetYDesc().GetType());
+    auto input_dtype  = miopen::GetDataType(problem.GetYDesc().GetType());
+    auto output_dtype = miopen::GetDataType(problem.GetXDesc().GetType());
 
-    size_t input_size = problem.GetXDesc().GetElementSize();
+    size_t input_grad_size = problem.GetXDesc().GetElementSize();
 
     size_t xlocalsize = 256;
-    size_t xgridsize  = AlignUpUL(input_size, xlocalsize);
+    size_t xgridsize  = AlignUpUL(input_grad_size, xlocalsize);
     size_t ylocalsize = 1;
     size_t ygridsize  = 1;
 
@@ -193,8 +193,10 @@ PadConstantBwd::GetSolution(const ExecutionContext& /*context*/,
             tensor_view_5d_t input_tv  = get_inner_expanded_tv(*params.dyDesc);
 
             padding_5d_t padding;
-            for(auto i = 0; i < 10; i++)
-                padding.val[i] = params.padding[i];
+            memset(padding.val, 0, sizeof(padding.val));
+            // Copy padding to the bottom of padding_5d_t
+            for(auto i = 0; i < params.padding_size; i++)
+                padding.val[10 - params.padding_size + i] = params.padding[i];
 
             // Calculate output size (again)
             size_t input_size = params.dxDesc->GetElementSize();

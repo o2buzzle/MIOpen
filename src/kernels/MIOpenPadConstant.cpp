@@ -42,7 +42,7 @@ __device__ void padconstantfwd(const TI* __restrict__ x,
                                const size_t output_size,
                                TO value)
 {
-    TO padding_value   = CVT_ACCUM2FLOAT(value);
+    TO padding_value   = value;
     const uint64_t gid = threadIdx.x + blockIdx.x * blockDim.x;
     if(gid >= output_size)
         return;
@@ -70,7 +70,7 @@ __device__ void padconstantfwdcontiguous(const TI* __restrict__ x,
                                          const size_t output_size,
                                          TO value)
 {
-    TO padding_value   = CVT_ACCUM2FLOAT(value);
+    TO padding_value   = value;
     const uint64_t gid = threadIdx.x + blockIdx.x * blockDim.x;
     if(gid >= output_size)
         return;
@@ -111,11 +111,8 @@ __device__ void padconstantbwd(TI* __restrict__ dx,
         flag *= o[i] < y_grad_tv.size[i];
     }
 
-    if(flag)
-    {
-        TI val = get5DValueAt<TI>(y_grad, y_grad_tv.stride, o[0], o[1], o[2], o[3], o[4]);
-        set5DValueAt<TI>(dx, dx_tv, gid, val);
-    }
+    TI val = flag ? get5DValueAt<TI>(y_grad, y_grad_tv.stride, o[0], o[1], o[2], o[3], o[4]) : 0;
+    set5DValueAt<TI>(dx, dx_tv, gid, val);
 }
 
 template <typename TI, typename TO>
@@ -141,8 +138,7 @@ __device__ void padconstantbwdcontiguous(TI* __restrict__ dx,
         flag *= o[i] < y_grad_tv.size[i];
     }
 
-    if(flag)
-        dx[gid] = get5DValueAt<TI>(y_grad, y_grad_tv.stride, o[0], o[1], o[2], o[3], o[4]);
+    dx[gid] = flag ? get5DValueAt<TI>(y_grad, y_grad_tv.stride, o[0], o[1], o[2], o[3], o[4]) : 0;
 }
 
 extern "C" __global__ void PadConstantFwd(const INPUT_TYPE* __restrict__ x,
