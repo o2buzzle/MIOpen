@@ -24,37 +24,29 @@
  *
  *******************************************************************************/
 
-#include "miopen/names.hpp"
-#include <miopen/mseloss/problem_description.hpp>
-#include <sstream>
+#ifndef GUARD_TENSOR_VIEW_HOST
+#define GUARD_TENSOR_VIEW_HOST
 
-namespace miopen {
-namespace mseloss {
-namespace forward {
-NetworkConfig ProblemDescription::MakeNetworkConfig() const
+#include "../../kernels/tensor_view.hpp"
+
+inline tensor_view_5d_t get_inner_expanded_tv(const miopen::TensorDescriptor Desc)
 {
-    auto dtype = xDesc.GetType();
+    auto dims    = Desc.GetLengths();
+    auto strides = Desc.GetStrides();
 
-    std::ostringstream ss;
-    ss << "fwd";
-    ss << "dtype" << dtype;
-
-    return NetworkConfig{ss.str()};
+    tensor_view_5d_t tv_5d;
+    for(size_t i = 0; i < strides.size(); ++i)
+    {
+        tv_5d.stride[i] = strides[i];
+        tv_5d.size[i]   = dims[i];
+    }
+    auto rest = strides.size();
+    for(size_t j = rest; j < 5; ++j)
+    {
+        tv_5d.stride[j] = (rest == 0 ? 1 : strides[rest - 1]);
+        tv_5d.size[j]   = 1;
+    }
+    return tv_5d;
 }
 
-} // namespace forward
-namespace backward {
-NetworkConfig ProblemDescription::MakeNetworkConfig() const
-{
-    auto dtype = xDesc.GetType();
-
-    std::ostringstream ss;
-    ss << "bwd";
-    ss << "dtype" << dtype;
-
-    return NetworkConfig{ss.str()};
-}
-
-} // namespace backward
-} // namespace mseloss
-} // namespace miopen
+#endif

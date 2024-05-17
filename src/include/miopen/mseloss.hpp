@@ -24,6 +24,7 @@
  *
  *******************************************************************************/
 
+#include "miopen/miopen.h"
 #include <miopen/common.hpp>
 
 namespace miopen {
@@ -37,7 +38,7 @@ miopenStatus_t miopenMSELossForward(Handle& handle,
                                     const void* x,
                                     const void* y,
                                     void* z,
-                                    float lossScale = 1.0f);
+                                    float divisor = 1.0f);
 
 miopenStatus_t miopenMSELossBackward(Handle& handle,
                                      const TensorDescriptor& xDesc,
@@ -50,5 +51,25 @@ miopenStatus_t miopenMSELossBackward(Handle& handle,
                                      const void* dz,
                                      void* dx,
                                      void* dy,
-                                     float lossScale = 1.0f);
+                                     float divisor = 1.0f);
+
+miopenStatus_t miopenMSELossForwardUnreduced(Handle& handle,
+                                             const TensorDescriptor& xDesc,
+                                             const TensorDescriptor& yDesc,
+                                             const TensorDescriptor& zDesc,
+                                             const void* x,
+                                             const void* y,
+                                             void* z);
+
+miopenStatus_t miopenMSELossBackwardUnreduced(Handle& handle,
+                                              const TensorDescriptor& xDesc,
+                                              const TensorDescriptor& yDesc,
+                                              const TensorDescriptor& dzDesc,
+                                              const TensorDescriptor& dxDesc,
+                                              const TensorDescriptor& dyDesc,
+                                              const void* x,
+                                              const void* y,
+                                              const void* dz,
+                                              void* dx,
+                                              void* dy);
 } // namespace miopen

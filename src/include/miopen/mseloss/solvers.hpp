@@ -46,6 +46,7 @@ struct MSELossForward final : MSELossForwardSolver
     GetSolution(const ExecutionContext& context,
                 const miopen::mseloss::forward::ProblemDescription& problem) const override;
 };
+
 } // namespace forward
 
 namespace backward {

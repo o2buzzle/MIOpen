@@ -24,6 +24,7 @@
  *
  *******************************************************************************/
 
+#include "miopen/miopen.h"
 #include "miopen/names.hpp"
 #include "miopen/tensor.hpp"
 #include "miopen/find_solution.hpp"
@@ -41,20 +42,20 @@ miopenStatus_t miopenMSELossForward(Handle& handle,
                                     const void* x,
                                     const void* y,
                                     void* z,
-                                    float lossScale)
+                                    float divisor)
 {
     const auto problem =
-        miopen::mseloss::forward::ProblemDescription{xDesc, yDesc, zDesc, x, y, z, lossScale};
+        miopen::mseloss::forward::ProblemDescription{xDesc, yDesc, zDesc, x, y, z, divisor};
 
     const auto invoke_params = [&]() {
-        auto tmp      = miopen::mseloss::forward::InvokeParams{};
-        tmp.xDesc     = &xDesc;
-        tmp.yDesc     = &yDesc;
-        tmp.zDesc     = &zDesc;
-        tmp.x         = x;
-        tmp.y         = y;
-        tmp.z         = z;
-        tmp.lossScale = lossScale;
+        auto tmp    = miopen::mseloss::forward::ReducedInvokeParams{};
+        tmp.xDesc   = &xDesc;
+        tmp.yDesc   = &yDesc;
+        tmp.zDesc   = &zDesc;
+        tmp.x       = x;
+        tmp.y       = y;
+        tmp.z       = z;
+        tmp.divisor = divisor;
         return tmp;
     }();
 
@@ -65,7 +66,35 @@ miopenStatus_t miopenMSELossForward(Handle& handle,
     solvers.ExecutePrimitive(handle, problem, algo, invoke_params);
     return miopenStatusSuccess;
 }
+/*
+miopenStatus_t miopenMSELossForwardUnreduced(Handle& handle,
+                                             const TensorDescriptor& xDesc,
+                                             const TensorDescriptor& yDesc,
+                                             const TensorDescriptor& zDesc,
+                                             const void* x,
+                                             const void* y,
+                                             void* z)
+{
+    const auto problem = mseloss::forward::ProblemDescription{xDesc, yDesc, zDesc, x, y, z};
 
+    const auto invoke_params = [&]() {
+        auto tmp  = mseloss::forward::UnreducedInvokeParams{};
+        tmp.xDesc = &xDesc;
+        tmp.yDesc = &yDesc;
+        tmp.zDesc = &zDesc;
+        tmp.x     = x;
+        tmp.y     = y;
+        tmp.z     = z;
+        return tmp;
+    }();
+
+    const auto algo    = AlgorithmName{"MSELossForwardUnreduced"};
+    const auto solvers = solver::SolverContainer<solver::mseloss::forward::MSELossForward>{};
+
+    solvers.ExecutePrimitive(handle, problem, algo, invoke_params);
+    return miopenStatusSuccess;
+}
+*/
 miopenStatus_t miopenMSELossBackward(Handle& handle,
                                      const TensorDescriptor& xDesc,
                                      const TensorDescriptor& yDesc,
@@ -77,25 +106,25 @@ miopenStatus_t miopenMSELossBackward(Handle& handle,
                                      const void* dz,
                                      void* dx,
                                      void* dy,
-                                     float lossScale)
+                                     float divisor)
 {
 
-    const auto problem = mseloss::backward::ProblemDescription{
-        xDesc, yDesc, dzDesc, dxDesc, dyDesc, x, y, dz, dx, dy, lossScale};
+    const auto problem = miopen::mseloss::backward::ProblemDescription{
+        xDesc, yDesc, dzDesc, dxDesc, dyDesc, x, y, dz, dx, dy, divisor};
 
     const auto invoke_params = [&]() {
-        auto tmp      = mseloss::backward::InvokeParams{};
-        tmp.xDesc     = &xDesc;
-        tmp.yDesc     = &yDesc;
-        tmp.dzDesc    = &dzDesc;
-        tmp.dxDesc    = &dxDesc;
-        tmp.dyDesc    = &dyDesc;
-        tmp.x         = x;
-        tmp.y         = y;
-        tmp.dz        = dz;
-        tmp.dx        = dx;
-        tmp.dy        = dy;
-        tmp.lossScale = lossScale;
+        auto tmp    = mseloss::backward::ReducedInvokeParams{};
+        tmp.xDesc   = &xDesc;
+        tmp.yDesc   = &yDesc;
+        tmp.dzDesc  = &dzDesc;
+        tmp.dxDesc  = &dxDesc;
+        tmp.dyDesc  = &dyDesc;
+        tmp.x       = x;
+        tmp.y       = y;
+        tmp.dz      = dz;
+        tmp.dx      = dx;
+        tmp.dy      = dy;
+        tmp.divisor = divisor;
         return tmp;
     }();
 
@@ -105,4 +134,43 @@ miopenStatus_t miopenMSELossBackward(Handle& handle,
     solvers.ExecutePrimitive(handle, problem, algo, invoke_params);
     return miopenStatusSuccess;
 }
+/*
+miopenStatus_t miopenMSELossBackwardUnreduced(Handle& handle,
+                                              const TensorDescriptor& xDesc,
+                                              const TensorDescriptor& yDesc,
+                                              const TensorDescriptor& dzDesc,
+                                              const TensorDescriptor& dxDesc,
+                                              const TensorDescriptor& dyDesc,
+                                              const void* x,
+                                              const void* y,
+                                              const void* dz,
+                                              void* dx,
+                                              void* dy)
+{
+
+    const auto problem = mseloss::backward::ReducedProblemDescription{
+        xDesc, yDesc, dzDesc, dxDesc, dyDesc, x, y, dz, dx, dy};
+
+    const auto invoke_params = [&]() {
+        auto tmp   = mseloss::backward::UnreducedInvokeParams{};
+        tmp.xDesc  = &xDesc;
+        tmp.yDesc  = &yDesc;
+        tmp.dzDesc = &dzDesc;
+        tmp.dxDesc = &dxDesc;
+        tmp.dyDesc = &dyDesc;
+        tmp.x      = x;
+        tmp.y      = y;
+        tmp.dz     = dz;
+        tmp.dx     = dx;
+        tmp.dy     = dy;
+        return tmp;
+    }();
+
+    const auto algo    = AlgorithmName{"MSELossBackwardUnreduced"};
+    const auto solvers = solver::SolverContainer<solver::mseloss::backward::MSELossBackward>{};
+
+    solvers.ExecutePrimitive(handle, problem, algo, invoke_params);
+    return miopenStatusSuccess;
+}
+*/
 } // namespace miopen

@@ -24,6 +24,7 @@
  *
  *******************************************************************************/
 
+#include "miopen/miopen.h"
 #include <miopen/errors.hpp>
 #include <miopen/handle.hpp>
 #include <miopen/logger.hpp>
@@ -37,9 +38,9 @@ extern "C" miopenStatus_t miopenMSELossForward(miopenHandle_t handle,
                                                const void* x,
                                                const void* y,
                                                void* z,
-                                               const float lossScale)
+                                               const float divisor)
 {
-    MIOPEN_LOG_FUNCTION(xDesc, yDesc, zDesc, x, y, z, lossScale);
+    MIOPEN_LOG_FUNCTION(xDesc, yDesc, zDesc, x, y, z, divisor);
 
     return miopen::try_([&] {
         miopen::miopenMSELossForward(miopen::deref(handle),
@@ -49,7 +50,7 @@ extern "C" miopenStatus_t miopenMSELossForward(miopenHandle_t handle,
                                      DataCast(x),
                                      DataCast(y),
                                      DataCast(z),
-                                     lossScale);
+                                     divisor);
     });
 }
 
@@ -64,9 +65,9 @@ extern "C" miopenStatus_t miopenMSELossBackward(miopenHandle_t handle,
                                                 const void* dz,
                                                 void* dx,
                                                 void* dy,
-                                                const float lossScale)
+                                                const float divisor)
 {
-    MIOPEN_LOG_FUNCTION(xDesc, yDesc, dzDesc, dxDesc, dyDesc, x, y, dz, dx, dy, lossScale);
+    MIOPEN_LOG_FUNCTION(xDesc, yDesc, dzDesc, dxDesc, dyDesc, x, y, dz, dx, dy, divisor);
 
     return miopen::try_([&] {
         miopen::miopenMSELossBackward(miopen::deref(handle),
@@ -80,6 +81,56 @@ extern "C" miopenStatus_t miopenMSELossBackward(miopenHandle_t handle,
                                       DataCast(dz),
                                       DataCast(dx),
                                       DataCast(dy),
-                                      lossScale);
+                                      divisor);
+    });
+}
+
+extern "C" miopenStatus_t miopenMSELossForwardUnreduced(miopenHandle_t handle,
+                                                        miopenTensorDescriptor_t xDesc,
+                                                        miopenTensorDescriptor_t yDesc,
+                                                        miopenTensorDescriptor_t zDesc,
+                                                        const void* x,
+                                                        const void* y,
+                                                        void* z)
+{
+    MIOPEN_LOG_FUNCTION(xDesc, yDesc, zDesc, x, y, z);
+
+    return miopen::try_([&] {
+        miopen::miopenMSELossForwardUnreduced(miopen::deref(handle),
+                                              miopen::deref(xDesc),
+                                              miopen::deref(yDesc),
+                                              miopen::deref(zDesc),
+                                              DataCast(x),
+                                              DataCast(y),
+                                              DataCast(z));
+    });
+}
+
+extern "C" miopenStatus_t miopenMSELossBackwardUnreduced(miopenHandle_t handle,
+                                                         miopenTensorDescriptor_t xDesc,
+                                                         miopenTensorDescriptor_t yDesc,
+                                                         miopenTensorDescriptor_t dzDesc,
+                                                         miopenTensorDescriptor_t dxDesc,
+                                                         miopenTensorDescriptor_t dyDesc,
+                                                         const void* x,
+                                                         const void* y,
+                                                         const void* dz,
+                                                         void* dx,
+                                                         void* dy)
+{
+    MIOPEN_LOG_FUNCTION(xDesc, yDesc, dzDesc, dxDesc, dyDesc, x, y, dz, dx, dy);
+
+    return miopen::try_([&] {
+        miopen::miopenMSELossBackwardUnreduced(miopen::deref(handle),
+                                               miopen::deref(xDesc),
+                                               miopen::deref(yDesc),
+                                               miopen::deref(dzDesc),
+                                               miopen::deref(dxDesc),
+                                               miopen::deref(dyDesc),
+                                               DataCast(x),
+                                               DataCast(y),
+                                               DataCast(dz),
+                                               DataCast(dx),
+                                               DataCast(dy));
     });
 }

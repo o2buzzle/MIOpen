@@ -33,9 +33,9 @@
 namespace miopen {
 namespace mseloss {
 namespace forward {
-struct InvokeParams : public miopen::InvokeParams
+struct ReducedInvokeParams : public miopen::InvokeParams
 {
-    InvokeParams() = default;
+    ReducedInvokeParams() = default;
 
     const TensorDescriptor* xDesc;
     const TensorDescriptor* yDesc;
@@ -45,16 +45,33 @@ struct InvokeParams : public miopen::InvokeParams
     ConstData_t y;
     Data_t z;
 
-    float lossScale = 1.0f;
+    float divisor = 1.0f;
 
     std::size_t GetWorkspaceSize() const { return 0; }
     Data_t GetWorkspace() const { return nullptr; }
 };
+
+struct UnreducedInvokeParams : public miopen::InvokeParams
+{
+    UnreducedInvokeParams() = default;
+
+    const TensorDescriptor* xDesc;
+    const TensorDescriptor* yDesc;
+    const TensorDescriptor* zDesc;
+
+    ConstData_t x;
+    ConstData_t y;
+    Data_t z;
+
+    std::size_t GetWorkspaceSize() const { return 0; }
+    Data_t GetWorkspace() const { return nullptr; }
+};
+
 } // namespace forward
 namespace backward {
-struct InvokeParams : public miopen::InvokeParams
+struct ReducedInvokeParams : public miopen::InvokeParams
 {
-    InvokeParams() = default;
+    ReducedInvokeParams() = default;
 
     const TensorDescriptor* xDesc;
     const TensorDescriptor* yDesc;
@@ -68,7 +85,28 @@ struct InvokeParams : public miopen::InvokeParams
     Data_t dx;
     Data_t dy;
 
-    float lossScale = 1.0f;
+    float divisor = 1.0f;
+
+    std::size_t GetWorkspaceSize() const { return 0; }
+    Data_t GetWorkspace() const { return nullptr; }
+};
+
+struct UnreducedInvokeParams : public miopen::InvokeParams
+{
+
+    UnreducedInvokeParams() = default;
+
+    const TensorDescriptor* xDesc;
+    const TensorDescriptor* yDesc;
+    const TensorDescriptor* dzDesc;
+    const TensorDescriptor* dxDesc;
+    const TensorDescriptor* dyDesc;
+
+    ConstData_t x;
+    ConstData_t y;
+    ConstData_t dz;
+    Data_t dx;
+    Data_t dy;
 
     std::size_t GetWorkspaceSize() const { return 0; }
     Data_t GetWorkspace() const { return nullptr; }
