@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "miopen/execution_context.hpp"
 #include <miopen/solver.hpp>
 #include <miopen/mseloss/problem_description.hpp>
 
@@ -46,7 +47,6 @@ struct MSELossForward final : MSELossForwardSolver
     GetSolution(const ExecutionContext& context,
                 const miopen::mseloss::forward::ProblemDescription& problem) const override;
 };
-
 } // namespace forward
 
 namespace backward {

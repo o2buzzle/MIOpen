@@ -6589,13 +6589,13 @@ MIOPEN_EXPORT miopenStatus_t miopenBackendInitialize(miopenBackendDescriptor_t d
  *
  * MSELoss forward, unreduced function
  * @param  [in]  handle         An instance of miopenHandle_t
- * @param  [in]  xDesc          Tensor descriptor
- * @param  [in]  yDesc          Tensor descriptor
- * @param  [in]  zDesc          Tensor descriptor
- * @param  [in]  x              Pointer to the data
- * @param  [in]  y              Pointer to the data
- * @param  [out] z              Pointer to the output data
- * @param  [in]  lossScale      Loss scale factor
+ * @param  [in]  xDesc          Input Tensor descriptor
+ * @param  [in]  yDesc          Target Tensor descriptor
+ * @param  [in]  zDesc          Output Tensor descriptor
+ * @param  [in]  x              Pointer to input tensor data
+ * @param  [in]  y              Pointer to target tensor data
+ * @param  [out] z              Pointer to the output tensor data
+ * @param  [in]  divisor        Divisor value
  */
 MIOPEN_EXPORT miopenStatus_t miopenMSELossForward(miopenHandle_t handle,
                                                   miopenTensorDescriptor_t xDesc,
@@ -6611,17 +6611,17 @@ MIOPEN_EXPORT miopenStatus_t miopenMSELossForward(miopenHandle_t handle,
  *
  * MSELoss backward, unreduced function
  * @param  [in]  handle         An instance of miopenHandle_t
- * @param  [in]  xDesc          Tensor descriptor
- * @param  [in]  yDesc          Tensor descriptor
- * @param  [in]  dzDesc         Tensor descriptor
- * @param  [in]  dxDesc         Tensor descriptor
- * @param  [in]  dyDesc         Tensor descriptor
- * @param  [in]  x              Pointer to the data
- * @param  [in]  y              Pointer to the data
- * @param  [in]  dz             Pointer to the data
- * @param  [out] dx             Pointer to the output data
- * @param  [out] dy             Pointer to the output data
- * @param  [in]  lossScale      Loss scale factor
+ * @param  [in]  xDesc          Input Tensor descriptor
+ * @param  [in]  yDesc          Target Tensor descriptor
+ * @param  [in]  dzDesc         Output Tensor descriptor
+ * @param  [in]  dxDesc         Input gradient Tensor descriptor
+ * @param  [in]  dyDesc         Target gradient Tensor descriptor
+ * @param  [in]  x              Pointer to input tensor data
+ * @param  [in]  y              Pointer to target tensor data
+ * @param  [in]  dz             Pointer to output tensor data
+ * @param  [out] dx             Pointer to input gradient data
+ * @param  [out] dy             Pointer to target gradient data
+ * @param  [in]  divisor        Divisor value
  */
 
 MIOPEN_EXPORT miopenStatus_t miopenMSELossBackward(miopenHandle_t handle,
@@ -6643,12 +6643,12 @@ MIOPEN_EXPORT miopenStatus_t miopenMSELossBackward(miopenHandle_t handle,
  *
  * MSELoss forward, unreduced function
  * @param  [in]  handle         An instance of miopenHandle_t
- * @param  [in]  xDesc          Tensor descriptor
- * @param  [in]  yDesc          Tensor descriptor
- * @param  [in]  zDesc          Tensor descriptor
- * @param  [in]  x              Pointer to the data
- * @param  [in]  y              Pointer to the data
- * @param  [out] z              Pointer to the output data
+ * @param  [in]  xDesc          Input Tensor descriptor
+ * @param  [in]  yDesc          Target Tensor descriptor
+ * @param  [in]  zDesc          Output Tensor descriptor
+ * @param  [in]  x              Pointer to input tensor data
+ * @param  [in]  y              Pointer to target tensor data
+ * @param  [out] z              Pointer to output tensor data
  */
 
 MIOPEN_EXPORT miopenStatus_t miopenMSELossForwardUnreduced(miopenHandle_t handle,
@@ -6665,16 +6665,16 @@ MIOPEN_EXPORT miopenStatus_t miopenMSELossForwardUnreduced(miopenHandle_t handle
  *
  * MSELoss backward, unreduced function
  * @param  [in]  handle         An instance of miopenHandle_t
- * @param  [in]  xDesc          Tensor descriptor
- * @param  [in]  yDesc          Tensor descriptor
- * @param  [in]  dzDesc         Tensor descriptor
- * @param  [in]  dxDesc         Tensor descriptor
- * @param  [in]  dyDesc         Tensor descriptor
- * @param  [in]  x              Pointer to the data
- * @param  [in]  y              Pointer to the data
- * @param  [in]  dz             Pointer to the data
- * @param  [out] dx             Pointer to the output data
- * @param  [out] dy             Pointer to the output data
+ * @param  [in]  xDesc          Input Tensor descriptor
+ * @param  [in]  yDesc          Target Tensor descriptor
+ * @param  [in]  dzDesc         Output Tensor descriptor
+ * @param  [in]  dxDesc         Input gradiant Tensor descriptor
+ * @param  [in]  dyDesc         Target gradiant Tensor descriptor
+ * @param  [in]  x              Pointer to input tensor data
+ * @param  [in]  y              Pointer to target tensor data
+ * @param  [in]  dz             Pointer to output tensor data
+ * @param  [out] dx             Pointer to input gradient data
+ * @param  [out] dy             Pointer to target gradient data
  */
 
 MIOPEN_EXPORT miopenStatus_t miopenMSELossBackwardUnreduced(miopenHandle_t handle,

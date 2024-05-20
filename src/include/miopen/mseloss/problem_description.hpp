@@ -94,6 +94,9 @@ struct ProblemDescription : ProblemDescriptionBase
     const TensorDescriptor& GetYDesc() const { return yDesc; }
     const TensorDescriptor& GetZDesc() const { return dzDesc; }
 
+    const TensorDescriptor& GetDXDesc() const { return dxDesc; }
+    const TensorDescriptor& GetDYDesc() const { return dyDesc; }
+
 private:
     const TensorDescriptor& xDesc;
     const TensorDescriptor& yDesc;
