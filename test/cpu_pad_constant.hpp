@@ -39,7 +39,7 @@ void cpu_pad_constant_fwd(const T* input,
                           miopen::TensorDescriptor* input_desc,
                           miopen::TensorDescriptor* output_desc,
                           std::vector<size_t> padding_vec,
-                          float value)
+                          T value)
 {
     auto input_tv  = get_inner_expanded_tv(*input_desc);
     auto output_tv = get_inner_expanded_tv(*output_desc);

@@ -169,7 +169,7 @@ protected:
         auto&& handle = get_handle();
         auto out_dims = output.desc.GetLengths();
 
-        float padding_value = 3.5f;
+        T padding_value = static_cast<T>(0);
 
         cpu_pad_constant_fwd<T>(input.data.data(),
                                 ref_output.data.data(),
