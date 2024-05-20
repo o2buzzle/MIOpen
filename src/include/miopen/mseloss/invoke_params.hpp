@@ -102,13 +102,13 @@ struct InvokeParams : public miopen::InvokeParams
 
     const TensorDescriptor* xDesc;
     const TensorDescriptor* yDesc;
-    const TensorDescriptor* dzDesc;
+    const TensorDescriptor* zDesc;
     const TensorDescriptor* dxDesc;
     const TensorDescriptor* dyDesc;
 
     ConstData_t x;
     ConstData_t y;
-    ConstData_t dz;
+    ConstData_t z;
     Data_t dx;
     Data_t dy;
 

@@ -39,12 +39,8 @@ struct ProblemDescription : ProblemDescriptionBase
 {
     ProblemDescription(const TensorDescriptor& xDesc_,
                        const TensorDescriptor& yDesc_,
-                       const TensorDescriptor& zDesc_,
-                       ConstData_t x_,
-                       ConstData_t y_,
-                       Data_t z_,
-                       const float lossScale_ = 1.0f)
-        : xDesc(xDesc_), yDesc(yDesc_), zDesc(zDesc_), x(x_), y(y_), z(z_), lossScale(lossScale_){};
+                       const TensorDescriptor& zDesc_)
+        : xDesc(xDesc_), yDesc(yDesc_), zDesc(zDesc_){};
 
     NetworkConfig MakeNetworkConfig() const override;
 
@@ -56,38 +52,48 @@ private:
     const TensorDescriptor& xDesc;
     const TensorDescriptor& yDesc;
     const TensorDescriptor& zDesc;
-    ConstData_t x;
-    ConstData_t y;
-    Data_t z;
-    const float lossScale = 1.0f;
 };
 } // namespace forward
+
+namespace forward_unreduced {
+struct ProblemDescription : ProblemDescriptionBase
+{
+    ProblemDescription(const TensorDescriptor& xDesc_,
+                       const TensorDescriptor& yDesc_,
+                       const TensorDescriptor& zDesc_,
+                       ConstData_t x_,
+                       ConstData_t y_,
+                       Data_t z_)
+        : xDesc(xDesc_), yDesc(yDesc_), zDesc(zDesc_){};
+
+    NetworkConfig MakeNetworkConfig() const override;
+
+    const TensorDescriptor& GetXDesc() const { return xDesc; }
+    const TensorDescriptor& GetYDesc() const { return yDesc; }
+    const TensorDescriptor& GetZDesc() const { return zDesc; }
+
+private:
+    const TensorDescriptor& xDesc;
+    const TensorDescriptor& yDesc;
+    const TensorDescriptor& zDesc;
+};
+} // namespace forward_unreduced
 
 namespace backward {
 struct ProblemDescription : ProblemDescriptionBase
 {
     ProblemDescription(const TensorDescriptor& xDesc_,
                        const TensorDescriptor& yDesc_,
-                       const TensorDescriptor& dzDesc_,
+                       const TensorDescriptor& zDesc_,
                        const TensorDescriptor& dxDesc_,
                        const TensorDescriptor& dyDesc_,
-                       ConstData_t x_,
-                       ConstData_t y_,
-                       ConstData_t dz_,
-                       Data_t dx_,
-                       Data_t dy_,
-                       const float lossScale_ = 1.0f)
+                       const float divisor_ = 1.0f)
         : xDesc(xDesc_),
           yDesc(yDesc_),
-          dzDesc(dzDesc_),
+          dzDesc(zDesc_),
           dxDesc(dxDesc_),
           dyDesc(dyDesc_),
-          x(x_),
-          y(y_),
-          dz(dz_),
-          dx(dx_),
-          dy(dy_),
-          lossScale(lossScale_){};
+          divisor(divisor_){};
 
     NetworkConfig MakeNetworkConfig() const override;
 
@@ -98,19 +104,44 @@ struct ProblemDescription : ProblemDescriptionBase
     const TensorDescriptor& GetDXDesc() const { return dxDesc; }
     const TensorDescriptor& GetDYDesc() const { return dyDesc; }
 
+    float GetDivisor() const { return divisor; }
+
 private:
     const TensorDescriptor& xDesc;
     const TensorDescriptor& yDesc;
     const TensorDescriptor& dzDesc;
     const TensorDescriptor& dxDesc;
     const TensorDescriptor& dyDesc;
-    ConstData_t x;
-    ConstData_t y;
-    ConstData_t dz;
-    Data_t dx;
-    Data_t dy;
-    const float lossScale = 1.0f;
+    const float divisor = 1.0f;
 };
 } // namespace backward
+
+namespace backward_unreduced {
+struct ProblemDescription : ProblemDescriptionBase
+{
+    ProblemDescription(const TensorDescriptor& xDesc_,
+                       const TensorDescriptor& yDesc_,
+                       const TensorDescriptor& zDesc_,
+                       const TensorDescriptor& dxDesc_,
+                       const TensorDescriptor& dyDesc_)
+        : xDesc(xDesc_), yDesc(yDesc_), zDesc(zDesc_), dxDesc(dxDesc_), dyDesc(dyDesc_){};
+
+    NetworkConfig MakeNetworkConfig() const override;
+
+    const TensorDescriptor& GetXDesc() const { return xDesc; }
+    const TensorDescriptor& GetYDesc() const { return yDesc; }
+    const TensorDescriptor& GetZDesc() const { return zDesc; }
+
+    const TensorDescriptor& GetDXDesc() const { return dxDesc; }
+    const TensorDescriptor& GetDYDesc() const { return dyDesc; }
+
+private:
+    const TensorDescriptor& xDesc;
+    const TensorDescriptor& yDesc;
+    const TensorDescriptor& zDesc;
+    const TensorDescriptor& dxDesc;
+    const TensorDescriptor& dyDesc;
+};
+} // namespace backward_unreduced
 } // namespace mseloss
 } // namespace miopen

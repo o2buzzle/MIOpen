@@ -49,6 +49,26 @@ struct MSELossForward final : MSELossForwardSolver
 };
 } // namespace forward
 
+namespace forward_unreduced {
+using MSELossForwardUnreducedSolver =
+    NonTunableSolverBase<ExecutionContext, miopen::mseloss::forward_unreduced::ProblemDescription>;
+
+struct MSELossForwardUnreduced final : MSELossForwardUnreducedSolver
+{
+    const std::string& SolverDbId() const override
+    {
+        return GetSolverDbId<MSELossForwardUnreduced>();
+    }
+
+    bool IsApplicable(
+        const ExecutionContext& context,
+        const miopen::mseloss::forward_unreduced::ProblemDescription& problem) const override;
+    ConvSolution GetSolution(
+        const ExecutionContext& context,
+        const miopen::mseloss::forward_unreduced::ProblemDescription& problem) const override;
+};
+} // namespace forward_unreduced
+
 namespace backward {
 using MSELossBackwardSolver =
     NonTunableSolverBase<ExecutionContext, miopen::mseloss::backward::ProblemDescription>;
@@ -64,6 +84,26 @@ struct MSELossBackward final : MSELossBackwardSolver
                 const miopen::mseloss::backward::ProblemDescription& problem) const override;
 };
 } // namespace backward
+
+namespace backward_unreduced {
+using MSELossBackwardUnreducedSolver =
+    NonTunableSolverBase<ExecutionContext, miopen::mseloss::backward_unreduced::ProblemDescription>;
+
+struct MSELossBackwardUnreduced final : MSELossBackwardUnreducedSolver
+{
+    const std::string& SolverDbId() const override
+    {
+        return GetSolverDbId<MSELossBackwardUnreduced>();
+    }
+
+    bool IsApplicable(
+        const ExecutionContext& context,
+        const miopen::mseloss::backward_unreduced::ProblemDescription& problem) const override;
+    ConvSolution GetSolution(
+        const ExecutionContext& context,
+        const miopen::mseloss::backward_unreduced::ProblemDescription& problem) const override;
+};
+} // namespace backward_unreduced
 
 } // namespace mseloss
 } // namespace solver
