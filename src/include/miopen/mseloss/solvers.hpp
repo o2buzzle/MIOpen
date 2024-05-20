@@ -104,7 +104,6 @@ struct MSELossBackwardUnreduced final : MSELossBackwardUnreducedSolver
         const miopen::mseloss::backward_unreduced::ProblemDescription& problem) const override;
 };
 } // namespace backward_unreduced
-
 } // namespace mseloss
 } // namespace solver
 } // namespace miopen

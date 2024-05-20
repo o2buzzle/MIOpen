@@ -24,65 +24,19 @@
  *
  *******************************************************************************/
 
-#include "miopen/names.hpp"
-#include <miopen/mseloss/problem_description.hpp>
-#include <sstream>
+#include "miopen/bfloat16.hpp"
+#include "mseloss_driver.hpp"
+#include "registry_driver_maker.hpp"
 
-namespace miopen {
-namespace mseloss {
-namespace forward {
-NetworkConfig ProblemDescription::MakeNetworkConfig() const
+static Driver* makeDriver(const std::string& base_arg)
 {
-    auto dtype = xDesc.GetType();
-
-    std::ostringstream ss;
-    ss << "fwd";
-    ss << "dtype" << dtype;
-
-    return NetworkConfig{ss.str()};
+    if(base_arg == "mseloss")
+        return new MSELossDriver<float, float>();
+    if(base_arg == "mselossfp16")
+        return new MSELossDriver<float16, float>();
+    if(base_arg == "mselossbfp16")
+        return new MSELossDriver<bfloat16, float>();
+    return nullptr;
 }
 
-} // namespace forward
-
-namespace forward_unreduced {
-NetworkConfig ProblemDescription::MakeNetworkConfig() const
-{
-    auto dtype = xDesc.GetType();
-
-    std::ostringstream ss;
-    ss << "fwdu";
-    ss << "dtype" << dtype;
-
-    return NetworkConfig{ss.str()};
-}
-} // namespace forward_unreduced
-
-namespace backward {
-NetworkConfig ProblemDescription::MakeNetworkConfig() const
-{
-    auto dtype = xDesc.GetType();
-
-    std::ostringstream ss;
-    ss << "bwd";
-    ss << "dtype" << dtype;
-
-    return NetworkConfig{ss.str()};
-}
-
-} // namespace backward
-
-namespace backward_unreduced {
-NetworkConfig ProblemDescription::MakeNetworkConfig() const
-{
-    auto dtype = xDesc.GetType();
-
-    std::ostringstream ss;
-    ss << "bwdu";
-    ss << "dtype" << dtype;
-
-    return NetworkConfig{ss.str()};
-}
-
-} // namespace backward_unreduced
-} // namespace mseloss
-} // namespace miopen
+REGISTER_DRIVER_MAKER(makeDriver);

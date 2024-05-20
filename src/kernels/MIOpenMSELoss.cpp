@@ -24,7 +24,6 @@
  *
  *******************************************************************************/
 
-#include <__clang_hip_runtime_wrapper.h>
 #include <cstddef>
 #ifndef MIOPEN_DONT_USE_HIP_RUNTIME_HEADERS
 #include <hip/hip_fp16.h>
@@ -144,7 +143,7 @@ __device__ void DeviceMSELossUnreducedBackward5d(const IO_TYPE* I,
                                                  tensor_view_5d_t dI_tv,
                                                  tensor_view_5d_t dT_tv)
 {
-    size_t gid   = blockIdx.x * blockDim.x + threadIdx.x;
+    const size_t gid = blockIdx.x * blockDim.x + threadIdx.x;
     size_t n0123 = gid / I_tv.size[4], n4 = gid % I_tv.size[4];
     size_t n012 = n0123 / I_tv.size[3], n3 = n0123 % I_tv.size[3];
     size_t n01 = n012 / I_tv.size[2], n2 = n012 % I_tv.size[2];
@@ -197,7 +196,7 @@ extern "C" __global__ void MSELossBackward5d(const IO_TYPE* I,
 {
     DeviceMSELossBackward5d(I, T, dO, dI, dT, divisor, I_tv, T_tv, dO_tv, dI_tv, dT_tv);
 }
-extern "C" __global__ void MSELossUnreducedForward5d(const IO_TYPE* I,
+extern "C" __global__ void MSELossForwardUnreduced5d(const IO_TYPE* I,
                                                      const IO_TYPE* T,
                                                      IO_TYPE* O,
                                                      tensor_view_5d_t I_tv,
@@ -207,7 +206,7 @@ extern "C" __global__ void MSELossUnreducedForward5d(const IO_TYPE* I,
     DeviceMSELossUnreducedForward5d(I, T, O, I_tv, T_tv, O_tv);
 }
 
-extern "C" __global__ void MSELossUnreducedBackward5d(const IO_TYPE* I,
+extern "C" __global__ void MSELossBackwardUnreduced5d(const IO_TYPE* I,
                                                       const IO_TYPE* T,
                                                       const IO_TYPE* dO,
                                                       IO_TYPE* dI,

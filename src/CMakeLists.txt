@@ -144,6 +144,7 @@ set( MIOpen_Source
     mha/problem_description.cpp
     mseloss/problem_description.cpp
     mseloss_api.cpp
+    mseloss.cpp
     op_args.cpp
     operator.cpp
     performance_config.cpp
@@ -430,6 +431,7 @@ if( MIOPEN_BACKEND MATCHES "OpenCL" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN
         kernels/xform_data_filter.inc
         kernels/xform_kd_cov2.inc
         kernels/xform_metadata.inc
+        kernels/tensor_view.hpp
         )
 
     set(MIOPEN_KERNELS

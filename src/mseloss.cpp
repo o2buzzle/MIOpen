@@ -24,6 +24,8 @@
  *
  *******************************************************************************/
 
+#include "miopen/common.hpp"
+#include "miopen/execution_context.hpp"
 #include "miopen/miopen.h"
 #include "miopen/names.hpp"
 #include "miopen/tensor.hpp"
@@ -39,15 +41,17 @@ miopenStatus_t miopenMSELossForward(Handle& handle,
                                     const TensorDescriptor& xDesc,
                                     const TensorDescriptor& yDesc,
                                     const TensorDescriptor& zDesc,
-                                    const void* x,
-                                    const void* y,
-                                    void* z,
+                                    ConstData_t x,
+                                    ConstData_t y,
+                                    Data_t z,
                                     float divisor)
 {
-    const auto problem = miopen::mseloss::forward::ProblemDescription{xDesc, yDesc, zDesc};
+    auto ctx = ExecutionContext{&handle};
+
+    const auto problem = mseloss::forward::ProblemDescription{xDesc, yDesc, zDesc};
 
     const auto invoke_params = [&]() {
-        auto tmp    = miopen::mseloss::forward::InvokeParams{};
+        auto tmp    = mseloss::forward::InvokeParams{};
         tmp.xDesc   = &xDesc;
         tmp.yDesc   = &yDesc;
         tmp.zDesc   = &zDesc;
@@ -58,9 +62,8 @@ miopenStatus_t miopenMSELossForward(Handle& handle,
         return tmp;
     }();
 
-    const auto algo = AlgorithmName{"MSELossForward"};
-    const auto solvers =
-        solver::SolverContainer<miopen::solver::mseloss::forward::MSELossForward>{};
+    const auto algo    = AlgorithmName{"MSELossForward"};
+    const auto solvers = solver::SolverContainer<solver::mseloss::forward::MSELossForward>{};
 
     solvers.ExecutePrimitive(handle, problem, algo, invoke_params);
     return miopenStatusSuccess;
@@ -70,11 +73,13 @@ miopenStatus_t miopenMSELossForwardUnreduced(Handle& handle,
                                              const TensorDescriptor& xDesc,
                                              const TensorDescriptor& yDesc,
                                              const TensorDescriptor& zDesc,
-                                             const void* x,
-                                             const void* y,
-                                             void* z)
+                                             ConstData_t x,
+                                             ConstData_t y,
+                                             Data_t z)
 {
-    const auto problem = mseloss::forward::ProblemDescription{xDesc, yDesc, zDesc};
+    auto ctx = ExecutionContext{&handle};
+
+    const auto problem = mseloss::forward_unreduced::ProblemDescription{xDesc, yDesc, zDesc};
 
     const auto invoke_params = [&]() {
         auto tmp  = mseloss::forward_unreduced::InvokeParams{};
@@ -92,6 +97,7 @@ miopenStatus_t miopenMSELossForwardUnreduced(Handle& handle,
         solver::SolverContainer<solver::mseloss::forward_unreduced::MSELossForwardUnreduced>{};
 
     solvers.ExecutePrimitive(handle, problem, algo, invoke_params);
+
     return miopenStatusSuccess;
 }
 
@@ -101,16 +107,16 @@ miopenStatus_t miopenMSELossBackward(Handle& handle,
                                      const TensorDescriptor& zDesc,
                                      const TensorDescriptor& dxDesc,
                                      const TensorDescriptor& dyDesc,
-                                     const void* x,
-                                     const void* y,
-                                     const void* z,
-                                     void* dx,
-                                     void* dy,
+                                     ConstData_t x,
+                                     ConstData_t y,
+                                     ConstData_t z,
+                                     Data_t dx,
+                                     Data_t dy,
                                      float divisor)
 {
+    auto ctx = ExecutionContext{&handle};
 
-    const auto problem =
-        miopen::mseloss::backward::ProblemDescription{xDesc, yDesc, zDesc, dxDesc, dyDesc};
+    const auto problem = mseloss::backward::ProblemDescription{xDesc, yDesc, zDesc, dxDesc, dyDesc};
 
     const auto invoke_params = [&]() {
         auto tmp    = mseloss::backward::InvokeParams{};
@@ -141,12 +147,13 @@ miopenStatus_t miopenMSELossBackwardUnreduced(Handle& handle,
                                               const TensorDescriptor& zDesc,
                                               const TensorDescriptor& dxDesc,
                                               const TensorDescriptor& dyDesc,
-                                              const void* x,
-                                              const void* y,
-                                              const void* z,
-                                              void* dx,
-                                              void* dy)
+                                              ConstData_t x,
+                                              ConstData_t y,
+                                              ConstData_t z,
+                                              Data_t dx,
+                                              Data_t dy)
 {
+    auto ctx = ExecutionContext{&handle};
 
     const auto problem =
         mseloss::backward_unreduced::ProblemDescription{xDesc, yDesc, zDesc, dxDesc, dyDesc};

@@ -60,10 +60,7 @@ struct ProblemDescription : ProblemDescriptionBase
 {
     ProblemDescription(const TensorDescriptor& xDesc_,
                        const TensorDescriptor& yDesc_,
-                       const TensorDescriptor& zDesc_,
-                       ConstData_t x_,
-                       ConstData_t y_,
-                       Data_t z_)
+                       const TensorDescriptor& zDesc_)
         : xDesc(xDesc_), yDesc(yDesc_), zDesc(zDesc_){};
 
     NetworkConfig MakeNetworkConfig() const override;

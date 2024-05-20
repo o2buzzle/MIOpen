@@ -6604,7 +6604,7 @@ MIOPEN_EXPORT miopenStatus_t miopenMSELossForward(miopenHandle_t handle,
                                                   const void* x,
                                                   const void* y,
                                                   void* z,
-                                                  const float divisor = 1.0f);
+                                                  float divisor = 1.0f);
 /*!
  * @addtogroup loss
  * @brief MSELoss backward function
@@ -6635,7 +6635,7 @@ MIOPEN_EXPORT miopenStatus_t miopenMSELossBackward(miopenHandle_t handle,
                                                    const void* z,
                                                    void* dx,
                                                    void* dy,
-                                                   const float divisor = 1.0f);
+                                                   float divisor = 1.0f);
 
 /*!
  * @addtogroup loss
