@@ -40,8 +40,8 @@ struct padding_5d_t
     uint64_t val[10];
 };
 
-template <typename T>
-__host__ __device__ void inline getNCDHW(T* ncdhw, const T idx, const T size[5])
+template <typename T, typename U>
+__host__ __device__ void inline getNCDHW(T* ncdhw, const U idx, const U size[5])
 {
     ulong ncdh = (idx) / size[4];
     ncdhw[4]   = (idx) % size[4];

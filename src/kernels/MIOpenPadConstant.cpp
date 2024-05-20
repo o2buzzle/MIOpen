@@ -47,14 +47,14 @@ __device__ void padconstantfwd(const TI* __restrict__ x,
     if(gid >= output_size)
         return;
 
-    uint64_t o[5];
+    int64_t o[5];
     getNCDHW(o, gid, y_tv.size);
     bool flag = true;
 
     for(int i = 0; i < 5; ++i)
     {
         o[i] = o[i] - padding.val[2 * i];
-        flag *= o[i] < x_tv.size[i];
+        flag *= (o[i] >= 0) && (o[i] < x_tv.size[i]);
     }
 
     TO val = flag ? get5DValueAt<TO>(x, x_tv.stride, o[0], o[1], o[2], o[3], o[4]) : padding_value;
@@ -75,14 +75,14 @@ __device__ void padconstantfwdcontiguous(const TI* __restrict__ x,
     if(gid >= output_size)
         return;
 
-    uint64_t o[5];
+    int64_t o[5];
     getNCDHW(o, gid, y_tv.size);
     bool flag = true;
 
     for(int i = 0; i < 5; ++i)
     {
         o[i] = o[i] - padding.val[2 * i];
-        flag *= o[i] < x_tv.size[i];
+        flag *= (o[i] >= 0) && (o[i] < x_tv.size[i]);
     }
 
     y[gid] = flag ? get5DValueAt<TO>(x, x_tv.stride, o[0], o[1], o[2], o[3], o[4]) : padding_value;
@@ -101,14 +101,14 @@ __device__ void padconstantbwd(TI* __restrict__ dx,
     if(gid >= input_size)
         return;
 
-    uint64_t o[5];
+    int64_t o[5];
     getNCDHW(o, gid, dx_tv.size);
     bool flag = true;
 
     for(int i = 0; i < 5; ++i)
     {
         o[i] = o[i] + padding.val[2 * i];
-        flag *= o[i] < y_grad_tv.size[i];
+        flag *= (o[i] >= 0) && (o[i] < y_grad_tv.size[i]);
     }
 
     TI val = flag ? get5DValueAt<TI>(y_grad, y_grad_tv.stride, o[0], o[1], o[2], o[3], o[4]) : 0;
@@ -135,7 +135,7 @@ __device__ void padconstantbwdcontiguous(TI* __restrict__ dx,
     for(int i = 0; i < 5; ++i)
     {
         o[i] = o[i] + padding.val[2 * i];
-        flag *= o[i] < y_grad_tv.size[i];
+        flag *= (o[i] >= 0) && (o[i] < y_grad_tv.size[i]);
     }
 
     dx[gid] = flag ? get5DValueAt<TI>(y_grad, y_grad_tv.stride, o[0], o[1], o[2], o[3], o[4]) : 0;
