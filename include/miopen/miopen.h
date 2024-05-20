@@ -6632,7 +6632,7 @@ MIOPEN_EXPORT miopenStatus_t miopenMSELossBackward(miopenHandle_t handle,
                                                    miopenTensorDescriptor_t dyDesc,
                                                    const void* x,
                                                    const void* y,
-                                                   const void* dz,
+                                                   const void* z,
                                                    void* dx,
                                                    void* dy,
                                                    const float divisor = 1.0f);
@@ -6685,7 +6685,7 @@ MIOPEN_EXPORT miopenStatus_t miopenMSELossBackwardUnreduced(miopenHandle_t handl
                                                             miopenTensorDescriptor_t dyDesc,
                                                             const void* x,
                                                             const void* y,
-                                                            const void* dz,
+                                                            const void* z,
                                                             void* dx,
                                                             void* dy);
 

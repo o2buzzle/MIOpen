@@ -88,8 +88,7 @@ MSELossForward::GetSolution(const ExecutionContext& context,
     result.invoker_factory = [](const std::vector<Kernel>& kernels) {
         return [=](const Handle& handle_, const AnyInvokeParams& raw_params) {
             decltype(auto) kernel = handle_.Run(kernels.front());
-            decltype(auto) params =
-                raw_params.CastTo<miopen::mseloss::forward::ReducedInvokeParams>();
+            decltype(auto) params = raw_params.CastTo<miopen::mseloss::forward::InvokeParams>();
 
             auto xdims = params.xDesc->GetLengths();
             auto ydims = params.yDesc->GetLengths();
@@ -159,18 +158,17 @@ MSELossBackward::GetSolution(const ExecutionContext& context,
     result.invoker_factory = [](const std::vector<Kernel>& kernels) {
         return [=](const Handle& handle_, const AnyInvokeParams& raw_params) {
             decltype(auto) kernel = handle_.Run(kernels.front());
-            decltype(auto) params =
-                raw_params.CastTo<miopen::mseloss::backward::ReducedInvokeParams>();
+            decltype(auto) params = raw_params.CastTo<miopen::mseloss::backward::InvokeParams>();
 
             tensor_view_5d_t I_tv  = get_inner_expanded_tv(*params.xDesc);
             tensor_view_5d_t T_tv  = get_inner_expanded_tv(*params.yDesc);
-            tensor_view_5d_t dO_tv = get_inner_expanded_tv(*params.dzDesc);
+            tensor_view_5d_t dO_tv = get_inner_expanded_tv(*params.zDesc);
             tensor_view_5d_t dI_tv = get_inner_expanded_tv(*params.dxDesc);
-            tensor_view_5d_t dT_tv = get_inner_expanded_tv(*params.dzDesc);
+            tensor_view_5d_t dT_tv = get_inner_expanded_tv(*params.dyDesc);
 
             kernel(params.x,
                    params.y,
-                   params.dz,
+                   params.z,
                    params.dx,
                    params.dy,
                    params.divisor,

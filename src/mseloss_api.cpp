@@ -57,28 +57,28 @@ extern "C" miopenStatus_t miopenMSELossForward(miopenHandle_t handle,
 extern "C" miopenStatus_t miopenMSELossBackward(miopenHandle_t handle,
                                                 miopenTensorDescriptor_t xDesc,
                                                 miopenTensorDescriptor_t yDesc,
-                                                miopenTensorDescriptor_t dzDesc,
+                                                miopenTensorDescriptor_t zDesc,
                                                 miopenTensorDescriptor_t dxDesc,
                                                 miopenTensorDescriptor_t dyDesc,
                                                 const void* x,
                                                 const void* y,
-                                                const void* dz,
+                                                const void* z,
                                                 void* dx,
                                                 void* dy,
                                                 const float divisor)
 {
-    MIOPEN_LOG_FUNCTION(xDesc, yDesc, dzDesc, dxDesc, dyDesc, x, y, dz, dx, dy, divisor);
+    MIOPEN_LOG_FUNCTION(xDesc, yDesc, zDesc, dxDesc, dyDesc, x, y, z, dx, dy, divisor);
 
     return miopen::try_([&] {
         miopen::miopenMSELossBackward(miopen::deref(handle),
                                       miopen::deref(xDesc),
                                       miopen::deref(yDesc),
-                                      miopen::deref(dzDesc),
+                                      miopen::deref(zDesc),
                                       miopen::deref(dxDesc),
                                       miopen::deref(dyDesc),
                                       DataCast(x),
                                       DataCast(y),
-                                      DataCast(dz),
+                                      DataCast(z),
                                       DataCast(dx),
                                       DataCast(dy),
                                       divisor);
@@ -109,27 +109,27 @@ extern "C" miopenStatus_t miopenMSELossForwardUnreduced(miopenHandle_t handle,
 extern "C" miopenStatus_t miopenMSELossBackwardUnreduced(miopenHandle_t handle,
                                                          miopenTensorDescriptor_t xDesc,
                                                          miopenTensorDescriptor_t yDesc,
-                                                         miopenTensorDescriptor_t dzDesc,
+                                                         miopenTensorDescriptor_t zDesc,
                                                          miopenTensorDescriptor_t dxDesc,
                                                          miopenTensorDescriptor_t dyDesc,
                                                          const void* x,
                                                          const void* y,
-                                                         const void* dz,
+                                                         const void* z,
                                                          void* dx,
                                                          void* dy)
 {
-    MIOPEN_LOG_FUNCTION(xDesc, yDesc, dzDesc, dxDesc, dyDesc, x, y, dz, dx, dy);
+    MIOPEN_LOG_FUNCTION(xDesc, yDesc, zDesc, dxDesc, dyDesc, x, y, z, dx, dy);
 
     return miopen::try_([&] {
         miopen::miopenMSELossBackwardUnreduced(miopen::deref(handle),
                                                miopen::deref(xDesc),
                                                miopen::deref(yDesc),
-                                               miopen::deref(dzDesc),
+                                               miopen::deref(zDesc),
                                                miopen::deref(dxDesc),
                                                miopen::deref(dyDesc),
                                                DataCast(x),
                                                DataCast(y),
-                                               DataCast(dz),
+                                               DataCast(z),
                                                DataCast(dx),
                                                DataCast(dy));
     });

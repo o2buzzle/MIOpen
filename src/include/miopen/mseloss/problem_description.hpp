@@ -62,6 +62,7 @@ private:
     const float lossScale = 1.0f;
 };
 } // namespace forward
+
 namespace backward {
 struct ProblemDescription : ProblemDescriptionBase
 {

@@ -33,9 +33,9 @@
 namespace miopen {
 namespace mseloss {
 namespace forward {
-struct ReducedInvokeParams : public miopen::InvokeParams
+struct InvokeParams : public miopen::InvokeParams
 {
-    ReducedInvokeParams() = default;
+    InvokeParams() = default;
 
     const TensorDescriptor* xDesc;
     const TensorDescriptor* yDesc;
@@ -46,42 +46,45 @@ struct ReducedInvokeParams : public miopen::InvokeParams
     Data_t z;
 
     float divisor = 1.0f;
-
-    std::size_t GetWorkspaceSize() const { return 0; }
-    Data_t GetWorkspace() const { return nullptr; }
-};
-
-struct UnreducedInvokeParams : public miopen::InvokeParams
-{
-    UnreducedInvokeParams() = default;
-
-    const TensorDescriptor* xDesc;
-    const TensorDescriptor* yDesc;
-    const TensorDescriptor* zDesc;
-
-    ConstData_t x;
-    ConstData_t y;
-    Data_t z;
 
     std::size_t GetWorkspaceSize() const { return 0; }
     Data_t GetWorkspace() const { return nullptr; }
 };
 
 } // namespace forward
-namespace backward {
-struct ReducedInvokeParams : public miopen::InvokeParams
+
+namespace forward_unreduced {
+struct InvokeParams : public miopen::InvokeParams
 {
-    ReducedInvokeParams() = default;
+    InvokeParams() = default;
 
     const TensorDescriptor* xDesc;
     const TensorDescriptor* yDesc;
-    const TensorDescriptor* dzDesc;
+    const TensorDescriptor* zDesc;
+
+    ConstData_t x;
+    ConstData_t y;
+    Data_t z;
+
+    std::size_t GetWorkspaceSize() const { return 0; }
+    Data_t GetWorkspace() const { return nullptr; }
+};
+} // namespace forward_unreduced
+
+namespace backward {
+struct InvokeParams : public miopen::InvokeParams
+{
+    InvokeParams() = default;
+
+    const TensorDescriptor* xDesc;
+    const TensorDescriptor* yDesc;
+    const TensorDescriptor* zDesc;
     const TensorDescriptor* dxDesc;
     const TensorDescriptor* dyDesc;
 
     ConstData_t x;
     ConstData_t y;
-    ConstData_t dz;
+    ConstData_t z;
     Data_t dx;
     Data_t dy;
 
@@ -90,11 +93,12 @@ struct ReducedInvokeParams : public miopen::InvokeParams
     std::size_t GetWorkspaceSize() const { return 0; }
     Data_t GetWorkspace() const { return nullptr; }
 };
-
-struct UnreducedInvokeParams : public miopen::InvokeParams
+} // namespace backward
+namespace backward_unreduced {
+struct InvokeParams : public miopen::InvokeParams
 {
 
-    UnreducedInvokeParams() = default;
+    InvokeParams() = default;
 
     const TensorDescriptor* xDesc;
     const TensorDescriptor* yDesc;
@@ -111,6 +115,6 @@ struct UnreducedInvokeParams : public miopen::InvokeParams
     std::size_t GetWorkspaceSize() const { return 0; }
     Data_t GetWorkspace() const { return nullptr; }
 };
-} // namespace backward
+} // namespace backward_unreduced
 } // namespace mseloss
 } // namespace miopen
