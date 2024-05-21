@@ -412,9 +412,6 @@ int ConstantPadDriver<Tgpu, Tref>::VerifyForward()
 {
     RunForwardCPU();
 
-    // for (int i = 0; i < output.size(); i++)
-    //     printf("output[%d] = %f\n", i, output[i]);
-
     for(int i = 0; i < output.size(); i++)
     {
         if(output[i] != output_host[i])
@@ -487,9 +484,6 @@ template <typename Tgpu, typename Tref>
 int ConstantPadDriver<Tgpu, Tref>::VerifyBackward()
 {
     RunBackwardCPU();
-
-    // for (int i = 0; i < backward_output.size(); i++)
-    //     printf("backward_output[%d] = %f\n", i, backward_output[i]);
 
     for(int i = 0; i < backward_output_host.size(); i++)
     {
