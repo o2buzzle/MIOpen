@@ -29,11 +29,14 @@
 
 #include "driver.hpp"
 #include "miopen/miopen.h"
+#include "miopen/tensor.hpp"
+#include "miopen/tensor_view.hpp"
 #include "random.hpp"
 #include "tensor_driver.hpp"
 #include <memory>
 #include <vector>
 #include "../test/tensor_holder.hpp"
+#include "tensor_view.hpp"
 
 inline std::vector<std::string> split(const std::string& s, char delim)
 {
@@ -59,6 +62,93 @@ inline std::vector<T> ComputeStrides(std::vector<T> input, bool contiguous)
     if(!contiguous)
         std::swap(strides.front(), strides.back());
     return strides;
+}
+
+template <typename Tgpu, typename Tref>
+void mloMSELossForwardUnreducedRunHost(miopenTensorDescriptor_t inputDesc,
+                                       miopenTensorDescriptor_t targetDesc,
+                                       miopenTensorDescriptor_t outputDesc,
+                                       Tgpu* input,
+                                       Tgpu* target,
+                                       Tref* output)
+
+{
+    tensor_view_5d_t I_tv = get_inner_expanded_tv(miopen::deref(inputDesc));
+    tensor_view_5d_t T_tv = get_inner_expanded_tv(miopen::deref(targetDesc));
+    tensor_view_5d_t O_tv = get_inner_expanded_tv(miopen::deref(outputDesc));
+
+    int64_t gid = 0;
+
+    while(true)
+    {
+        size_t n0123 = gid / I_tv.size[4], n4 = gid % I_tv.size[4];
+        size_t n012 = n0123 / I_tv.size[3], n3 = n0123 % I_tv.size[3];
+        size_t n01 = n012 / I_tv.size[2], n2 = n012 % I_tv.size[2];
+        size_t n0 = n01 / I_tv.size[1], n1 = n01 % I_tv.size[1];
+
+        if(!(n0 < I_tv.size[0]))
+            break;
+
+        size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
+        size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
+        size_t Oidx = get5DIndexAt<size_t>(O_tv, n0, n1, n2, n3, n4);
+
+        output[Oidx] =
+            static_cast<Tref>((input[Iidx] - target[Tidx]) * (input[Iidx] - target[Tidx]));
+        ++gid;
+    }
+}
+
+template <typename Tgpu, typename Tref>
+void mloMSELossBackwardUnreducedRunHost(miopenTensorDescriptor_t inputDesc,
+                                        miopenTensorDescriptor_t targetDesc,
+                                        miopenTensorDescriptor_t outputDesc,
+                                        miopenTensorDescriptor_t inputGradDesc,
+                                        miopenTensorDescriptor_t targetGradDesc,
+                                        Tgpu* input,
+                                        Tgpu* target,
+                                        Tgpu* output,
+                                        Tref* input_grad,
+                                        Tref* target_grad)
+{
+    tensor_view_5d_t I_tv  = get_inner_expanded_tv(miopen::deref(inputDesc));
+    tensor_view_5d_t T_tv  = get_inner_expanded_tv(miopen::deref(targetDesc));
+    tensor_view_5d_t O_tv  = get_inner_expanded_tv(miopen::deref(outputDesc));
+    tensor_view_5d_t IG_tv = get_inner_expanded_tv(miopen::deref(inputGradDesc));
+    tensor_view_5d_t TG_tv = get_inner_expanded_tv(miopen::deref(targetGradDesc));
+
+    int64_t gid = 0;
+
+    while(true)
+    {
+        size_t n0123 = gid / I_tv.size[4], n4 = gid % I_tv.size[4];
+        size_t n012 = n0123 / I_tv.size[3], n3 = n0123 % I_tv.size[3];
+        size_t n01 = n012 / I_tv.size[2], n2 = n012 % I_tv.size[2];
+        size_t n0 = n01 / I_tv.size[1], n1 = n01 % I_tv.size[1];
+
+        if(!(n0 < I_tv.size[0]))
+            break;
+
+        size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
+        size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
+        size_t Oidx = get5DIndexAt<size_t>(O_tv, n0, n1, n2, n3, n4);
+
+        Tref grad = 2.0f * (input[Iidx] - target[Tidx]) * (output[Oidx]);
+
+        if(input_grad != nullptr)
+        {
+            size_t IGidx      = get5DIndexAt<size_t>(IG_tv, n0, n1, n2, n3, n4);
+            input_grad[IGidx] = grad;
+        }
+
+        if(target_grad != nullptr)
+        {
+            size_t TGidx       = get5DIndexAt<size_t>(TG_tv, n0, n1, n2, n3, n4);
+            target_grad[TGidx] = -grad;
+        }
+
+        ++gid;
+    }
 }
 
 template <typename Tgpu, typename Tref>
@@ -133,8 +223,8 @@ private:
 template <typename Tgpu, typename Tref>
 int MSELossDriver<Tgpu, Tref>::AddCmdLineArgs()
 {
-    inflags.AddInputFlag("forw", 'F', "1", "Run only Forward Cat (Default=1)", "int");
-    inflags.AddInputFlag("contiguous", 'Z', "1", "Use Contiguous Tensors", "int");
+    inflags.AddInputFlag("forw", 'F', "0", "Run only Forward Cat (Default=1)", "int");
+    inflags.AddInputFlag("contiguous", 'Z', "0", "Use Contiguous Tensors", "int");
     inflags.AddTensorFlag("in_tensors", 'I', "1", "Input Tensors");
     inflags.AddInputFlag("divisor", 'D', "1", "Divisor", "float");
     inflags.AddInputFlag("reduction", 'r', "none", "Reduction", "string");
@@ -173,6 +263,8 @@ void MSELossDriver<Tgpu, Tref>::GetInputTensorLengthsFromCmdLine()
 
     SetTensorNd(inputDesc, in_lengths, input_strides, data_type);
     SetTensorNd(targetDesc, target_lengths, target_strides, data_type);
+    SetTensorNd(inputGradDesc, in_lengths, data_type);
+    SetTensorNd(targetGradDesc, in_lengths, data_type);
 
     // Output is basically (input - target).pow(2) sized when unreduced
     // And (input - target).pow(2).(mean|sum)() (ala. 1) sized when reduced
@@ -180,15 +272,11 @@ void MSELossDriver<Tgpu, Tref>::GetInputTensorLengthsFromCmdLine()
     {
         auto out_lengths = in_lengths;
         SetTensorNd(outputDesc, out_lengths, data_type);
-        SetTensorNd(inputGradDesc, out_lengths, data_type);
-        SetTensorNd(targetGradDesc, out_lengths, data_type);
     }
     else
     {
         std::vector<int> out_lengths(1, 1);
         SetTensorNd(outputDesc, out_lengths, data_type);
-        SetTensorNd(inputGradDesc, out_lengths, data_type);
-        SetTensorNd(targetGradDesc, out_lengths, data_type);
     }
 }
 
@@ -211,26 +299,25 @@ int MSELossDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
     input       = std::vector<Tgpu>(input_size, static_cast<Tgpu>(0));
     target      = std::vector<Tgpu>(target_size, static_cast<Tgpu>(0));
     output      = std::vector<Tgpu>(output_size, static_cast<Tgpu>(0));
-    input_grad  = std::vector<Tgpu>(output_size, static_cast<Tgpu>(0));
-    target_grad = std::vector<Tgpu>(output_size, static_cast<Tgpu>(0));
+    input_grad  = std::vector<Tgpu>(input_size, static_cast<Tgpu>(0));
+    target_grad = std::vector<Tgpu>(input_size, static_cast<Tgpu>(0));
 
     // Host side buffers (for verification)
     output_host      = std::vector<Tref>(output_size, static_cast<Tref>(0));
-    input_grad_host  = std::vector<Tref>(output_size, static_cast<Tref>(0));
-    target_grad_host = std::vector<Tref>(output_size, static_cast<Tref>(0));
+    input_grad_host  = std::vector<Tref>(input_size, static_cast<Tref>(0));
+    target_grad_host = std::vector<Tref>(input_size, static_cast<Tref>(0));
 
     // Fill input and target tensors
     for(size_t i = 0; i < input.size(); i++)
     {
         input[i]  = prng::gen_A_to_B(static_cast<Tgpu>(0.0), static_cast<Tgpu>(1.0));
         target[i] = prng::gen_A_to_B(static_cast<Tgpu>(0.0), static_cast<Tgpu>(1.0));
+        input[i]  = static_cast<Tgpu>(1.0);
+        target[i] = static_cast<Tgpu>(1.0);
     }
 
-    for(size_t i = 0; i < output.size(); i++)
-    {
-        input_grad[i]  = static_cast<Tgpu>(1.0);
-        target_grad[i] = static_cast<Tgpu>(1.0);
-    }
+    memset(input_grad.data(), 1, input_grad.size() * sizeof(Tgpu));
+    memset(target_grad.data(), 1, target_grad.size() * sizeof(Tgpu));
 
     if(input_buf->ToGPU(GetStream(), input.data()) != miopenStatusSuccess)
         std::cerr << "Error: Failed to copy input to GPU, size " << input.size() << std::endl;
@@ -294,16 +381,32 @@ int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
 template <typename Tgpu, typename Tref>
 int MSELossDriver<Tgpu, Tref>::RunForwardCPU()
 {
+    if(inflags.GetValueStr("reduction") == "none")
+    {
+        mloMSELossForwardUnreducedRunHost(
+            inputDesc, targetDesc, outputDesc, input.data(), target.data(), output_host.data());
+    }
+
     return miopenStatusSuccess;
 }
 
 template <typename Tgpu, typename Tref>
 int MSELossDriver<Tgpu, Tref>::VerifyForward()
 {
+    RunForwardCPU();
+
     for(size_t i = 0; i < output.size(); i++)
     {
-        printf("output[%lu] = %f\n", i, output[i]);
+        if(output[i] != output_host[i])
+        {
+            std::cerr << "Error: Forward CPU and GPU mismatch" << std::endl;
+            std::cerr << "output[" << i << "] = " << output[i] << " != " << output_host[i]
+                      << std::endl;
+            return -1;
+        }
     }
+
+    printf("Success: Forward CPU and GPU match\n");
     return miopenStatusSuccess;
 }
 
@@ -314,17 +417,17 @@ int MSELossDriver<Tgpu, Tref>::RunBackwardGPU()
     {
         for(size_t i = 0; i < inflags.GetValueInt("iter"); i++)
         {
-            auto status = miopenMSELossBackward(GetHandle(),
-                                                inputDesc,
-                                                targetDesc,
-                                                outputDesc,
-                                                inputGradDesc,
-                                                targetGradDesc,
-                                                input_buf->GetMem(),
-                                                target_buf->GetMem(),
-                                                output_buf->GetMem(),
-                                                input_grad_buf->GetMem(),
-                                                target_grad_buf->GetMem());
+            auto status = miopenMSELossBackwardUnreduced(GetHandle(),
+                                                         inputDesc,
+                                                         targetDesc,
+                                                         outputDesc,
+                                                         inputGradDesc,
+                                                         targetGradDesc,
+                                                         input_buf->GetMem(),
+                                                         target_buf->GetMem(),
+                                                         output_buf->GetMem(),
+                                                         input_grad_buf->GetMem(),
+                                                         target_grad_buf->GetMem());
 
             if(status != miopenStatusSuccess)
             {
@@ -332,15 +435,18 @@ int MSELossDriver<Tgpu, Tref>::RunBackwardGPU()
                 return status;
             }
         }
-
-        if(input_grad_buf->FromGPU(GetStream(), input_grad.data()) != miopenStatusSuccess)
-            std::cerr << "Error: Failed to copy input_grad from GPU, size " << input_grad.size()
-                      << std::endl;
     }
     else
     {
         return miopenStatusSuccess;
     }
+
+    if(input_grad_buf->FromGPU(GetStream(), input_grad.data()) != miopenStatusSuccess)
+        std::cerr << "Error: Failed to copy input_grad from GPU, size " << input_grad.size()
+                  << std::endl;
+    if(target_grad_buf->FromGPU(GetStream(), target_grad.data()) != miopenStatusSuccess)
+        std::cerr << "Error: Failed to copy target_grad from GPU, size " << target_grad.size()
+                  << std::endl;
 
     return miopenStatusSuccess;
 }
@@ -348,9 +454,18 @@ int MSELossDriver<Tgpu, Tref>::RunBackwardGPU()
 template <typename Tgpu, typename Tref>
 int MSELossDriver<Tgpu, Tref>::RunBackwardCPU()
 {
-    for(size_t i = 0; i < input_grad.size(); i++)
+    if(inflags.GetValueStr("reduction") == "none")
     {
-        printf("input_grad[%lu] = %f\n", i, input_grad[i]);
+        mloMSELossBackwardUnreducedRunHost(inputDesc,
+                                           targetDesc,
+                                           outputDesc,
+                                           inputGradDesc,
+                                           targetGradDesc,
+                                           input.data(),
+                                           target.data(),
+                                           output.data(),
+                                           input_grad_host.data(),
+                                           target_grad_host.data());
     }
 
     return miopenStatusSuccess;
@@ -359,6 +474,32 @@ int MSELossDriver<Tgpu, Tref>::RunBackwardCPU()
 template <typename Tgpu, typename Tref>
 int MSELossDriver<Tgpu, Tref>::VerifyBackward()
 {
+    RunBackwardCPU();
+
+    for(size_t i = 0; i < input_grad.size(); i++)
+    {
+        if(input_grad[i] != input_grad_host[i])
+        {
+            std::cerr << "Error: Backward CPU and GPU mismatch" << std::endl;
+            std::cerr << "input_grad[" << i << "] = " << input_grad[i]
+                      << " != " << input_grad_host[i] << std::endl;
+            return -1;
+        }
+    }
+
+    for(size_t i = 0; i < target_grad.size(); i++)
+    {
+        if(target_grad[i] != target_grad_host[i])
+        {
+            std::cerr << "Error: Backward CPU and GPU mismatch" << std::endl;
+            std::cerr << "target_grad[" << i << "] = " << target_grad[i]
+                      << " != " << target_grad_host[i] << std::endl;
+
+            return -1;
+        }
+    }
+
+    printf("Success: Backward CPU and GPU match\n");
     return miopenStatusSuccess;
 }
 

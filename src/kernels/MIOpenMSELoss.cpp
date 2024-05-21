@@ -43,9 +43,9 @@
 #define IO_TYPE float
 #endif
 
-__device__ void DeviceMSELossForward5d(const IO_TYPE* I,
-                                       const IO_TYPE* T,
-                                       IO_TYPE* lsum,
+__device__ void DeviceMSELossForward5d(const IO_TYPE* __restrict__ I,
+                                       const IO_TYPE* __restrict__ T,
+                                       IO_TYPE* __restrict__ lsum,
                                        FLOAT_ACCUM divisor,
                                        tensor_view_5d_t I_tv,
                                        tensor_view_5d_t T_tv)
@@ -69,11 +69,11 @@ __device__ void DeviceMSELossForward5d(const IO_TYPE* I,
     lsum[gid] /= divisor;
 }
 
-__device__ void DeviceMSELossBackward5d(const IO_TYPE* I,
-                                        const IO_TYPE* T,
-                                        const IO_TYPE* dO,
-                                        IO_TYPE* dI,
-                                        IO_TYPE* dT,
+__device__ void DeviceMSELossBackward5d(const IO_TYPE* __restrict__ I,
+                                        const IO_TYPE* __restrict__ T,
+                                        const IO_TYPE* __restrict__ dO,
+                                        IO_TYPE* __restrict__ dI,
+                                        IO_TYPE* __restrict__ dT,
                                         FLOAT_ACCUM divisor,
                                         tensor_view_5d_t I_tv,
                                         tensor_view_5d_t T_tv,
@@ -109,9 +109,9 @@ __device__ void DeviceMSELossBackward5d(const IO_TYPE* I,
     }
 }
 
-__device__ void DeviceMSELossUnreducedForward5d(const IO_TYPE* I,
-                                                const IO_TYPE* T,
-                                                IO_TYPE* O,
+__device__ void DeviceMSELossUnreducedForward5d(const IO_TYPE* __restrict__ I,
+                                                const IO_TYPE* __restrict__ T,
+                                                IO_TYPE* __restrict__ O,
                                                 tensor_view_5d_t I_tv,
                                                 tensor_view_5d_t T_tv,
                                                 tensor_view_5d_t O_tv)
@@ -133,11 +133,11 @@ __device__ void DeviceMSELossUnreducedForward5d(const IO_TYPE* I,
     O[Oidx] = (I[Iidx] - T[Tidx]) * (I[Iidx] - T[Tidx]);
 }
 
-__device__ void DeviceMSELossUnreducedBackward5d(const IO_TYPE* I,
-                                                 const IO_TYPE* T,
-                                                 const IO_TYPE* dO,
-                                                 IO_TYPE* dI,
-                                                 IO_TYPE* dT,
+__device__ void DeviceMSELossUnreducedBackward5d(const IO_TYPE* __restrict__ I,
+                                                 const IO_TYPE* __restrict__ T,
+                                                 const IO_TYPE* __restrict__ dO,
+                                                 IO_TYPE* __restrict__ dI,
+                                                 IO_TYPE* __restrict__ dT,
                                                  tensor_view_5d_t I_tv,
                                                  tensor_view_5d_t T_tv,
                                                  tensor_view_5d_t dO_tv,
@@ -172,9 +172,9 @@ __device__ void DeviceMSELossUnreducedBackward5d(const IO_TYPE* I,
 }
 
 // Trampolines
-extern "C" __global__ void MSELossForward5d(const IO_TYPE* I,
-                                            const IO_TYPE* T,
-                                            IO_TYPE* lsum,
+extern "C" __global__ void MSELossForward5d(const IO_TYPE* __restrict__ I,
+                                            const IO_TYPE* __restrict__ T,
+                                            IO_TYPE* __restrict__ lsum,
                                             FLOAT_ACCUM divisor,
                                             tensor_view_5d_t I_tv,
                                             tensor_view_5d_t T_tv)
@@ -183,11 +183,11 @@ extern "C" __global__ void MSELossForward5d(const IO_TYPE* I,
     DeviceMSELossForward5d(I, T, lsum, divisor, I_tv, T_tv);
 }
 
-extern "C" __global__ void MSELossBackward5d(const IO_TYPE* I,
-                                             const IO_TYPE* T,
-                                             const IO_TYPE* dO,
-                                             IO_TYPE* dI,
-                                             IO_TYPE* dT,
+extern "C" __global__ void MSELossBackward5d(const IO_TYPE* __restrict__ I,
+                                             const IO_TYPE* __restrict__ T,
+                                             const IO_TYPE* __restrict__ dO,
+                                             IO_TYPE* __restrict__ dI,
+                                             IO_TYPE* __restrict__ dT,
                                              FLOAT_ACCUM divisor,
                                              tensor_view_5d_t I_tv,
                                              tensor_view_5d_t T_tv,
@@ -197,9 +197,9 @@ extern "C" __global__ void MSELossBackward5d(const IO_TYPE* I,
 {
     DeviceMSELossBackward5d(I, T, dO, dI, dT, divisor, I_tv, T_tv, dO_tv, dI_tv, dT_tv);
 }
-extern "C" __global__ void MSELossForwardUnreduced5d(const IO_TYPE* I,
-                                                     const IO_TYPE* T,
-                                                     IO_TYPE* O,
+extern "C" __global__ void MSELossForwardUnreduced5d(const IO_TYPE* __restrict__ I,
+                                                     const IO_TYPE* __restrict__ T,
+                                                     IO_TYPE* __restrict__ O,
                                                      tensor_view_5d_t I_tv,
                                                      tensor_view_5d_t T_tv,
                                                      tensor_view_5d_t O_tv)
@@ -207,11 +207,11 @@ extern "C" __global__ void MSELossForwardUnreduced5d(const IO_TYPE* I,
     DeviceMSELossUnreducedForward5d(I, T, O, I_tv, T_tv, O_tv);
 }
 
-extern "C" __global__ void MSELossBackwardUnreduced5d(const IO_TYPE* I,
-                                                      const IO_TYPE* T,
-                                                      const IO_TYPE* dO,
-                                                      IO_TYPE* dI,
-                                                      IO_TYPE* dT,
+extern "C" __global__ void MSELossBackwardUnreduced5d(const IO_TYPE* __restrict__ I,
+                                                      const IO_TYPE* __restrict__ T,
+                                                      const IO_TYPE* __restrict__ dO,
+                                                      IO_TYPE* __restrict__ dI,
+                                                      IO_TYPE* __restrict__ dT,
                                                       tensor_view_5d_t I_tv,
                                                       tensor_view_5d_t T_tv,
                                                       tensor_view_5d_t dO_tv,
