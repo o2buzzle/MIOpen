@@ -34,6 +34,7 @@
 #include "random.hpp"
 #include "timer.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <vector>
 #include <miopen/miopen.h>
@@ -57,7 +58,7 @@ void mloConstantPadForwardRunHost(miopenTensorDescriptor_t inputDesc,
     for(auto i = 0; i < padding_vec.size(); i++)
         padding.val[10 - padding_vec.size() + i] = padding_vec[i];
 
-    size_t o[5];
+    int64_t o[5];
     size_t output_size = miopen::deref(outputDesc).GetElementSize();
 
     tensor_view_5d_t input_tv  = get_inner_expanded_tv(miopen::deref(inputDesc));
@@ -71,7 +72,7 @@ void mloConstantPadForwardRunHost(miopenTensorDescriptor_t inputDesc,
         for(int i = 0; i < 5; i++)
         {
             o[i] = o[i] - padding.val[2 * i];
-            flag *= (o[i] < input_tv.size[i]);
+            flag *= (o[i] >= 0) && (o[i] < input_tv.size[i]);
         }
 
         auto val =
@@ -95,7 +96,7 @@ void mloConstantPadBackwardRunHost(miopenTensorDescriptor_t backwardOutputDesc,
     for(auto i = 0; i < padding_vec.size(); i++)
         padding.val[10 - padding_vec.size() + i] = padding_vec[i];
 
-    size_t o[5];
+    int64_t o[5];
 
     size_t backward_output_size = miopen::deref(backwardOutputDesc).GetElementSize();
     tensor_view_5d_t input_tv   = get_inner_expanded_tv(miopen::deref(inputGradDesc));
@@ -109,7 +110,7 @@ void mloConstantPadBackwardRunHost(miopenTensorDescriptor_t backwardOutputDesc,
         for(int i = 0; i < 5; i++)
         {
             o[i] = o[i] + padding.val[2 * i];
-            flag *= (o[i] < input_tv.size[i]);
+            flag *= (o[i] >= 0) && (o[i] < input_tv.size[i]);
         }
 
         if(flag)

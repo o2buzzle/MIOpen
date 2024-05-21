@@ -128,7 +128,7 @@ __device__ void padconstantbwdcontiguous(TI* __restrict__ dx,
     if(gid >= input_size)
         return;
 
-    uint64_t o[5];
+    int64_t o[5];
     getNCDHW(o, gid, dx_tv.size);
     bool flag = true;
 

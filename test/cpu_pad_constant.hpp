@@ -49,7 +49,7 @@ void cpu_pad_constant_fwd(const T* input,
     for(auto i = 0; i < padding_vec.size(); i++)
         padding.val[10 - padding_vec.size() + i] = padding_vec[i];
 
-    size_t o[5];
+    int64_t o[5];
 
     for(size_t gid = 0; gid != output_desc->GetElementSize(); ++gid)
     {
@@ -58,7 +58,7 @@ void cpu_pad_constant_fwd(const T* input,
         for(int i = 0; i < 5; i++)
         {
             o[i] = o[i] - padding.val[2 * i];
-            flag *= (o[i] < input_tv.size[i]);
+            flag *= (o[i] >= 0) && (o[i] < input_tv.size[i]);
         }
 
         auto val =
@@ -84,7 +84,7 @@ void cpu_pad_constant_bwd(T* input_grad,
     for(auto i = 0; i < padding_vec.size(); i++)
         padding.val[10 - padding_vec.size() + i] = padding_vec[i];
 
-    size_t o[5];
+    int64_t o[5];
     size_t backward_output_size = backward_output_desc->GetElementSize();
 
     for(size_t gid = 0; gid < backward_output_size; ++gid)
@@ -95,7 +95,7 @@ void cpu_pad_constant_bwd(T* input_grad,
         for(int i = 0; i < 5; i++)
         {
             o[i] = o[i] + padding.val[2 * i];
-            flag *= (o[i] < input_tv.size[i]);
+            flag *= (o[i] >= 0) && (o[i] < input_tv.size[i]);
         }
 
         T val = flag ? get5DValueAt<T>(input_grad, input_tv.stride, o[0], o[1], o[2], o[3], o[4])

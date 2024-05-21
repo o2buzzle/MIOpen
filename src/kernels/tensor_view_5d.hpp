@@ -37,7 +37,7 @@ struct tensor_view_5d_t
 
 struct padding_5d_t
 {
-    uint64_t val[10];
+    int64_t val[10];
 };
 
 template <typename T, typename U>
