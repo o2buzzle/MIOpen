@@ -6667,7 +6667,7 @@ MIOPEN_EXPORT miopenStatus_t miopenMSELossForwardUnreduced(miopenHandle_t handle
  * @param  [in]  handle         An instance of miopenHandle_t
  * @param  [in]  xDesc          Input Tensor descriptor
  * @param  [in]  yDesc          Target Tensor descriptor
- * @param  [in]  dzDesc         Output Tensor descriptor
+ * @param  [in]  zDesc          Output Tensor descriptor
  * @param  [in]  dxDesc         Input gradiant Tensor descriptor
  * @param  [in]  dyDesc         Target gradiant Tensor descriptor
  * @param  [in]  x              Pointer to input tensor data
@@ -6680,7 +6680,7 @@ MIOPEN_EXPORT miopenStatus_t miopenMSELossForwardUnreduced(miopenHandle_t handle
 MIOPEN_EXPORT miopenStatus_t miopenMSELossBackwardUnreduced(miopenHandle_t handle,
                                                             miopenTensorDescriptor_t xDesc,
                                                             miopenTensorDescriptor_t yDesc,
-                                                            miopenTensorDescriptor_t dzDesc,
+                                                            miopenTensorDescriptor_t zDesc,
                                                             miopenTensorDescriptor_t dxDesc,
                                                             miopenTensorDescriptor_t dyDesc,
                                                             const void* x,

@@ -38,6 +38,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     std::ostringstream ss;
     ss << "fwd";
     ss << "dtype" << dtype;
+    ss << "xDesc" << xDesc;
 
     return NetworkConfig{ss.str()};
 }
@@ -52,6 +53,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     std::ostringstream ss;
     ss << "fwdu";
     ss << "dtype" << dtype;
+    ss << "xdesc" << xDesc;
 
     return NetworkConfig{ss.str()};
 }
@@ -65,6 +67,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     std::ostringstream ss;
     ss << "bwd";
     ss << "dtype" << dtype;
+    ss << "dxDesc" << dxDesc;
 
     return NetworkConfig{ss.str()};
 }
@@ -79,6 +82,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     std::ostringstream ss;
     ss << "bwdu";
     ss << "dtype" << dtype;
+    ss << "dxDesc" << dxDesc;
 
     return NetworkConfig{ss.str()};
 }

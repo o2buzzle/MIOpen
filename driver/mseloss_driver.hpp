@@ -226,11 +226,25 @@ int MSELossDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
         target[i] = prng::gen_A_to_B(static_cast<Tgpu>(0.0), static_cast<Tgpu>(1.0));
     }
 
+    for(size_t i = 0; i < output.size(); i++)
+    {
+        input_grad[i]  = static_cast<Tgpu>(1.0);
+        target_grad[i] = static_cast<Tgpu>(1.0);
+    }
+
     if(input_buf->ToGPU(GetStream(), input.data()) != miopenStatusSuccess)
         std::cerr << "Error: Failed to copy input to GPU, size " << input.size() << std::endl;
 
     if(target_buf->ToGPU(GetStream(), target.data()) != miopenStatusSuccess)
         std::cerr << "Error: Failed to copy target to GPU, size " << target.size() << std::endl;
+
+    if(input_grad_buf->ToGPU(GetStream(), input_grad.data()) != miopenStatusSuccess)
+        std::cerr << "Error: Failed to copy input_grad to GPU, size " << input_grad.size()
+                  << std::endl;
+
+    if(target_grad_buf->ToGPU(GetStream(), target_grad.data()) != miopenStatusSuccess)
+        std::cerr << "Error: Failed to copy target_grad to GPU, size " << target_grad.size()
+                  << std::endl;
 
     return miopenStatusSuccess;
 }
@@ -248,26 +262,33 @@ int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
 {
     if(inflags.GetValueStr("reduction") == "none")
     {
-        auto status = miopenMSELossForwardUnreduced(GetHandle(),
-                                                    inputDesc,
-                                                    targetDesc,
-                                                    outputDesc,
-                                                    input.data(),
-                                                    target.data(),
-                                                    output.data());
-
-        if(status != miopenStatusSuccess)
+        for(size_t i = 0; i < inflags.GetValueInt("iter"); i++)
         {
-            std::cerr << "Error: miopenMSELossForwardUnreduced failed" << std::endl;
-            return status;
+            auto status = miopenMSELossForwardUnreduced(GetHandle(),
+                                                        inputDesc,
+                                                        targetDesc,
+                                                        outputDesc,
+                                                        input_buf->GetMem(),
+                                                        target_buf->GetMem(),
+                                                        output_buf->GetMem());
+
+            if(status != miopenStatusSuccess)
+            {
+                std::cerr << "Error: miopenMSELossForwardUnreduced failed" << std::endl;
+                return status;
+            }
         }
 
-        return miopenStatusSuccess;
+        if(output_buf->FromGPU(GetStream(), output.data()) != miopenStatusSuccess)
+            std::cerr << "Error: Failed to copy output from GPU, size " << output.size()
+                      << std::endl;
     }
     else
     {
-        return miopenStatusSuccess;
+        for(size_t i = 0; i < inflags.GetValueInt("iter"); i++)
+            return miopenStatusSuccess;
     }
+    return miopenStatusSuccess;
 }
 
 template <typename Tgpu, typename Tref>
@@ -279,18 +300,59 @@ int MSELossDriver<Tgpu, Tref>::RunForwardCPU()
 template <typename Tgpu, typename Tref>
 int MSELossDriver<Tgpu, Tref>::VerifyForward()
 {
+    for(size_t i = 0; i < output.size(); i++)
+    {
+        printf("output[%lu] = %f\n", i, output[i]);
+    }
     return miopenStatusSuccess;
 }
 
 template <typename Tgpu, typename Tref>
 int MSELossDriver<Tgpu, Tref>::RunBackwardGPU()
 {
+    if(inflags.GetValueStr("reduction") == "none")
+    {
+        for(size_t i = 0; i < inflags.GetValueInt("iter"); i++)
+        {
+            auto status = miopenMSELossBackward(GetHandle(),
+                                                inputDesc,
+                                                targetDesc,
+                                                outputDesc,
+                                                inputGradDesc,
+                                                targetGradDesc,
+                                                input_buf->GetMem(),
+                                                target_buf->GetMem(),
+                                                output_buf->GetMem(),
+                                                input_grad_buf->GetMem(),
+                                                target_grad_buf->GetMem());
+
+            if(status != miopenStatusSuccess)
+            {
+                std::cerr << "Error: miopenMSELossBackward failed" << std::endl;
+                return status;
+            }
+        }
+
+        if(input_grad_buf->FromGPU(GetStream(), input_grad.data()) != miopenStatusSuccess)
+            std::cerr << "Error: Failed to copy input_grad from GPU, size " << input_grad.size()
+                      << std::endl;
+    }
+    else
+    {
+        return miopenStatusSuccess;
+    }
+
     return miopenStatusSuccess;
 }
 
 template <typename Tgpu, typename Tref>
 int MSELossDriver<Tgpu, Tref>::RunBackwardCPU()
 {
+    for(size_t i = 0; i < input_grad.size(); i++)
+    {
+        printf("input_grad[%lu] = %f\n", i, input_grad[i]);
+    }
+
     return miopenStatusSuccess;
 }
 
