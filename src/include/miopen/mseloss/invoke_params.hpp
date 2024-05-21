@@ -27,6 +27,7 @@
 #pragma once
 
 #include "miopen/common.hpp"
+#include "miopen/mlo_internal.hpp"
 #include <miopen/invoke_params.hpp>
 #include <miopen/tensor.hpp>
 
@@ -39,16 +40,17 @@ struct InvokeParams : public miopen::InvokeParams
 
     const TensorDescriptor* xDesc;
     const TensorDescriptor* yDesc;
-    const TensorDescriptor* zDesc;
 
-    ConstData_t x;
-    ConstData_t y;
-    Data_t z;
+    ConstData_t x    = nullptr;
+    ConstData_t y    = nullptr;
+    Data_t workspace = nullptr;
 
     float divisor = 1.0f;
 
-    std::size_t GetWorkspaceSize() const { return 0; }
-    Data_t GetWorkspace() const { return nullptr; }
+    size_t workspace_size = 0;
+
+    std::size_t GetWorkspaceSize() const { return workspace_size; }
+    Data_t GetWorkspace() const { return workspace; }
 };
 
 } // namespace forward

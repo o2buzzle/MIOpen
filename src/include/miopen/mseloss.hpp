@@ -25,6 +25,7 @@
  *******************************************************************************/
 
 #include "miopen/miopen.h"
+#include <cstddef>
 #include <miopen/common.hpp>
 
 namespace miopen {
@@ -34,11 +35,14 @@ struct TensorDescriptor;
 miopenStatus_t miopenMSELossForward(Handle& handle,
                                     const TensorDescriptor& xDesc,
                                     const TensorDescriptor& yDesc,
-                                    const TensorDescriptor& zDesc,
                                     ConstData_t x,
                                     ConstData_t y,
                                     Data_t z,
                                     float divisor = 1.0f);
+
+size_t miopenMSELossForwardGetWorkspaceSize(Handle& handle,
+                                            TensorDescriptor& xDesc,
+                                            TensorDescriptor& yDesc);
 
 miopenStatus_t miopenMSELossBackward(Handle& handle,
                                      const TensorDescriptor& xDesc,

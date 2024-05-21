@@ -30,6 +30,7 @@
 #include "miopen/names.hpp"
 #include "miopen/tensor.hpp"
 #include "miopen/find_solution.hpp"
+#include <cstddef>
 #include <miopen/mseloss.hpp>
 #include <miopen/mseloss/problem_description.hpp>
 #include <miopen/mseloss/invoke_params.hpp>
@@ -40,7 +41,6 @@ namespace miopen {
 miopenStatus_t miopenMSELossForward(Handle& handle,
                                     const TensorDescriptor& xDesc,
                                     const TensorDescriptor& yDesc,
-                                    const TensorDescriptor& zDesc,
                                     ConstData_t x,
                                     ConstData_t y,
                                     Data_t z,
@@ -48,17 +48,16 @@ miopenStatus_t miopenMSELossForward(Handle& handle,
 {
     auto ctx = ExecutionContext{&handle};
 
-    const auto problem = mseloss::forward::ProblemDescription{xDesc, yDesc, zDesc};
+    const auto problem = mseloss::forward::ProblemDescription{xDesc, yDesc};
 
     const auto invoke_params = [&]() {
-        auto tmp    = mseloss::forward::InvokeParams{};
-        tmp.xDesc   = &xDesc;
-        tmp.yDesc   = &yDesc;
-        tmp.zDesc   = &zDesc;
-        tmp.x       = x;
-        tmp.y       = y;
-        tmp.z       = z;
-        tmp.divisor = divisor;
+        auto tmp      = mseloss::forward::InvokeParams{};
+        tmp.xDesc     = &xDesc;
+        tmp.yDesc     = &yDesc;
+        tmp.x         = x;
+        tmp.y         = y;
+        tmp.workspace = z;
+        tmp.divisor   = divisor;
         return tmp;
     }();
 
@@ -67,6 +66,22 @@ miopenStatus_t miopenMSELossForward(Handle& handle,
 
     solvers.ExecutePrimitive(handle, problem, algo, invoke_params);
     return miopenStatusSuccess;
+}
+
+size_t miopenMSELossForwardGetWorkspacesSize(Handle& handle,
+                                             TensorDescriptor& xDesc,
+                                             TensorDescriptor& yDesc)
+{
+    auto ctx = ExecutionContext{&handle};
+
+    const auto problem = mseloss::forward::ProblemDescription{xDesc, yDesc};
+    const auto algo    = AlgorithmName{"MSELossForward"};
+
+    const auto solvers = solver::SolverContainer<solver::mseloss::forward::MSELossForward>{};
+
+    auto workspace_sizes = solvers.GetWorkspaceSizes(ctx, problem);
+
+    return workspace_sizes.empty() ? static_cast<size_t>(0) : workspace_sizes.front().second;
 }
 
 miopenStatus_t miopenMSELossForwardUnreduced(Handle& handle,

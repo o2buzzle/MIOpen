@@ -6583,15 +6583,17 @@ MIOPEN_EXPORT miopenStatus_t miopenBackendInitialize(miopenBackendDescriptor_t d
 #endif // MIOPEN_BETA_API
 
 #ifdef MIOPEN_BETA_API
+/** @addtogroup loss
+ * @{
+ */
+
 /*! MSELoss APIs
- * @addtogroup loss
  * @brief MSELoss forward functon
  *
- * MSELoss forward, unreduced function
+ * MSELoss forward, reduced function
  * @param  [in]  handle         An instance of miopenHandle_t
  * @param  [in]  xDesc          Input Tensor descriptor
  * @param  [in]  yDesc          Target Tensor descriptor
- * @param  [in]  zDesc          Output Tensor descriptor
  * @param  [in]  x              Pointer to input tensor data
  * @param  [in]  y              Pointer to target tensor data
  * @param  [out] z              Pointer to the output tensor data
@@ -6600,13 +6602,27 @@ MIOPEN_EXPORT miopenStatus_t miopenBackendInitialize(miopenBackendDescriptor_t d
 MIOPEN_EXPORT miopenStatus_t miopenMSELossForward(miopenHandle_t handle,
                                                   miopenTensorDescriptor_t xDesc,
                                                   miopenTensorDescriptor_t yDesc,
-                                                  miopenTensorDescriptor_t zDesc,
                                                   const void* x,
                                                   const void* y,
                                                   void* z,
                                                   float divisor = 1.0f);
+
 /*!
- * @addtogroup loss
+ * @brief MSELoss Forward helper function
+ *
+ * MSELoss forward reduced helper function to find the workspace size
+ * @param  [in]  handle         An instance of miopenHandle_t
+ * @param  [in]  xDesc          Input Tensor descriptor
+ * @param  [in]  yDesc          Target Tensor descriptor
+ * @param  [out] sizeInBytes    Needed workspace size
+ */
+
+MIOPEN_EXPORT miopenStatus_t miopenMSELossForwardGetWorkspaceSize(miopenHandle_t handle,
+                                                                  miopenTensorDescriptor_t xDesc,
+                                                                  miopenTensorDescriptor_t yDesc,
+                                                                  size_t* sizeInBytes);
+
+/*!
  * @brief MSELoss backward function
  *
  * MSELoss backward, unreduced function
@@ -6638,7 +6654,6 @@ MIOPEN_EXPORT miopenStatus_t miopenMSELossBackward(miopenHandle_t handle,
                                                    float divisor = 1.0f);
 
 /*!
- * @addtogroup loss
  * @brief MSELoss forward function
  *
  * MSELoss forward, unreduced function
@@ -6660,7 +6675,6 @@ MIOPEN_EXPORT miopenStatus_t miopenMSELossForwardUnreduced(miopenHandle_t handle
                                                            void* z);
 
 /*!
- * @addtogroup loss
  * @brief MSELoss backward function
  *
  * MSELoss backward, unreduced function
@@ -6692,6 +6706,7 @@ MIOPEN_EXPORT miopenStatus_t miopenMSELossBackwardUnreduced(miopenHandle_t handl
 /*! @} */
 #endif
 
+/*! @} */
 #ifdef __cplusplus
 }
 #endif

@@ -27,6 +27,7 @@
 #pragma once
 
 #include "miopen/common.hpp"
+#include <cstddef>
 #include <miopen/problem_description_base.hpp>
 #include <miopen/activ.hpp>
 #include <miopen/tensor.hpp>
@@ -37,21 +38,17 @@ namespace mseloss {
 namespace forward {
 struct ProblemDescription : ProblemDescriptionBase
 {
-    ProblemDescription(const TensorDescriptor& xDesc_,
-                       const TensorDescriptor& yDesc_,
-                       const TensorDescriptor& zDesc_)
-        : xDesc(xDesc_), yDesc(yDesc_), zDesc(zDesc_){};
+    ProblemDescription(const TensorDescriptor& xDesc_, const TensorDescriptor& yDesc_)
+        : xDesc(xDesc_), yDesc(yDesc_){};
 
     NetworkConfig MakeNetworkConfig() const override;
 
     const TensorDescriptor& GetXDesc() const { return xDesc; }
     const TensorDescriptor& GetYDesc() const { return yDesc; }
-    const TensorDescriptor& GetZDesc() const { return zDesc; }
 
 private:
     const TensorDescriptor& xDesc;
     const TensorDescriptor& yDesc;
-    const TensorDescriptor& zDesc;
 };
 } // namespace forward
 

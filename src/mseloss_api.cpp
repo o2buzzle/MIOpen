@@ -35,23 +35,34 @@
 extern "C" miopenStatus_t miopenMSELossForward(miopenHandle_t handle,
                                                miopenTensorDescriptor_t xDesc,
                                                miopenTensorDescriptor_t yDesc,
-                                               miopenTensorDescriptor_t zDesc,
                                                const void* x,
                                                const void* y,
                                                void* z,
                                                const float divisor)
 {
-    MIOPEN_LOG_FUNCTION(xDesc, yDesc, zDesc, x, y, z, divisor);
+    MIOPEN_LOG_FUNCTION(xDesc, yDesc, x, y, z, divisor);
 
     return miopen::try_([&] {
         miopen::miopenMSELossForward(miopen::deref(handle),
                                      miopen::deref(xDesc),
                                      miopen::deref(yDesc),
-                                     miopen::deref(zDesc),
                                      DataCast(x),
                                      DataCast(y),
                                      DataCast(z),
                                      divisor);
+    });
+}
+
+extern "C" miopenStatus_t miopenMSELossForwardGetWorkspaceSize(miopenHandle_t handle,
+                                                               miopenTensorDescriptor_t xDesc,
+                                                               miopenTensorDescriptor_t yDesc,
+                                                               size_t* size)
+{
+    MIOPEN_LOG_FUNCTION(xDesc, yDesc, size);
+
+    return miopen::try_([&] {
+        miopen::deref(size) = miopen::miopenMSELossForwardGetWorkspaceSize(
+            miopen::deref(handle), miopen::deref(xDesc), miopen::deref(yDesc));
     });
 }
 

@@ -81,6 +81,8 @@ __device__ void DeviceMSELossBackward5d(const IO_TYPE* __restrict__ I,
                                         tensor_view_5d_t dI_tv,
                                         tensor_view_5d_t dT_tv)
 {
+    divisor = CVT_ACCUM2FLOAT(divisor);
+
     const size_t gid = blockIdx.x * blockDim.x + threadIdx.x;
     size_t n0123 = gid / I_tv.size[4], n4 = gid % I_tv.size[4];
     size_t n012 = n0123 / I_tv.size[3], n3 = n0123 % I_tv.size[3];

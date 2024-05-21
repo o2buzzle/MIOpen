@@ -27,6 +27,7 @@
 #pragma once
 
 #include "miopen/execution_context.hpp"
+#include <cstddef>
 #include <miopen/solver.hpp>
 #include <miopen/mseloss/problem_description.hpp>
 
@@ -46,6 +47,12 @@ struct MSELossForward final : MSELossForwardSolver
     ConvSolution
     GetSolution(const ExecutionContext& context,
                 const miopen::mseloss::forward::ProblemDescription& problem) const override;
+
+    std::size_t
+    GetWorkspaceSize([[maybe_unused]] const ExecutionContext& context,
+                     const miopen::mseloss::forward::ProblemDescription& problem) const override;
+
+    bool MayNeedWorkspace() const override { return true; }
 };
 } // namespace forward
 

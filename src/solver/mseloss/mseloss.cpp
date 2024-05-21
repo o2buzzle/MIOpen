@@ -24,6 +24,7 @@
  *
  *******************************************************************************/
 
+#include "miopen/bfloat16.hpp"
 #include "miopen/conv_solution.hpp"
 #include "miopen/invoke_params.hpp"
 #include "miopen/kernel_build_params.hpp"
@@ -32,6 +33,8 @@
 #include "miopen/mseloss/invoke_params.hpp"
 #include "miopen/tensor_view.hpp"
 #include <cstddef>
+
+#define LOCAL_SIZE_MSELOSS 256
 
 namespace miopen {
 namespace solver {
@@ -55,7 +58,7 @@ MSELossForward::GetSolution(const ExecutionContext& context,
 
     auto numel = problem.GetXDesc().GetElementSize();
 
-    size_t xlocalsize = 256;
+    size_t xlocalsize = LOCAL_SIZE_MSELOSS;
     size_t xgridsize  = AlignUp(numel, xlocalsize);
     size_t ylocalsize = 1;
     size_t ygridsize  = 1;
@@ -99,11 +102,32 @@ MSELossForward::GetSolution(const ExecutionContext& context,
             tensor_view_5d_t I_tv = get_inner_expanded_tv(*params.xDesc);
             tensor_view_5d_t T_tv = get_inner_expanded_tv(*params.yDesc);
 
-            kernel(params.x, params.y, params.z, params.divisor, I_tv, T_tv);
+            kernel(params.x, params.y, params.workspace, params.divisor, I_tv, T_tv);
         };
     };
     return result;
 }
+
+std::size_t
+MSELossForward::GetWorkspaceSize(const ExecutionContext& context,
+                                 const miopen::mseloss::forward::ProblemDescription& problem) const
+{
+    auto tensor_dtype = problem.GetXDesc().GetType();
+    auto numel        = problem.GetXDesc().GetElementSize();
+    auto elsize       = [&]() -> std::size_t {
+        switch(tensor_dtype)
+        {
+        case miopenHalf: return sizeof(half_float::half);
+        case miopenFloat: return sizeof(float);
+        case miopenBFloat16: return sizeof(bfloat16);
+        default: break;
+        }
+        MIOPEN_THROW("Unsupported tensor type");
+    }();
+
+    return AlignUp(numel, LOCAL_SIZE_MSELOSS) * elsize;
+}
+
 } // namespace forward
 
 namespace forward_unreduced {
@@ -126,7 +150,7 @@ ConvSolution MSELossForwardUnreduced::GetSolution(
 
     auto numel = problem.GetXDesc().GetElementSize();
 
-    size_t xlocalsize = 256;
+    size_t xlocalsize = LOCAL_SIZE_MSELOSS;
     size_t xgridsize  = AlignUp(numel, xlocalsize);
     size_t ylocalsize = 1;
     size_t ygridsize  = 1;
@@ -194,7 +218,7 @@ MSELossBackward::GetSolution(const ExecutionContext& context,
 
     auto numel = problem.GetDXDesc().GetElementSize();
 
-    size_t xlocalsize = 256;
+    size_t xlocalsize = LOCAL_SIZE_MSELOSS;
     size_t xgridsize  = AlignUp(numel, xlocalsize);
     size_t ylocalsize = 1;
     size_t ygridsize  = 1;
@@ -272,7 +296,7 @@ ConvSolution MSELossBackwardUnreduced::GetSolution(
 
     auto numel = problem.GetDXDesc().GetElementSize();
 
-    size_t xlocalsize = 256;
+    size_t xlocalsize = LOCAL_SIZE_MSELOSS;
     size_t xgridsize  = AlignUp(numel, xlocalsize);
     size_t ylocalsize = 1;
     size_t ygridsize  = 1;
