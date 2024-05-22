@@ -470,13 +470,13 @@ int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
             return status;
         }
 
-        workspace_buf =
-            std::unique_ptr<GPUMem>(new GPUMem(0, workspace_size_in_bytes, sizeof(Tgpu)));
-        workspace =
-            std::vector<Tgpu>(workspace_buf->GetSize() / sizeof(Tgpu), static_cast<Tgpu>(0));
+        size_t num_ws_elems = workspace_size_in_bytes / sizeof(Tgpu);
 
-        workspace_host =
-            std::vector<Tref>(workspace_buf->GetSize() / sizeof(Tref), static_cast<Tref>(0));
+        workspace_buf = std::unique_ptr<GPUMem>(new GPUMem(0, num_ws_elems, sizeof(Tgpu)));
+        workspace     = std::vector<Tgpu>(num_ws_elems, static_cast<Tgpu>(0));
+        workspace_buf->ToGPU(GetStream(), workspace.data());
+
+        workspace_host = std::vector<Tref>(num_ws_elems, static_cast<Tref>(0));
 
         printf("created workspace with size %zu\n", workspace_buf->GetSize());
 
@@ -496,11 +496,10 @@ int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
                 std::cerr << "Error: miopenMSELossForward failed" << std::endl;
                 return status;
             }
-
-            if(workspace_buf->FromGPU(GetStream(), workspace.data()) != miopenStatusSuccess)
-                std::cerr << "Error: Failed to copy output from GPU, size " << output.size()
-                          << std::endl;
         }
+        if(workspace_buf->FromGPU(GetStream(), workspace.data()) != miopenStatusSuccess)
+            std::cerr << "Error: Failed to copy output from GPU, size " << output.size()
+                      << std::endl;
     }
     return miopenStatusSuccess;
 }
@@ -544,11 +543,11 @@ int MSELossDriver<Tgpu, Tref>::VerifyForward()
     {
         for(size_t i = 0; i < workspace_host.size(); i++)
         {
-            if(workspace_host[i] != output_host[i])
+            if(workspace[i] != workspace_host[i])
             {
                 std::cerr << "Error: Forward CPU and GPU mismatch" << std::endl;
-                std::cerr << "workspace[" << i << "] = " << workspace_host[i]
-                          << " != " << output_host[i] << std::endl;
+                std::cerr << "workspace[" << i << "] = " << workspace[i]
+                          << " != " << workspace_host[i] << std::endl;
                 return -1;
             }
         }
