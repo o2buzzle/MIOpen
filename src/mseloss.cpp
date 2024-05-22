@@ -68,9 +68,9 @@ miopenStatus_t miopenMSELossForward(Handle& handle,
     return miopenStatusSuccess;
 }
 
-size_t miopenMSELossForwardGetWorkspacesSize(Handle& handle,
-                                             TensorDescriptor& xDesc,
-                                             TensorDescriptor& yDesc)
+size_t miopenMSELossForwardGetWorkspaceSize(Handle& handle,
+                                            TensorDescriptor& xDesc,
+                                            TensorDescriptor& yDesc)
 {
     auto ctx = ExecutionContext{&handle};
 

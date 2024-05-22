@@ -6617,7 +6617,7 @@ MIOPEN_EXPORT miopenStatus_t miopenMSELossForward(miopenHandle_t handle,
  * @param  [out] sizeInBytes    Needed workspace size
  */
 
-MIOPEN_EXPORT miopenStatus_t miopenMSELossForwardGetWorkspaceSize(miopenHandle_t handle,
+MIOPEN_EXPORT miopenStatus_t miopenGetMSELossForwardWorkspaceSize(miopenHandle_t handle,
                                                                   miopenTensorDescriptor_t xDesc,
                                                                   miopenTensorDescriptor_t yDesc,
                                                                   size_t* sizeInBytes);

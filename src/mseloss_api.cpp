@@ -53,7 +53,7 @@ extern "C" miopenStatus_t miopenMSELossForward(miopenHandle_t handle,
     });
 }
 
-extern "C" miopenStatus_t miopenMSELossForwardGetWorkspaceSize(miopenHandle_t handle,
+extern "C" miopenStatus_t miopenGetMSELossForwardWorkspaceSize(miopenHandle_t handle,
                                                                miopenTensorDescriptor_t xDesc,
                                                                miopenTensorDescriptor_t yDesc,
                                                                size_t* size)

@@ -26,6 +26,7 @@
 
 #include "miopen/bfloat16.hpp"
 #include "miopen/conv_solution.hpp"
+#include "miopen/datatype.hpp"
 #include "miopen/invoke_params.hpp"
 #include "miopen/kernel_build_params.hpp"
 #include "miopen/mlo_internal.hpp"
@@ -114,16 +115,7 @@ MSELossForward::GetWorkspaceSize(const ExecutionContext& context,
 {
     auto tensor_dtype = problem.GetXDesc().GetType();
     auto numel        = problem.GetXDesc().GetElementSize();
-    auto elsize       = [&]() -> std::size_t {
-        switch(tensor_dtype)
-        {
-        case miopenHalf: return sizeof(half_float::half);
-        case miopenFloat: return sizeof(float);
-        case miopenBFloat16: return sizeof(bfloat16);
-        default: break;
-        }
-        MIOPEN_THROW("Unsupported tensor type");
-    }();
+    auto elsize       = get_data_size(tensor_dtype);
 
     return AlignUp(numel, LOCAL_SIZE_MSELOSS) * elsize;
 }
