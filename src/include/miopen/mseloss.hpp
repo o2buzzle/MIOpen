@@ -35,9 +35,11 @@ struct TensorDescriptor;
 miopenStatus_t miopenMSELossForward(Handle& handle,
                                     const TensorDescriptor& xDesc,
                                     const TensorDescriptor& yDesc,
+                                    const TensorDescriptor& zDesc,
                                     ConstData_t x,
                                     ConstData_t y,
                                     Data_t z,
+                                    Data_t ws,
                                     float divisor = 1.0f);
 
 size_t miopenMSELossForwardGetWorkspaceSize(Handle& handle,

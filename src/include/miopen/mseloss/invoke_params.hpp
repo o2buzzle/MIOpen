@@ -40,10 +40,12 @@ struct InvokeParams : public miopen::InvokeParams
 
     const TensorDescriptor* xDesc;
     const TensorDescriptor* yDesc;
+    const TensorDescriptor* zDesc;
 
     ConstData_t x    = nullptr;
     ConstData_t y    = nullptr;
     Data_t workspace = nullptr;
+    Data_t output    = nullptr;
 
     float divisor = 1.0f;
 

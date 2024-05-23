@@ -6594,17 +6594,21 @@ MIOPEN_EXPORT miopenStatus_t miopenBackendInitialize(miopenBackendDescriptor_t d
  * @param  [in]  handle         An instance of miopenHandle_t
  * @param  [in]  xDesc          Input Tensor descriptor
  * @param  [in]  yDesc          Target Tensor descriptor
+ * @param  [in]  zDesc          Output Tensor descriptor
  * @param  [in]  x              Pointer to input tensor data
  * @param  [in]  y              Pointer to target tensor data
  * @param  [out] z              Pointer to the output tensor data
+ * @param  [out]  workspace      Pointer to the workspace area (for reduction)
  * @param  [in]  divisor        Divisor value
  */
 MIOPEN_EXPORT miopenStatus_t miopenMSELossForward(miopenHandle_t handle,
                                                   miopenTensorDescriptor_t xDesc,
                                                   miopenTensorDescriptor_t yDesc,
+                                                  miopenTensorDescriptor_t zDesc,
                                                   const void* x,
                                                   const void* y,
                                                   void* z,
+                                                  void* ws,
                                                   float divisor = 1.0f);
 
 /*!

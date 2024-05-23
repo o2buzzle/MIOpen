@@ -41,9 +41,11 @@ namespace miopen {
 miopenStatus_t miopenMSELossForward(Handle& handle,
                                     const TensorDescriptor& xDesc,
                                     const TensorDescriptor& yDesc,
+                                    const TensorDescriptor& zDesc,
                                     ConstData_t x,
                                     ConstData_t y,
                                     Data_t z,
+                                    Data_t ws,
                                     float divisor)
 {
     auto ctx = ExecutionContext{&handle};
@@ -54,9 +56,11 @@ miopenStatus_t miopenMSELossForward(Handle& handle,
         auto tmp      = mseloss::forward::InvokeParams{};
         tmp.xDesc     = &xDesc;
         tmp.yDesc     = &yDesc;
+        tmp.zDesc     = &zDesc;
         tmp.x         = x;
         tmp.y         = y;
-        tmp.workspace = z;
+        tmp.output    = z;
+        tmp.workspace = ws;
         tmp.divisor   = divisor;
         return tmp;
     }();
