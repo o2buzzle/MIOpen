@@ -68,7 +68,6 @@
  * @defgroup argmax
  * @defgroup groupnorm
  * @defgroup cat
- * @defgroup loss
  *
  */
 
@@ -6583,7 +6582,7 @@ MIOPEN_EXPORT miopenStatus_t miopenBackendInitialize(miopenBackendDescriptor_t d
 #endif // MIOPEN_BETA_API
 
 #ifdef MIOPEN_BETA_API
-/** @addtogroup loss
+/** @addtogroup LossFunction
  * @{
  */
 
