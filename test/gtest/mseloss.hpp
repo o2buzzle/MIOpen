@@ -109,7 +109,7 @@ protected:
     miopen::Allocator::ManageDataPtr input_grad_dev;
     miopen::Allocator::ManageDataPtr target_grad_dev;
 
-    T divisor;
+    float divisor;
 
     void SetUp() override
     {

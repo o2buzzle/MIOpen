@@ -161,7 +161,7 @@ void mloMSELossForwardRunHost(miopenTensorDescriptor_t inputDesc,
                               const Tgpu* target,
                               Tref* output,
                               Tref* workspace,
-                              Tgpu divisor)
+                              float divisor)
 {
     tensor_view_5d_t I_tv = get_inner_expanded_tv(miopen::deref(inputDesc));
     tensor_view_5d_t T_tv = get_inner_expanded_tv(miopen::deref(targetDesc));
@@ -207,7 +207,7 @@ void mloMSELossBackwardRunHost(miopenTensorDescriptor_t inputDesc,
                                const Tref* output,
                                Tref* input_grad,
                                Tref* target_grad,
-                               Tgpu divisor)
+                               float divisor)
 {
     tensor_view_5d_t I_tv  = get_inner_expanded_tv(miopen::deref(inputDesc));
     tensor_view_5d_t T_tv  = get_inner_expanded_tv(miopen::deref(targetDesc));
@@ -323,7 +323,7 @@ private:
     std::vector<Tref> input_grad_host;
     std::vector<Tref> target_grad_host;
 
-    Tgpu divisor;
+    float divisor;
 };
 
 template <typename Tgpu, typename Tref>
@@ -482,8 +482,7 @@ int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
 
         size_t num_ws_elems = workspace_size_in_bytes / sizeof(Tgpu);
 
-        workspace_buf = std::unique_ptr<GPUMem>(new GPUMem(0, num_ws_elems, sizeof(Tgpu)));
-
+        workspace_buf  = std::unique_ptr<GPUMem>(new GPUMem(0, num_ws_elems, sizeof(Tgpu)));
         num_ws_elems   = miopen::deref(inputDesc).GetElementSize();
         workspace      = std::vector<Tgpu>(num_ws_elems, static_cast<Tgpu>(0));
         workspace_host = std::vector<Tref>(num_ws_elems, static_cast<Tref>(0));
@@ -546,40 +545,14 @@ int MSELossDriver<Tgpu, Tref>::VerifyForward()
 {
     RunForwardCPU();
 
-    if(inflags.GetValueStr("reduction") == "none")
+    for(size_t i = 0; i < output.size(); i++)
     {
-        for(size_t i = 0; i < output.size(); i++)
+        if(output[i] != output_host[i])
         {
-            if(output[i] != output_host[i])
-            {
-                std::cerr << "Error: Forward CPU and GPU mismatch" << std::endl;
-                std::cerr << "output[" << i << "] = " << output[i] << " != " << output_host[i]
-                          << std::endl;
-                return -1;
-            }
-        }
-    }
-    else
-    {
-        for(size_t i = 0; i < workspace_host.size(); i++)
-        {
-            if(workspace[i] != workspace_host[i])
-            {
-                std::cerr << "Error: Forward CPU and GPU mismatch" << std::endl;
-                std::cerr << "workspace[" << i << "] = " << workspace[i]
-                          << " != " << workspace_host[i] << std::endl;
-                return -1;
-            }
-        }
-
-        for(size_t i = 0; i < output.size(); i++)
-        {
-            if(output[i] != output_host[i])
-            {
-                std::cerr << "Error: Forward CPU and GPU mismatch" << std::endl;
-                std::cerr << "output[" << i << "] = " << output[i] << " != " << output_host[i];
-                return -1;
-            }
+            std::cerr << "Error: Forward CPU and GPU mismatch" << std::endl;
+            std::cerr << "output[" << i << "] = " << output[i] << " != " << output_host[i]
+                      << std::endl;
+            return -1;
         }
     }
 

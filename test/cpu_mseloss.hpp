@@ -39,7 +39,7 @@ void cpu_mseloss(miopen::TensorDescriptor inputDesc,
                  const T* target,
                  T* output,
                  T* workspace,
-                 T divisor)
+                 float divisor)
 {
     tensor_view_5d_t I_tv = get_inner_expanded_tv(inputDesc);
     tensor_view_5d_t T_tv = get_inner_expanded_tv(targetDesc);
@@ -61,7 +61,7 @@ void cpu_mseloss(miopen::TensorDescriptor inputDesc,
         size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
 
         workspace[gid] = (input[Iidx] - target[Tidx]) * (input[Iidx] - target[Tidx]);
-        workspace[gid] /= divisor;
+        workspace[gid] /= static_cast<T>(divisor);
 
         ++gid;
     }
@@ -85,7 +85,7 @@ void cpu_mseloss_backward(miopen::TensorDescriptor inputDesc,
                           const T* output,
                           T* input_grad,
                           T* target_grad,
-                          T divisor)
+                          float divisor)
 {
     tensor_view_5d_t I_tv  = get_inner_expanded_tv(inputDesc);
     tensor_view_5d_t T_tv  = get_inner_expanded_tv(targetDesc);
@@ -110,8 +110,8 @@ void cpu_mseloss_backward(miopen::TensorDescriptor inputDesc,
         size_t IGidx = get5DIndexAt<size_t>(IG_tv, n0, n1, n2, n3, n4);
         size_t TGidx = get5DIndexAt<size_t>(TG_tv, n0, n1, n2, n3, n4);
 
-        T grad =
-            static_cast<T>(2.0f) * (input[Iidx] - target[Tidx]) / divisor * output[O_tv.offset];
+        T grad = static_cast<T>(2.0f) * (input[Iidx] - target[Tidx]) / static_cast<T>(divisor) *
+                 output[O_tv.offset];
 
         if(input_grad != nullptr)
         {
