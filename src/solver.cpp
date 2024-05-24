@@ -24,6 +24,7 @@
  *
  *******************************************************************************/
 
+#include "miopen/mseloss/solvers.hpp"
 #include <miopen/solver.hpp>
 
 #include <miopen/activ/solvers.hpp>
@@ -648,6 +649,17 @@ inline SolverRegistrar::SolverRegistrar(IdRegistryData& registry)
     Register(registry, ++id, Primitive::Mha, mha::Mha{}.SolverDbId());
     Register(registry, ++id, Primitive::Softmax, softmax::Softmax{}.SolverDbId());
     Register(registry, ++id, Primitive::Softmax, softmax::AttnSoftmax{}.SolverDbId());
+
+    Register(registry, ++id, Primitive::Loss, mseloss::forward::MSELossForward{}.SolverDbId());
+    Register(registry, ++id, Primitive::Loss, mseloss::backward::MSELossBackward{}.SolverDbId());
+    Register(registry,
+             ++id,
+             Primitive::Loss,
+             mseloss::forward_unreduced::MSELossForwardUnreduced{}.SolverDbId());
+    Register(registry,
+             ++id,
+             Primitive::Loss,
+             mseloss::backward_unreduced::MSELossBackwardUnreduced{}.SolverDbId());
 
     // IMPORTANT: New solvers should be added to the end of the function!
 }
