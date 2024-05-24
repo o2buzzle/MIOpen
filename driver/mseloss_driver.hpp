@@ -39,6 +39,7 @@
 #include <vector>
 #include "../test/tensor_holder.hpp"
 #include "tensor_view.hpp"
+#include "timer.hpp"
 
 inline std::vector<std::string> split(const std::string& s, char delim)
 {
@@ -422,10 +423,10 @@ int MSELossDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
     // Fill input and target tensors
     for(size_t i = 0; i < input.size(); i++)
     {
-        // input[i]  = prng::gen_A_to_B(static_cast<Tgpu>(0.0), static_cast<Tgpu>(1.0));
-        // target[i] = prng::gen_A_to_B(static_cast<Tgpu>(0.0), static_cast<Tgpu>(1.0));
-        input[i]  = static_cast<Tgpu>(1.0);
-        target[i] = static_cast<Tgpu>(0.0);
+        input[i]  = prng::gen_A_to_B(static_cast<Tgpu>(0.0), static_cast<Tgpu>(1.0));
+        target[i] = prng::gen_A_to_B(static_cast<Tgpu>(0.0), static_cast<Tgpu>(1.0));
+        // input[i]  = static_cast<Tgpu>(1.0);
+        // target[i] = static_cast<Tgpu>(0.0);
     }
 
     if(input_buf->ToGPU(GetStream(), input.data()) != miopenStatusSuccess)
@@ -448,6 +449,12 @@ int MSELossDriver<Tgpu, Tref>::GetandSetData()
 template <typename Tgpu, typename Tref>
 int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
 {
+    float kernel_total_time = 0;
+    float kernel_first_time = 0;
+
+    Timer t;
+    START_TIME
+
     if(inflags.GetValueStr("reduction") == "none")
     {
         for(size_t i = 0; i < inflags.GetValueInt("iter"); i++)
@@ -465,6 +472,22 @@ int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
                 std::cerr << "Error: miopenMSELossForwardUnreduced failed" << std::endl;
                 return status;
             }
+            float time = 0.0;
+            miopenGetKernelTime(GetHandle(), &time);
+            kernel_total_time += time;
+            if(i == 0)
+                kernel_first_time = time;
+        }
+        if(inflags.GetValueInt("time") == 1)
+        {
+            STOP_TIME
+            int iter = inflags.GetValueInt("iter");
+            if(WALL_CLOCK)
+                std::cout << "Wall-clock Time Forward MSELoss Elapsed: " << t.gettime_ms() / iter
+                          << " ms\n";
+            float kernel_average_time =
+                iter > 1 ? kernel_total_time / (iter - 1) : kernel_first_time;
+            std::cout << "Kernel Average Time Elapsed: " << kernel_average_time << " ms\n";
         }
     }
     else
@@ -490,7 +513,6 @@ int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
 
         for(size_t i = 0; i < inflags.GetValueInt("iter"); i++)
         {
-
             status = miopenMSELossForward(GetHandle(),
                                           inputDesc,
                                           targetDesc,
@@ -506,7 +528,26 @@ int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
                 std::cerr << "Error: miopenMSELossForward failed" << std::endl;
                 return status;
             }
+
+            float time = 0.0;
+            miopenGetKernelTime(GetHandle(), &time);
+            kernel_total_time += time;
+            if(i == 0)
+                kernel_first_time = time;
         }
+
+        if(inflags.GetValueInt("time") == 1)
+        {
+            STOP_TIME
+            int iter = inflags.GetValueInt("iter");
+            if(WALL_CLOCK)
+                std::cout << "Wall-clock Time Forward MSELoss Elapsed: " << t.gettime_ms() / iter
+                          << " ms\n";
+            float kernel_average_time =
+                iter > 1 ? kernel_total_time / (iter - 1) : kernel_first_time;
+            std::cout << "Kernel Forward Time Elapsed: " << kernel_average_time << " ms\n";
+        }
+
         if(workspace_buf->FromGPU(GetStream(), workspace.data()) != miopenStatusSuccess)
             std::cerr << "Error: Failed to copy output from GPU, size " << output.size()
                       << std::endl;
@@ -562,6 +603,12 @@ int MSELossDriver<Tgpu, Tref>::VerifyForward()
 template <typename Tgpu, typename Tref>
 int MSELossDriver<Tgpu, Tref>::RunBackwardGPU()
 {
+    float kernel_total_time = 0;
+    float kernel_first_time = 0;
+
+    Timer t;
+    START_TIME
+
     if(inflags.GetValueStr("reduction") == "none")
     {
         for(size_t i = 0; i < inflags.GetValueInt("iter"); i++)
@@ -577,12 +624,17 @@ int MSELossDriver<Tgpu, Tref>::RunBackwardGPU()
                                                          output_buf->GetMem(),
                                                          input_grad_buf->GetMem(),
                                                          target_grad_buf->GetMem());
-
             if(status != miopenStatusSuccess)
             {
                 std::cerr << "Error: miopenMSELossBackward failed" << std::endl;
                 return status;
             }
+
+            float time = 0.0;
+            miopenGetKernelTime(GetHandle(), &time);
+            kernel_total_time += time;
+            if(i == 0)
+                kernel_first_time = time;
         }
     }
     else
@@ -607,7 +659,24 @@ int MSELossDriver<Tgpu, Tref>::RunBackwardGPU()
                 std::cerr << "Error: miopenMSELossBackward failed" << std::endl;
                 return status;
             }
+
+            float time = 0.0;
+            miopenGetKernelTime(GetHandle(), &time);
+            kernel_total_time += time;
+            if(i == 0)
+                kernel_first_time = time;
         }
+    }
+
+    if(inflags.GetValueInt("time") == 1)
+    {
+        STOP_TIME
+        int iter = inflags.GetValueInt("iter");
+        if(WALL_CLOCK)
+            std::cout << "Wall-clock Time Backward MSELoss Elapsed: " << t.gettime_ms() / iter
+                      << " ms\n";
+        float kernel_average_time = iter > 1 ? kernel_total_time / (iter - 1) : kernel_first_time;
+        std::cout << "Kernel Backward Time Elapsed: " << kernel_average_time << " ms\n";
     }
 
     if(input_grad_buf->FromGPU(GetStream(), input_grad.data()) != miopenStatusSuccess)
