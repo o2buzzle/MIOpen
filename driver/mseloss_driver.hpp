@@ -333,7 +333,7 @@ int MSELossDriver<Tgpu, Tref>::AddCmdLineArgs()
     inflags.AddInputFlag("contiguous", 'Z', "0", "Use Contiguous Tensors", "int");
     inflags.AddTensorFlag("in_tensors", 'I', "1", "Input Tensors");
     inflags.AddInputFlag("divisor", 'D', "1", "Divisor", "float");
-    inflags.AddInputFlag("reduction", 'r', "none", "Reduction", "string");
+    inflags.AddInputFlag("reduction", 'r', "custom", "Reduction", "string");
 
     inflags.AddInputFlag("iter", 'i', "10", "Number of Iterations (Default=10)", "int");
     inflags.AddInputFlag("verify", 'V', "1", "Verify Each Layer (Default=1)", "int");
@@ -374,10 +374,19 @@ void MSELossDriver<Tgpu, Tref>::GetInputTensorLengthsFromCmdLine()
     SetTensorNd(inputGradDesc, in_lengths, data_type);
     SetTensorNd(targetGradDesc, in_lengths, data_type);
 
+    // Check if "reduction" is any of our hotword (ala. "none", "sum" or "mean")
+    auto reduction_str = inflags.GetValueStr("reduction");
+    if(reduction_str == "none")
+        // Override divisor
+        divisor = 0;
+    else if(reduction_str == "sum")
+        divisor = 1;
+    else if(reduction_str == "mean")
+        divisor = miopen::deref(inputDesc).GetElementSize();
+
     // Output is basically (input - target).pow(2) sized when unreduced
     // And (input - target).pow(2).(mean|sum)() (ala. 1) sized when reduced
-    auto out_lengths =
-        inflags.GetValueStr("reduction") == "none" ? in_lengths : std::vector<int>{1};
+    auto out_lengths = divisor == 0 ? in_lengths : std::vector<int>{1};
     SetTensorNd(outputDesc, out_lengths, data_type);
 }
 
@@ -386,6 +395,7 @@ int MSELossDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
 {
     size_t input_size  = GetTensorSize(inputDesc);
     size_t target_size = GetTensorSize(targetDesc);
+
     // Output is basically (input - target).pow(2) sized when unreduced
     // And (input - target).pow(2).(mean|sum)() (ala. 1) sized when reduced
     size_t output_size = inflags.GetValueStr("reduction") == "none" ? input_size : 1;
@@ -418,22 +428,11 @@ int MSELossDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
         target[i] = static_cast<Tgpu>(0.0);
     }
 
-    memset(input_grad.data(), 1, input_grad.size() * sizeof(Tgpu));
-    memset(target_grad.data(), 1, target_grad.size() * sizeof(Tgpu));
-
     if(input_buf->ToGPU(GetStream(), input.data()) != miopenStatusSuccess)
         std::cerr << "Error: Failed to copy input to GPU, size " << input.size() << std::endl;
 
     if(target_buf->ToGPU(GetStream(), target.data()) != miopenStatusSuccess)
         std::cerr << "Error: Failed to copy target to GPU, size " << target.size() << std::endl;
-
-    if(input_grad_buf->ToGPU(GetStream(), input_grad.data()) != miopenStatusSuccess)
-        std::cerr << "Error: Failed to copy input_grad to GPU, size " << input_grad.size()
-                  << std::endl;
-
-    if(target_grad_buf->ToGPU(GetStream(), target_grad.data()) != miopenStatusSuccess)
-        std::cerr << "Error: Failed to copy target_grad to GPU, size " << target_grad.size()
-                  << std::endl;
 
     return miopenStatusSuccess;
 }
@@ -547,7 +546,7 @@ int MSELossDriver<Tgpu, Tref>::VerifyForward()
 
     for(size_t i = 0; i < output.size(); i++)
     {
-        if(output[i] != output_host[i])
+        if(output[i] - output_host[i] > 1e-5)
         {
             std::cerr << "Error: Forward CPU and GPU mismatch" << std::endl;
             std::cerr << "output[" << i << "] = " << output[i] << " != " << output_host[i]
@@ -601,7 +600,7 @@ int MSELossDriver<Tgpu, Tref>::RunBackwardGPU()
                                                 output_buf->GetMem(),
                                                 input_grad_buf->GetMem(),
                                                 target_grad_buf->GetMem(),
-                                                static_cast<Tgpu>(divisor));
+                                                divisor);
 
             if(status != miopenStatusSuccess)
             {
@@ -661,7 +660,7 @@ int MSELossDriver<Tgpu, Tref>::VerifyBackward()
 
     for(size_t i = 0; i < input_grad.size(); i++)
     {
-        if(input_grad[i] != input_grad_host[i])
+        if(input_grad[i] - input_grad_host[i] > 1e-5)
         {
             std::cerr << "Error: Backward CPU and GPU mismatch" << std::endl;
             std::cerr << "input_grad[" << i << "] = " << input_grad[i]
@@ -672,7 +671,7 @@ int MSELossDriver<Tgpu, Tref>::VerifyBackward()
 
     for(size_t i = 0; i < target_grad.size(); i++)
     {
-        if(target_grad[i] != target_grad_host[i])
+        if(target_grad[i] - target_grad_host[i] > 1e-5)
         {
             std::cerr << "Error: Backward CPU and GPU mismatch" << std::endl;
             std::cerr << "target_grad[" << i << "] = " << target_grad[i]

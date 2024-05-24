@@ -88,7 +88,7 @@ __device__ void DeviceMSELossBackward5d(const IO_TYPE* __restrict__ I,
     FLOAT_ACCUM iidxval  = CVT_FLOAT2ACCUM(I[Iidx]);
     FLOAT_ACCUM tidxval  = CVT_FLOAT2ACCUM(T[Tidx]);
     FLOAT_ACCUM dOidxval = CVT_FLOAT2ACCUM(dO[dO_tv.offset]);
-    FLOAT_ACCUM grad     = 2.0f * (iidxval - tidxval) * dOidxval;
+    FLOAT_ACCUM grad     = 2.0f * (iidxval - tidxval) / divisor * dOidxval;
 
     if(dI != nullptr)
     {
