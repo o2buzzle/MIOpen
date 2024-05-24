@@ -68,16 +68,18 @@ MSELossForward::GetSolution(const ExecutionContext& context,
 {
     auto result = ConvSolution{miopenStatusSuccess};
 
-    auto dtype = problem.GetXDesc().GetType();
-    auto xdims = problem.GetXDesc().GetLengths();
-    auto ydims = problem.GetYDesc().GetLengths();
-    auto numel = problem.GetXDesc().GetElementSize();
+    auto dtype   = problem.GetXDesc().GetType();
+    auto io_type = miopen::GetDataType(dtype);
+    auto xdims   = problem.GetXDesc().GetLengths();
+    auto ydims   = problem.GetYDesc().GetLengths();
+    auto numel   = problem.GetXDesc().GetElementSize();
 
     const auto build_params =
         KernelBuildParameters{{"MIOPEN_USE_FP16", static_cast<int32_t>(dtype == miopenHalf)},
                               {"MIOPEN_USE_FP32", static_cast<int32_t>(dtype == miopenFloat)},
                               {"MIOPEN_USE_FP64", static_cast<int32_t>(dtype == miopenDouble)},
                               {"MIOPEN_USE_BFP16", static_cast<int32_t>(dtype == miopenBFloat16)},
+                              {"DTYPE", io_type == "bfloat16" ? "ushort" : io_type},
                               {"REDUCE_SIZE", static_cast<int32_t>(LOCAL_SIZE_MSELOSS)}};
 
     // Kernel 1: calculate loss for every elements to workspace
@@ -182,9 +184,10 @@ ConvSolution MSELossForwardUnreduced::GetSolution(
 {
     auto result = ConvSolution{miopenStatusSuccess};
 
-    auto dtype = problem.GetXDesc().GetType();
-    auto xdims = problem.GetXDesc().GetLengths();
-    auto ydims = problem.GetYDesc().GetLengths();
+    auto dtype   = problem.GetXDesc().GetType();
+    auto io_type = miopen::GetDataType(dtype);
+    auto xdims   = problem.GetXDesc().GetLengths();
+    auto ydims   = problem.GetYDesc().GetLengths();
 
     auto numel = problem.GetXDesc().GetElementSize();
 
@@ -204,6 +207,7 @@ ConvSolution MSELossForwardUnreduced::GetSolution(
         {"MIOPEN_USE_FP32", static_cast<int32_t>(dtype == miopenFloat)},
         {"MIOPEN_USE_FP64", static_cast<int32_t>(dtype == miopenDouble)},
         {"MIOPEN_USE_BFP16", static_cast<int32_t>(dtype == miopenBFloat16)},
+        {"DTYPE", io_type == "bfloat16" ? "ushort" : io_type},
         {"REDUCE_SIZE", static_cast<int32_t>(LOCAL_SIZE_MSELOSS)},
     };
 
@@ -251,9 +255,10 @@ MSELossBackward::GetSolution(const ExecutionContext& context,
 {
     auto result = ConvSolution{miopenStatusSuccess};
 
-    auto dtype = problem.GetXDesc().GetType();
-    auto xdims = problem.GetXDesc().GetLengths();
-    auto ydims = problem.GetYDesc().GetLengths();
+    auto dtype   = problem.GetXDesc().GetType();
+    auto io_type = miopen::GetDataType(dtype);
+    auto xdims   = problem.GetXDesc().GetLengths();
+    auto ydims   = problem.GetYDesc().GetLengths();
 
     auto numel = problem.GetDXDesc().GetElementSize();
 
@@ -273,6 +278,7 @@ MSELossBackward::GetSolution(const ExecutionContext& context,
         {"MIOPEN_USE_FP32", static_cast<int32_t>(dtype == miopenFloat)},
         {"MIOPEN_USE_FP64", static_cast<int32_t>(dtype == miopenDouble)},
         {"MIOPEN_USE_BFP16", static_cast<int32_t>(dtype == miopenBFloat16)},
+        {"DTYPE", io_type == "bfloat16" ? "ushort" : io_type},
         {"REDUCE_SIZE", static_cast<int32_t>(LOCAL_SIZE_MSELOSS)},
     };
 
@@ -330,9 +336,10 @@ ConvSolution MSELossBackwardUnreduced::GetSolution(
 {
     auto result = ConvSolution{miopenStatusSuccess};
 
-    auto dtype = problem.GetXDesc().GetType();
-    auto xdims = problem.GetXDesc().GetLengths();
-    auto ydims = problem.GetYDesc().GetLengths();
+    auto dtype   = problem.GetXDesc().GetType();
+    auto io_type = miopen::GetDataType(dtype);
+    auto xdims   = problem.GetXDesc().GetLengths();
+    auto ydims   = problem.GetYDesc().GetLengths();
 
     auto numel = problem.GetDXDesc().GetElementSize();
 
@@ -352,6 +359,7 @@ ConvSolution MSELossBackwardUnreduced::GetSolution(
         {"MIOPEN_USE_FP32", static_cast<int32_t>(dtype == miopenFloat)},
         {"MIOPEN_USE_FP64", static_cast<int32_t>(dtype == miopenDouble)},
         {"MIOPEN_USE_BFP16", static_cast<int32_t>(dtype == miopenBFloat16)},
+        {"DTYPE", io_type == "bfloat16" ? "ushort" : io_type},
         {"REDUCE_SIZE", static_cast<int32_t>(LOCAL_SIZE_MSELOSS)},
     };
 

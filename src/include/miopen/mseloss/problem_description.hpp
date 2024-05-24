@@ -84,7 +84,7 @@ struct ProblemDescription : ProblemDescriptionBase
                        const float divisor_ = 1.0f)
         : xDesc(xDesc_),
           yDesc(yDesc_),
-          dzDesc(zDesc_),
+          zDesc(zDesc_),
           dxDesc(dxDesc_),
           dyDesc(dyDesc_),
           divisor(divisor_){};
@@ -93,7 +93,7 @@ struct ProblemDescription : ProblemDescriptionBase
 
     const TensorDescriptor& GetXDesc() const { return xDesc; }
     const TensorDescriptor& GetYDesc() const { return yDesc; }
-    const TensorDescriptor& GetZDesc() const { return dzDesc; }
+    const TensorDescriptor& GetZDesc() const { return zDesc; }
 
     const TensorDescriptor& GetDXDesc() const { return dxDesc; }
     const TensorDescriptor& GetDYDesc() const { return dyDesc; }
@@ -103,7 +103,7 @@ struct ProblemDescription : ProblemDescriptionBase
 private:
     const TensorDescriptor& xDesc;
     const TensorDescriptor& yDesc;
-    const TensorDescriptor& dzDesc;
+    const TensorDescriptor& zDesc;
     const TensorDescriptor& dxDesc;
     const TensorDescriptor& dyDesc;
     const float divisor = 1.0f;

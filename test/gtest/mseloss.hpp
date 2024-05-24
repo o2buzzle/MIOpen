@@ -39,59 +39,38 @@
 
 struct MSELossTestCase
 {
-    size_t N;
-    size_t C;
-    size_t D;
-    size_t H;
-    size_t W;
+    std::vector<size_t> lengths;
+    float divisor;
+    bool isContiguous;
 
     friend std::ostream& operator<<(std::ostream& os, const MSELossTestCase& tc)
     {
-        return os << "(N: " << tc.N << " C:" << tc.C << " D:" << tc.D << " H:" << tc.H
-                  << " W:" << tc.W << " )";
-    }
-
-    std::vector<size_t> GetInput()
-    {
-        if((N != 0) && (C != 0) && (D != 0) && (H != 0) && (W != 0))
+        os << " lengths:";
+        for(int i = 0; i < tc.lengths.size(); i++)
         {
-            return std::vector<size_t>({N, C, D, H, W});
+            auto input = tc.lengths[i];
+            if(i != 0)
+                os << ",";
+            os << input;
         }
-        else if((N != 0) && (C != 0) && (H != 0) && (W != 0))
-        {
-            return std::vector<size_t>({N, C, H, W});
-        }
-        else if((N != 0) && (C != 0) && (W != 0))
-        {
-            return std::vector<size_t>({N, C, W});
-        }
-        else if((N != 0) && (W != 0))
-        {
-            return std::vector<size_t>({N, W});
-        }
-        else if((N != 0))
-        {
-            return std::vector<size_t>({N});
-        }
-        else
-        {
-            std::cout << "Error Input Tensor Lengths\n" << std::endl;
-            return std::vector<size_t>({0});
-        }
+        os << " divisor:" << tc.divisor << " contiguous:" << tc.isContiguous;
+        return os;
     }
 };
 
 std::vector<MSELossTestCase> MSELossTestConfigs()
 {
-    return {{8, 512, 0, 0, 384},
-            {8, 511, 0, 0, 1},
-            {8, 512, 0, 0, 384},
-            {16, 512, 0, 0, 384},
-            {16, 512, 0, 0, 8},
-            {48, 8, 0, 512, 512},
-            {48, 8, 0, 512, 512},
-            {16, 311, 1, 98, 512},
-            {16, 311, 1, 98, 512}};
+    // clang-format off
+    return {{{1, 2,3}, 1.0f, false},
+            {{8, 8,8}, 1.0f, false},
+            {{16, 128,384}, 1.0f, false},
+            {{1,2,3,4}, 1.0f, false},
+            {{8, 8, 8, 8}, 1.0f, false},
+            {{16, 32, 32, 32}, 0.0f, false},
+            {{1,1,16,1024}, 0.0f, false},
+            {{16, 16, 32, 32, 2}, 0.0f, false},
+            {{16, 16, 32, 32, 256}, 0.0f, false}};
+    // clang-format on
 }
 
 inline std::vector<size_t> GetStrides(std::vector<size_t> input, bool contiguous)
@@ -138,8 +117,8 @@ protected:
         mseloss_config = GetParam();
         auto gen_value = [](auto...) { return prng::gen_descreet_uniform_sign<T>(1e-2, 100); };
 
-        auto in_dims = mseloss_config.GetInput();
-        auto strides = GetStrides(in_dims, false);
+        auto in_dims = mseloss_config.lengths;
+        auto strides = GetStrides(in_dims, mseloss_config.isContiguous);
 
         input           = tensor<T>{in_dims}.generate(gen_value);
         target          = tensor<T>{in_dims}.generate(gen_value);
@@ -151,7 +130,7 @@ protected:
         input_dev  = handle.Write(input.data);
         target_dev = handle.Write(target.data);
 
-        divisor = static_cast<T>(prng::gen_0_to_B<uint64_t>(input.GetSize()));
+        divisor = mseloss_config.divisor;
 
         if(divisor == 0.0f)
         {

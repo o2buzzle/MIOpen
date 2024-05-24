@@ -39,6 +39,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     ss << "fwd";
     ss << "dtype" << dtype;
     ss << "xDesc" << xDesc;
+    ss << "yDesc" << yDesc;
 
     return NetworkConfig{ss.str()};
 }
@@ -54,6 +55,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     ss << "fwdu";
     ss << "dtype" << dtype;
     ss << "xdesc" << xDesc;
+    ss << "yDesc" << yDesc;
 
     return NetworkConfig{ss.str()};
 }
@@ -68,6 +70,8 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     ss << "bwd";
     ss << "dtype" << dtype;
     ss << "dxDesc" << dxDesc;
+    ss << "dyDesc" << dyDesc;
+    ss << "zDesc" << zDesc;
 
     return NetworkConfig{ss.str()};
 }
@@ -83,6 +87,8 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     ss << "bwdu";
     ss << "dtype" << dtype;
     ss << "dxDesc" << dxDesc;
+    ss << "dyDesc" << dyDesc;
+    ss << "zDesc" << zDesc;
 
     return NetworkConfig{ss.str()};
 }
