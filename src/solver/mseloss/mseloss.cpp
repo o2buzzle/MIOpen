@@ -59,6 +59,8 @@ namespace forward {
 bool MSELossForward::IsApplicable(const ExecutionContext& context,
                                   const miopen::mseloss::forward::ProblemDescription& problem) const
 {
+    if(!problem.IsImprovementOverROCm())
+        return false;
     return true;
 }
 
@@ -175,6 +177,8 @@ bool MSELossForwardUnreduced::IsApplicable(
     const ExecutionContext& context,
     const miopen::mseloss::forward_unreduced::ProblemDescription& problem) const
 {
+    if(!problem.IsImprovementOverROCm())
+        return false;
     return true;
 }
 
@@ -246,6 +250,8 @@ bool MSELossBackward::IsApplicable(
     const ExecutionContext& context,
     const miopen::mseloss::backward::ProblemDescription& problem) const
 {
+    if(!problem.IsImprovementOverROCm())
+        return false;
     return true;
 }
 
@@ -327,6 +333,8 @@ bool MSELossBackwardUnreduced::IsApplicable(
     const ExecutionContext& context,
     const miopen::mseloss::backward_unreduced::ProblemDescription& problem) const
 {
+    if(!problem.IsImprovementOverROCm())
+        return false;
     return true;
 }
 

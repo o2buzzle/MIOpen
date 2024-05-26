@@ -399,7 +399,7 @@ int MSELossDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
 
     // Output is basically (input - target).pow(2) sized when unreduced
     // And (input - target).pow(2).(mean|sum)() (ala. 1) sized when reduced
-    size_t output_size = inflags.GetValueStr("reduction") == "none" ? input_size : 1;
+    size_t output_size = divisor == 0 ? input_size : 1;
 
     // GPU data buffers
     input_buf       = std::unique_ptr<GPUMem>(new GPUMem(0, input_size, sizeof(Tgpu)));
@@ -453,7 +453,7 @@ int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
     Timer t;
     START_TIME
 
-    if(inflags.GetValueStr("reduction") == "none")
+    if(divisor == 0)
     {
         for(size_t i = 0; i < inflags.GetValueInt("iter"); i++)
         {
@@ -557,7 +557,7 @@ int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
 template <typename Tgpu, typename Tref>
 int MSELossDriver<Tgpu, Tref>::RunForwardCPU()
 {
-    if(inflags.GetValueStr("reduction") == "none")
+    if(divisor == 0)
     {
         mloMSELossForwardUnreducedRunHost(
             inputDesc, targetDesc, outputDesc, input.data(), target.data(), output_host.data());
@@ -565,8 +565,8 @@ int MSELossDriver<Tgpu, Tref>::RunForwardCPU()
     else
     {
         mloMSELossForwardRunHost(inputDesc,
-                                 outputDesc,
                                  targetDesc,
+                                 outputDesc,
                                  input.data(),
                                  target.data(),
                                  output_host.data(),
@@ -606,7 +606,7 @@ int MSELossDriver<Tgpu, Tref>::RunBackwardGPU()
     Timer t;
     START_TIME
 
-    if(inflags.GetValueStr("reduction") == "none")
+    if(divisor == 0)
     {
         for(size_t i = 0; i < inflags.GetValueInt("iter"); i++)
         {
@@ -689,7 +689,7 @@ int MSELossDriver<Tgpu, Tref>::RunBackwardGPU()
 template <typename Tgpu, typename Tref>
 int MSELossDriver<Tgpu, Tref>::RunBackwardCPU()
 {
-    if(inflags.GetValueStr("reduction") == "none")
+    if(divisor == 0)
     {
         mloMSELossBackwardUnreducedRunHost(inputDesc,
                                            targetDesc,

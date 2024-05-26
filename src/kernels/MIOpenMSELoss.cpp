@@ -93,14 +93,12 @@ __device__ void DeviceMSELossBackward5d(const IO_TYPE* __restrict__ I,
     if(dI != nullptr)
     {
         size_t dIidx = get5DIndexAt<size_t>(dI_tv, n0, n1, n2, n3, n4);
-
-        dI[dIidx] = CVT_ACCUM2FLOAT(grad);
+        dI[dIidx]    = CVT_ACCUM2FLOAT(grad);
     }
     if(dT != nullptr)
     {
         size_t dTidx = get5DIndexAt<size_t>(dT_tv, n0, n1, n2, n3, n4);
-
-        dT[dTidx] = CVT_ACCUM2FLOAT(-grad);
+        dT[dTidx]    = CVT_ACCUM2FLOAT(-grad);
     }
 }
 

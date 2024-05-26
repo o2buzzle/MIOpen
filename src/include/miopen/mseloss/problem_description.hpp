@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include "miopen/common.hpp"
 #include <cstddef>
 #include <miopen/problem_description_base.hpp>
 #include <miopen/activ.hpp>
@@ -39,12 +38,45 @@ namespace forward {
 struct ProblemDescription : ProblemDescriptionBase
 {
     ProblemDescription(const TensorDescriptor& xDesc_, const TensorDescriptor& yDesc_)
-        : xDesc(xDesc_), yDesc(yDesc_){};
+        : xDesc(xDesc_), yDesc(yDesc_)
+    {
+        if(!DoesTensorsMatch())
+        {
+            MIOPEN_THROW("Target and Input does not match");
+        }
+        if(!IsSameType())
+        {
+            MIOPEN_THROW("Target and Input does not match");
+        }
+    };
 
     NetworkConfig MakeNetworkConfig() const override;
 
     const TensorDescriptor& GetXDesc() const { return xDesc; }
     const TensorDescriptor& GetYDesc() const { return yDesc; }
+
+    bool IsSameType() const { return xDesc.GetType() == yDesc.GetType(); }
+
+    bool IsContiguous() const { return xDesc.IsContiguous() && yDesc.IsContiguous(); }
+
+    bool DoesTensorsMatch() const
+    {
+        if(xDesc.GetLengths().size() != yDesc.GetLengths().size())
+            return false;
+
+        for(auto i = 0; i < xDesc.GetLengths().size(); ++i)
+        {
+            if(xDesc.GetLengths()[i] != yDesc.GetLengths()[i])
+                return false;
+        }
+        return true;
+    }
+
+    bool IsImprovementOverROCm() const
+    {
+        // We pretty much always lose if it's a contiguous operation
+        return !IsContiguous();
+    }
 
 private:
     const TensorDescriptor& xDesc;
@@ -58,13 +90,56 @@ struct ProblemDescription : ProblemDescriptionBase
     ProblemDescription(const TensorDescriptor& xDesc_,
                        const TensorDescriptor& yDesc_,
                        const TensorDescriptor& zDesc_)
-        : xDesc(xDesc_), yDesc(yDesc_), zDesc(zDesc_){};
+        : xDesc(xDesc_), yDesc(yDesc_), zDesc(zDesc_)
+    {
+        if(!DoesTensorsMatch())
+        {
+            MIOPEN_THROW("Target and Input does not match");
+        }
+        if(!IsSameType())
+        {
+            MIOPEN_THROW("Target and Input does not match");
+        }
+    };
 
     NetworkConfig MakeNetworkConfig() const override;
 
     const TensorDescriptor& GetXDesc() const { return xDesc; }
     const TensorDescriptor& GetYDesc() const { return yDesc; }
     const TensorDescriptor& GetZDesc() const { return zDesc; }
+
+    bool IsSameType() const
+    {
+        return xDesc.GetType() == yDesc.GetType() && xDesc.GetType() == zDesc.GetType();
+    }
+
+    bool IsContiguous() const
+    {
+        return xDesc.IsContiguous() && yDesc.IsContiguous() && zDesc.IsContiguous();
+    }
+
+    bool DoesTensorsMatch() const
+    {
+        if(xDesc.GetLengths().size() != yDesc.GetLengths().size() ||
+           xDesc.GetLengths().size() != zDesc.GetLengths().size())
+            return false;
+
+        for(auto i = 0; i < xDesc.GetLengths().size(); ++i)
+        {
+            if(xDesc.GetLengths()[i] != yDesc.GetLengths()[i])
+                return false;
+
+            if(xDesc.GetLengths()[i] != zDesc.GetLengths()[i])
+                return false;
+        }
+        return true;
+    }
+
+    bool IsImprovementOverROCm() const
+    {
+        // We pretty much always lose if it's a contiguous operation
+        return !IsContiguous();
+    }
 
 private:
     const TensorDescriptor& xDesc;
@@ -87,7 +162,17 @@ struct ProblemDescription : ProblemDescriptionBase
           zDesc(zDesc_),
           dxDesc(dxDesc_),
           dyDesc(dyDesc_),
-          divisor(divisor_){};
+          divisor(divisor_)
+    {
+        if(!DoesTensorsMatch())
+        {
+            MIOPEN_THROW("Target and Input does not match");
+        }
+        if(!IsSameType())
+        {
+            MIOPEN_THROW("Target and Input does not match");
+        }
+    };
 
     NetworkConfig MakeNetworkConfig() const override;
 
@@ -99,6 +184,29 @@ struct ProblemDescription : ProblemDescriptionBase
     const TensorDescriptor& GetDYDesc() const { return dyDesc; }
 
     float GetDivisor() const { return divisor; }
+
+    bool IsSameType() const { return xDesc.GetType() == yDesc.GetType(); }
+
+    bool IsContiguous() const { return xDesc.IsContiguous() && yDesc.IsContiguous(); }
+
+    bool DoesTensorsMatch() const
+    {
+        if(xDesc.GetLengths().size() != yDesc.GetLengths().size())
+            return false;
+
+        for(auto i = 0; i < xDesc.GetLengths().size(); ++i)
+        {
+            if(xDesc.GetLengths()[i] != yDesc.GetLengths()[i])
+                return false;
+        }
+        return true;
+    }
+
+    bool IsImprovementOverROCm() const
+    {
+        // We pretty much always lose if it's a contiguous operation
+        return !IsContiguous();
+    }
 
 private:
     const TensorDescriptor& xDesc;
@@ -118,7 +226,17 @@ struct ProblemDescription : ProblemDescriptionBase
                        const TensorDescriptor& zDesc_,
                        const TensorDescriptor& dxDesc_,
                        const TensorDescriptor& dyDesc_)
-        : xDesc(xDesc_), yDesc(yDesc_), zDesc(zDesc_), dxDesc(dxDesc_), dyDesc(dyDesc_){};
+        : xDesc(xDesc_), yDesc(yDesc_), zDesc(zDesc_), dxDesc(dxDesc_), dyDesc(dyDesc_)
+    {
+        if(!DoesTensorsMatch())
+        {
+            MIOPEN_THROW("Target and Input does not match");
+        }
+        if(!IsSameType())
+        {
+            MIOPEN_THROW("Target and Input does not match");
+        }
+    };
 
     NetworkConfig MakeNetworkConfig() const override;
 
@@ -128,6 +246,29 @@ struct ProblemDescription : ProblemDescriptionBase
 
     const TensorDescriptor& GetDXDesc() const { return dxDesc; }
     const TensorDescriptor& GetDYDesc() const { return dyDesc; }
+
+    bool IsSameType() const { return xDesc.GetType() == yDesc.GetType(); }
+
+    bool IsContiguous() const { return xDesc.IsContiguous() && yDesc.IsContiguous(); }
+
+    bool DoesTensorsMatch() const
+    {
+        if(xDesc.GetLengths().size() != yDesc.GetLengths().size())
+            return false;
+
+        for(auto i = 0; i < xDesc.GetLengths().size(); ++i)
+        {
+            if(xDesc.GetLengths()[i] != yDesc.GetLengths()[i])
+                return false;
+        }
+        return true;
+    }
+
+    bool IsImprovementOverROCm() const
+    {
+        // We pretty much always lose if it's a contiguous operation
+        return !IsContiguous();
+    }
 
 private:
     const TensorDescriptor& xDesc;
