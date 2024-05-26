@@ -425,8 +425,6 @@ int MSELossDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
     {
         input[i]  = prng::gen_A_to_B(static_cast<Tgpu>(0.0), static_cast<Tgpu>(1.0));
         target[i] = prng::gen_A_to_B(static_cast<Tgpu>(0.0), static_cast<Tgpu>(1.0));
-        // input[i]  = static_cast<Tgpu>(1.0);
-        // target[i] = static_cast<Tgpu>(0.0);
     }
 
     if(input_buf->ToGPU(GetStream(), input.data()) != miopenStatusSuccess)
@@ -505,7 +503,6 @@ int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
         size_t num_ws_elems = workspace_size_in_bytes / sizeof(Tgpu);
 
         workspace_buf  = std::unique_ptr<GPUMem>(new GPUMem(0, num_ws_elems, sizeof(Tgpu)));
-        num_ws_elems   = miopen::deref(inputDesc).GetElementSize();
         workspace      = std::vector<Tgpu>(num_ws_elems, static_cast<Tgpu>(0));
         workspace_host = std::vector<Tref>(num_ws_elems, static_cast<Tref>(0));
 
