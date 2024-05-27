@@ -322,7 +322,8 @@ int MSELossDriver<Tgpu, Tref>::AddCmdLineArgs()
     inflags.AddInputFlag("contiguous", 'Z', "0", "Use Contiguous Tensors", "int");
     inflags.AddTensorFlag("in_tensors", 'I', "1", "Input Tensors");
     inflags.AddInputFlag("divisor", 'D', "1", "Divisor", "float");
-    inflags.AddInputFlag("reduction", 'r', "custom", "Reduction", "string");
+    inflags.AddInputFlag(
+        "reduction", 'r', "custom", "Reduction (none, mean, sum). Overrides divisor", "string");
 
     inflags.AddInputFlag("iter", 'i', "10", "Number of Iterations (Default=10)", "int");
     inflags.AddInputFlag("verify", 'V', "1", "Verify Each Layer (Default=1)", "int");
