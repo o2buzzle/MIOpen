@@ -330,7 +330,7 @@ private:
 template <typename Tgpu, typename Tref>
 int MSELossDriver<Tgpu, Tref>::AddCmdLineArgs()
 {
-    inflags.AddInputFlag("forw", 'F', "0", "Run only Forward Cat (Default=1)", "int");
+    inflags.AddInputFlag("forw", 'F', "1", "Run only Forward Cat (Default=1)", "int");
     inflags.AddInputFlag("contiguous", 'Z', "0", "Use Contiguous Tensors", "int");
     inflags.AddTensorFlag("in_tensors", 'I', "1", "Input Tensors");
     inflags.AddInputFlag("divisor", 'D', "1", "Divisor", "float");

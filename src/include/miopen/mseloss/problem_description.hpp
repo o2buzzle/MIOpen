@@ -74,8 +74,8 @@ struct ProblemDescription : ProblemDescriptionBase
 
     bool IsImprovementOverROCm() const
     {
-        // We pretty much always lose if it's a contiguous operation
-        return !IsContiguous();
+        // Mostly thanks to parallel reduction, since we lose pretty much everywhere else
+        return true;
     }
 
 private:
@@ -138,7 +138,7 @@ struct ProblemDescription : ProblemDescriptionBase
     bool IsImprovementOverROCm() const
     {
         // We pretty much always lose if it's a contiguous operation
-        return !IsContiguous();
+        return false;
     }
 
 private:
@@ -205,7 +205,7 @@ struct ProblemDescription : ProblemDescriptionBase
     bool IsImprovementOverROCm() const
     {
         // We pretty much always lose if it's a contiguous operation
-        return !IsContiguous();
+        return false;
     }
 
 private:
@@ -267,7 +267,7 @@ struct ProblemDescription : ProblemDescriptionBase
     bool IsImprovementOverROCm() const
     {
         // We pretty much always lose if it's a contiguous operation
-        return !IsContiguous();
+        return false;
     }
 
 private:
