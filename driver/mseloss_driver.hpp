@@ -28,10 +28,12 @@
 #define GUARD_MIOPEN_MSELOSS_DRIVER_HPP
 
 #include "driver.hpp"
+#include "miopen/errors.hpp"
 #include "miopen/miopen.h"
 #include "miopen/tensor.hpp"
 #include "miopen/tensor_view.hpp"
 #include "random.hpp"
+#include "../test/verify.hpp"
 #include "tensor_driver.hpp"
 #include <cstddef>
 #include <iostream>
@@ -163,12 +165,15 @@ void mloMSELossForwardRunHost(miopenTensorDescriptor_t inputDesc,
                               Tref* output,
                               float divisor)
 {
+    const int local_size = 256; 
+
     tensor_view_5d_t I_tv = get_inner_expanded_tv(miopen::deref(inputDesc));
     tensor_view_5d_t T_tv = get_inner_expanded_tv(miopen::deref(targetDesc));
     tensor_view_5d_t O_tv = get_inner_expanded_tv(miopen::deref(outputDesc));
 
     int64_t gid = 0;
-    Tref accum  = static_cast<Tref>(0.0f);
+    auto size = miopen::deref(inputDesc).GetElementSize();
+    auto ref_workspace = std::vector<Tref>(size + ((size / local_size) + 1) * local_size, static_cast<Tref>(0.0f)); 
 
     while(true)
     {
@@ -183,11 +188,33 @@ void mloMSELossForwardRunHost(miopenTensorDescriptor_t inputDesc,
         size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
         size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
 
-        accum += (input[Iidx] - target[Tidx]) * (input[Iidx] - target[Tidx]) / divisor;
-
+        ref_workspace[gid] = static_cast<Tref>((input[Iidx] - target[Tidx]) * (input[Iidx] - target[Tidx]) / divisor);
         ++gid;
     }
-    output[O_tv.offset] = accum;
+
+    // Yes this mess is actually necessary to emulate the behavior of parallel reduction.
+    // Naive approach here would generate __way too much__ floating point differences
+    int offset_a         = 0;
+    int offset_b         = size;
+    size_t _size         = size;
+    do
+    {
+        for(int i = 0; i < _size; i += local_size)
+        {
+            Tref shared[local_size];
+            for(int j = 0; j < local_size; ++j)
+                shared[j] = i + j < _size ? ref_workspace[offset_a + i + j] : static_cast<Tref>(0.0f);
+            for(int offset = local_size / 2; offset > 0; offset >>= 1)
+                for(int j = 0; j < offset; ++j)
+                    shared[j] += shared[j + offset];
+            if(_size <= local_size)
+                output[O_tv.offset] = shared[0];
+            else
+                ref_workspace[offset_b + i / local_size] = shared[0];
+        }
+        std::swap(offset_a, offset_b);
+        _size = (_size + local_size - 1) / local_size;
+    } while(_size > 1);
 }
 
 template <typename Tgpu, typename Tref>
@@ -226,8 +253,8 @@ void mloMSELossBackwardRunHost(miopenTensorDescriptor_t inputDesc,
         size_t IGidx = get5DIndexAt<size_t>(IG_tv, n0, n1, n2, n3, n4);
         size_t TGidx = get5DIndexAt<size_t>(TG_tv, n0, n1, n2, n3, n4);
 
-        Tref grad =
-            static_cast<Tgpu>(2.0f) * (input[Iidx] - target[Tidx]) / divisor * output[O_tv.offset];
+        Tref grad = static_cast<Tgpu>(2.0f) * (input[Iidx] - target[Tidx]) /
+                    static_cast<Tgpu>(divisor) * output[O_tv.offset];
 
         if(input_grad != nullptr)
         {
@@ -313,6 +340,8 @@ private:
     std::vector<Tref> target_grad_host;
 
     float divisor;
+
+    const Tref tolerance = sizeof(Tgpu) == 4 ? 1e-5 : 5e-3;
 };
 
 template <typename Tgpu, typename Tref>
@@ -562,15 +591,12 @@ int MSELossDriver<Tgpu, Tref>::VerifyForward()
 {
     RunForwardCPU();
 
-    for(size_t i = 0; i < output.size(); i++)
+    auto error = miopen::rms_range(output, output_host);
+    if(error > tolerance)
     {
-        if(output[i] - output_host[i] > 1e-5)
-        {
-            std::cerr << "Error: Forward CPU and GPU mismatch" << std::endl;
-            std::cerr << "output[" << i << "] = " << output[i] << " != " << output_host[i]
-                      << std::endl;
-            return -1;
-        }
+        std::cerr << "Error: Forward CPU and GPU mismatch" << std::endl;
+        std::cerr << "rms = " << error << std::endl;
+        return -1;
     }
 
     printf("Success: Forward CPU and GPU match\n");
@@ -704,26 +730,20 @@ int MSELossDriver<Tgpu, Tref>::VerifyBackward()
 {
     RunBackwardCPU();
 
-    for(size_t i = 0; i < input_grad.size(); i++)
+    auto error = miopen::rms_range(target_grad, target_grad_host);
+    if(error > tolerance)
     {
-        if(input_grad[i] - input_grad_host[i] > 1e-5)
-        {
-            std::cerr << "Error: Backward CPU and GPU mismatch" << std::endl;
-            std::cerr << "input_grad[" << i << "] = " << input_grad[i]
-                      << " != " << input_grad_host[i] << std::endl;
-            return -1;
-        }
+        std::cerr << "Error: Backward CPU and GPU mismatch" << std::endl;
+        std::cerr << "rms = " << error << std::endl;
+        return -1;
     }
 
-    for(size_t i = 0; i < target_grad.size(); i++)
+    error = miopen::rms_range(input_grad, input_grad_host);
+    if(error > tolerance)
     {
-        if(target_grad[i] - target_grad_host[i] > 1e-5)
-        {
-            std::cerr << "Error: Backward CPU and GPU mismatch" << std::endl;
-            std::cerr << "target_grad[" << i << "] = " << target_grad[i]
-                      << " != " << target_grad_host[i] << std::endl;
-            return -1;
-        }
+        std::cerr << "Error: Backward CPU and GPU mismatch" << std::endl;
+        std::cerr << "rms = " << error << std::endl;
+        return -1;
     }
 
     printf("Success: Backward CPU and GPU match\n");

@@ -269,9 +269,7 @@ __device__ void losssum(const IO_TYPE* input, IO_TYPE* output, size_t N)
     val             = block_reduce_sum(val);
 
     if(threadIdx.x == 0)
-    {
         output[blockIdx.x] = CVT_ACCUM2FLOAT(val);
-    }
 }
 
 extern "C" __global__ void

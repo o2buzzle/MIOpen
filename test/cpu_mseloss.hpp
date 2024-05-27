@@ -40,12 +40,15 @@ void cpu_mseloss(miopen::TensorDescriptor inputDesc,
                  T* output,
                  float divisor)
 {
+    const int local_size = 256; 
+
     tensor_view_5d_t I_tv = get_inner_expanded_tv(inputDesc);
     tensor_view_5d_t T_tv = get_inner_expanded_tv(targetDesc);
     tensor_view_5d_t O_tv = get_inner_expanded_tv(outputDesc);
 
     int64_t gid = 0;
-    T accum     = static_cast<T>(0.0f);
+    auto size  = inputDesc.GetElementSize();
+    auto ref_workspace = std::vector<T>(size + ((size / local_size) + 1) * local_size, static_cast<T>(0.0f)); 
 
     while(true)
     {
@@ -60,12 +63,34 @@ void cpu_mseloss(miopen::TensorDescriptor inputDesc,
         size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
         size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
 
-        accum +=
-            (input[Iidx] - target[Tidx]) * (input[Iidx] - target[Tidx]) / static_cast<T>(divisor);
+        ref_workspace[gid] = static_cast<T>((input[Iidx] - target[Tidx]) * (input[Iidx] - target[Tidx]) / divisor);
 
         ++gid;
     }
-    output[O_tv.offset] = accum;
+
+    // Yes this mess is actually necessary to emulate the behavior of parallel reduction.
+    // Naive approach here would generate __way too much__ floating point differences
+    int offset_a         = 0;
+    int offset_b         = size;
+    size_t _size         = size;
+    do
+    {
+        for(int i = 0; i < _size; i += local_size)
+        {
+            T shared[local_size];
+            for(int j = 0; j < local_size; ++j)
+                shared[j] = i + j < _size ? ref_workspace[offset_a + i + j] : 0.0f;
+            for(int offset = local_size / 2; offset > 0; offset >>= 1)
+                for(int j = 0; j < offset; ++j)
+                    shared[j] += shared[j + offset];
+            if(_size <= local_size)
+                output[O_tv.offset] = shared[0];
+            else
+                ref_workspace[offset_b + i / local_size] = shared[0];
+        }
+        std::swap(offset_a, offset_b);
+        _size = (_size + local_size - 1) / local_size;
+    } while(_size > 1);
 }
 
 template <class T>
