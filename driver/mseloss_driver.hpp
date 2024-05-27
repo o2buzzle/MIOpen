@@ -161,7 +161,6 @@ void mloMSELossForwardRunHost(miopenTensorDescriptor_t inputDesc,
                               const Tgpu* input,
                               const Tgpu* target,
                               Tref* output,
-                              Tref* workspace,
                               float divisor)
 {
     tensor_view_5d_t I_tv = get_inner_expanded_tv(miopen::deref(inputDesc));
@@ -169,6 +168,7 @@ void mloMSELossForwardRunHost(miopenTensorDescriptor_t inputDesc,
     tensor_view_5d_t O_tv = get_inner_expanded_tv(miopen::deref(outputDesc));
 
     int64_t gid = 0;
+    Tref accum  = static_cast<Tref>(0.0f);
 
     while(true)
     {
@@ -183,16 +183,9 @@ void mloMSELossForwardRunHost(miopenTensorDescriptor_t inputDesc,
         size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
         size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
 
-        workspace[gid] = (input[Iidx] - target[Tidx]) * (input[Iidx] - target[Tidx]);
-        workspace[gid] /= divisor;
+        accum += (input[Iidx] - target[Tidx]) * (input[Iidx] - target[Tidx]) / divisor;
 
         ++gid;
-    }
-
-    Tref accum = static_cast<Tref>(0.0f);
-    for(auto i = 0; i < gid; ++i)
-    {
-        accum += workspace[i];
     }
     output[O_tv.offset] = accum;
 }
@@ -502,9 +495,7 @@ int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
 
         size_t num_ws_elems = workspace_size_in_bytes / sizeof(Tgpu);
 
-        workspace_buf  = std::unique_ptr<GPUMem>(new GPUMem(0, num_ws_elems, sizeof(Tgpu)));
-        workspace      = std::vector<Tgpu>(num_ws_elems, static_cast<Tgpu>(0));
-        workspace_host = std::vector<Tref>(num_ws_elems, static_cast<Tref>(0));
+        workspace_buf = std::unique_ptr<GPUMem>(new GPUMem(0, num_ws_elems, sizeof(Tgpu)));
 
         printf("created workspace with size %zu\n", workspace_buf->GetSize());
 
@@ -570,7 +561,6 @@ int MSELossDriver<Tgpu, Tref>::RunForwardCPU()
                                  input.data(),
                                  target.data(),
                                  output_host.data(),
-                                 workspace_host.data(),
                                  divisor);
     }
 

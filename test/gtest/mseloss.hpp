@@ -143,20 +143,34 @@ protected:
         auto outDesc  = output.desc;
 
         // forward portion
-        cpu_mseloss_unreduced<T>(input.desc,
-                                 target.desc,
-                                 output.desc,
-                                 input.data.data(),
-                                 target.data.data(),
-                                 output_ref.data.data());
+        size_t workspace_in_bytes = 0;
+        auto status               = miopenGetMSELossForwardWorkspaceSize(
+            &handle, &input.desc, &target.desc, &workspace_in_bytes);
 
-        auto status = miopenMSELossForwardUnreduced(handle,
-                                                    input.desc,
-                                                    target.desc,
-                                                    output.desc,
-                                                    input_dev.get(),
-                                                    target_dev.get(),
-                                                    output_dev.get());
+        if(status != miopenStatusSuccess)
+        {
+            std::cout << "Error: failed to obtain workspace size" << std::endl;
+        }
+
+        workspace_dev = handle.Create(workspace_in_bytes);
+
+        cpu_mseloss<T>(input.desc,
+                       target.desc,
+                       output.desc,
+                       input.data.data(),
+                       target.data.data(),
+                       output_ref.data.data(),
+                       divisor);
+
+        status = miopenMSELossForward(handle,
+                                      input.desc,
+                                      target.desc,
+                                      output.desc,
+                                      input_dev.get(),
+                                      target_dev.get(),
+                                      output_dev.get(),
+                                      workspace_dev.get(),
+                                      divisor);
 
         EXPECT_EQ(status, miopenStatusSuccess);
 
