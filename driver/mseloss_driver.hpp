@@ -253,7 +253,6 @@ public:
         miopenCreateTensorDescriptor(&inputDesc);
         miopenCreateTensorDescriptor(&targetDesc);
         miopenCreateTensorDescriptor(&outputDesc);
-        miopenCreateTensorDescriptor(&workspaceDesc);
 
         miopenCreateTensorDescriptor(&inputGradDesc);
         miopenCreateTensorDescriptor(&targetGradDesc);
@@ -265,7 +264,6 @@ public:
         miopenDestroyTensorDescriptor(inputDesc);
         miopenDestroyTensorDescriptor(targetDesc);
         miopenDestroyTensorDescriptor(outputDesc);
-        miopenDestroyTensorDescriptor(workspaceDesc);
 
         miopenDestroyTensorDescriptor(inputGradDesc);
         miopenDestroyTensorDescriptor(targetGradDesc);
@@ -291,7 +289,6 @@ private:
     miopenTensorDescriptor_t inputDesc;
     miopenTensorDescriptor_t targetDesc;
     miopenTensorDescriptor_t outputDesc;
-    miopenTensorDescriptor_t workspaceDesc;
 
     miopenTensorDescriptor_t inputGradDesc;
     miopenTensorDescriptor_t targetGradDesc;
@@ -307,12 +304,10 @@ private:
     std::vector<Tgpu> input;
     std::vector<Tgpu> target;
     std::vector<Tgpu> output;
-    std::vector<Tgpu> workspace;
 
     std::vector<Tgpu> input_grad;
     std::vector<Tgpu> target_grad;
 
-    std::vector<Tref> workspace_host;
     std::vector<Tref> output_host;
     std::vector<Tref> input_grad_host;
     std::vector<Tref> target_grad_host;
@@ -363,7 +358,6 @@ void MSELossDriver<Tgpu, Tref>::GetInputTensorLengthsFromCmdLine()
 
     SetTensorNd(inputDesc, in_lengths, input_strides, data_type);
     SetTensorNd(targetDesc, target_lengths, target_strides, data_type);
-    SetTensorNd(workspaceDesc, in_lengths, data_type);
 
     SetTensorNd(inputGradDesc, in_lengths, data_type);
     SetTensorNd(targetGradDesc, in_lengths, data_type);
@@ -496,8 +490,7 @@ int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
         size_t num_ws_elems = workspace_size_in_bytes / sizeof(Tgpu);
 
         workspace_buf = std::unique_ptr<GPUMem>(new GPUMem(0, num_ws_elems, sizeof(Tgpu)));
-
-        printf("created workspace with size %zu\n", workspace_buf->GetSize());
+        printf("Created workspace with size %zu\n", workspace_buf->GetSize());
 
         for(size_t i = 0; i < inflags.GetValueInt("iter"); i++)
         {
