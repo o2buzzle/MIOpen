@@ -137,7 +137,7 @@ struct ProblemDescription : ProblemDescriptionBase
 
     bool IsImprovementOverROCm() const
     {
-        // We pretty much always lose if it's a contiguous operation
+        // not faster in any tested cases
         return false;
     }
 
@@ -204,7 +204,7 @@ struct ProblemDescription : ProblemDescriptionBase
 
     bool IsImprovementOverROCm() const
     {
-        // We pretty much always lose if it's a contiguous operation
+        // not faster in any tested cases
         return false;
     }
 
@@ -266,7 +266,7 @@ struct ProblemDescription : ProblemDescriptionBase
 
     bool IsImprovementOverROCm() const
     {
-        // We pretty much always lose if it's a contiguous operation
+        // only a few % tested is at least 20% faster
         return false;
     }
 
