@@ -204,7 +204,9 @@ struct ProblemDescription : ProblemDescriptionBase
 
     bool IsImprovementOverROCm() const
     {
-        // not faster in any tested cases
+        // Backward, reduced is seems only faster on 2d, non-contiguous tensors
+        if(xDesc.GetLengths().size() == 2 && !IsContiguous())
+            return true;
         return false;
     }
 
