@@ -535,10 +535,6 @@ int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
                 iter > 1 ? kernel_total_time / (iter - 1) : kernel_first_time;
             std::cout << "Kernel Forward Time Elapsed: " << kernel_average_time << " ms\n";
         }
-
-        if(workspace_buf->FromGPU(GetStream(), workspace.data()) != miopenStatusSuccess)
-            std::cerr << "Error: Failed to copy output from GPU, size " << output.size()
-                      << std::endl;
     }
     if(output_buf->FromGPU(GetStream(), output.data()) != miopenStatusSuccess)
         std::cerr << "Error: Failed to copy output from GPU, size " << output.size() << std::endl;
