@@ -40,15 +40,16 @@ void cpu_mseloss(miopen::TensorDescriptor inputDesc,
                  T* output,
                  float divisor)
 {
-    const int local_size = 256; 
+    const int local_size = 256;
 
     tensor_view_5d_t I_tv = get_inner_expanded_tv(inputDesc);
     tensor_view_5d_t T_tv = get_inner_expanded_tv(targetDesc);
     tensor_view_5d_t O_tv = get_inner_expanded_tv(outputDesc);
 
     int64_t gid = 0;
-    auto size  = inputDesc.GetElementSize();
-    auto ref_workspace = std::vector<T>(size + ((size / local_size) + 1) * local_size, static_cast<T>(0.0f)); 
+    auto size   = inputDesc.GetElementSize();
+    auto ref_workspace =
+        std::vector<T>(size + ((size / local_size) + 1) * local_size, static_cast<T>(0.0f));
 
     while(true)
     {
@@ -63,16 +64,17 @@ void cpu_mseloss(miopen::TensorDescriptor inputDesc,
         size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
         size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
 
-        ref_workspace[gid] = static_cast<T>((input[Iidx] - target[Tidx]) * (input[Iidx] - target[Tidx]) / divisor);
+        ref_workspace[gid] =
+            static_cast<T>((input[Iidx] - target[Tidx]) * (input[Iidx] - target[Tidx]) / divisor);
 
         ++gid;
     }
 
     // Yes this mess is actually necessary to emulate the behavior of parallel reduction.
     // Naive approach here would generate __way too much__ floating point differences
-    int offset_a         = 0;
-    int offset_b         = size;
-    size_t _size         = size;
+    int offset_a = 0;
+    int offset_b = size;
+    size_t _size = size;
     do
     {
         for(int i = 0; i < _size; i += local_size)
@@ -144,89 +146,4 @@ void cpu_mseloss_backward(miopen::TensorDescriptor inputDesc,
         ++gid;
     }
 }
-
-template <class T>
-void cpu_mseloss_unreduced(miopen::TensorDescriptor inputDesc,
-                           miopen::TensorDescriptor targetDesc,
-                           miopen::TensorDescriptor outputDesc,
-                           const T* input,
-                           const T* target,
-                           T* output)
-{
-    tensor_view_5d_t I_tv = get_inner_expanded_tv(inputDesc);
-    tensor_view_5d_t T_tv = get_inner_expanded_tv(targetDesc);
-    tensor_view_5d_t O_tv = get_inner_expanded_tv(outputDesc);
-
-    int64_t gid = 0;
-
-    while(true)
-    {
-        size_t n0123 = gid / I_tv.size[4], n4 = gid % I_tv.size[4];
-        size_t n012 = n0123 / I_tv.size[3], n3 = n0123 % I_tv.size[3];
-        size_t n01 = n012 / I_tv.size[2], n2 = n012 % I_tv.size[2];
-        size_t n0 = n01 / I_tv.size[1], n1 = n01 % I_tv.size[1];
-
-        if(!(n0 < I_tv.size[0]))
-            break;
-
-        size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
-        size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
-        size_t Oidx = get5DIndexAt<size_t>(O_tv, n0, n1, n2, n3, n4);
-
-        output[Oidx] = static_cast<T>((input[Iidx] - target[Tidx]) * (input[Iidx] - target[Tidx]));
-        ++gid;
-    }
-}
-
-template <class T>
-void cpu_mseloss_backward_unreduced(miopen::TensorDescriptor inputDesc,
-                                    miopen::TensorDescriptor targetDesc,
-                                    miopen::TensorDescriptor outputDesc,
-                                    miopen::TensorDescriptor inputGradDesc,
-                                    miopen::TensorDescriptor targetGradDesc,
-                                    const T* input,
-                                    const T* target,
-                                    const T* output,
-                                    T* input_grad,
-                                    T* target_grad)
-{
-    tensor_view_5d_t I_tv  = get_inner_expanded_tv(inputDesc);
-    tensor_view_5d_t T_tv  = get_inner_expanded_tv(targetDesc);
-    tensor_view_5d_t O_tv  = get_inner_expanded_tv(outputDesc);
-    tensor_view_5d_t IG_tv = get_inner_expanded_tv(inputGradDesc);
-    tensor_view_5d_t TG_tv = get_inner_expanded_tv(targetGradDesc);
-
-    int64_t gid = 0;
-
-    while(true)
-    {
-        size_t n0123 = gid / I_tv.size[4], n4 = gid % I_tv.size[4];
-        size_t n012 = n0123 / I_tv.size[3], n3 = n0123 % I_tv.size[3];
-        size_t n01 = n012 / I_tv.size[2], n2 = n012 % I_tv.size[2];
-        size_t n0 = n01 / I_tv.size[1], n1 = n01 % I_tv.size[1];
-
-        if(!(n0 < I_tv.size[0]))
-            break;
-
-        size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
-        size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
-        size_t Oidx = get5DIndexAt<size_t>(O_tv, n0, n1, n2, n3, n4);
-
-        T grad = static_cast<T>(2.0f) * (input[Iidx] - target[Tidx]) * (output[Oidx]);
-
-        if(input_grad != nullptr)
-        {
-            size_t IGidx      = get5DIndexAt<size_t>(IG_tv, n0, n1, n2, n3, n4);
-            input_grad[IGidx] = grad;
-        }
-
-        if(target_grad != nullptr)
-        {
-            size_t TGidx       = get5DIndexAt<size_t>(TG_tv, n0, n1, n2, n3, n4);
-            target_grad[TGidx] = -grad;
-        }
-        ++gid;
-    }
-}
-
 #endif

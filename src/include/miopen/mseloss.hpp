@@ -58,24 +58,4 @@ miopenStatus_t miopenMSELossBackward(Handle& handle,
                                      Data_t dx,
                                      Data_t dy,
                                      float divisor = 1.0f);
-
-miopenStatus_t miopenMSELossForwardUnreduced(Handle& handle,
-                                             const TensorDescriptor& xDesc,
-                                             const TensorDescriptor& yDesc,
-                                             const TensorDescriptor& zDesc,
-                                             ConstData_t x,
-                                             ConstData_t y,
-                                             Data_t z);
-
-miopenStatus_t miopenMSELossBackwardUnreduced(Handle& handle,
-                                              const TensorDescriptor& xDesc,
-                                              const TensorDescriptor& yDesc,
-                                              const TensorDescriptor& zDesc,
-                                              const TensorDescriptor& dxDesc,
-                                              const TensorDescriptor& dyDesc,
-                                              ConstData_t x,
-                                              ConstData_t y,
-                                              ConstData_t z,
-                                              Data_t dx,
-                                              Data_t dy);
 } // namespace miopen

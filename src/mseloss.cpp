@@ -88,38 +88,6 @@ size_t miopenMSELossForwardGetWorkspaceSize(Handle& handle,
     return workspace_sizes.empty() ? static_cast<size_t>(0) : workspace_sizes.front().second;
 }
 
-miopenStatus_t miopenMSELossForwardUnreduced(Handle& handle,
-                                             const TensorDescriptor& xDesc,
-                                             const TensorDescriptor& yDesc,
-                                             const TensorDescriptor& zDesc,
-                                             ConstData_t x,
-                                             ConstData_t y,
-                                             Data_t z)
-{
-    auto ctx = ExecutionContext{&handle};
-
-    const auto problem = mseloss::forward_unreduced::ProblemDescription{xDesc, yDesc, zDesc};
-
-    const auto invoke_params = [&]() {
-        auto tmp  = mseloss::forward_unreduced::InvokeParams{};
-        tmp.xDesc = &xDesc;
-        tmp.yDesc = &yDesc;
-        tmp.zDesc = &zDesc;
-        tmp.x     = x;
-        tmp.y     = y;
-        tmp.z     = z;
-        return tmp;
-    }();
-
-    const auto algo = AlgorithmName{"MSELossForwardUnreduced"};
-    const auto solvers =
-        solver::SolverContainer<solver::mseloss::forward_unreduced::MSELossForwardUnreduced>{};
-
-    solvers.ExecutePrimitive(handle, problem, algo, invoke_params);
-
-    return miopenStatusSuccess;
-}
-
 miopenStatus_t miopenMSELossBackward(Handle& handle,
                                      const TensorDescriptor& xDesc,
                                      const TensorDescriptor& yDesc,
@@ -159,45 +127,4 @@ miopenStatus_t miopenMSELossBackward(Handle& handle,
     solvers.ExecutePrimitive(handle, problem, algo, invoke_params);
     return miopenStatusSuccess;
 }
-
-miopenStatus_t miopenMSELossBackwardUnreduced(Handle& handle,
-                                              const TensorDescriptor& xDesc,
-                                              const TensorDescriptor& yDesc,
-                                              const TensorDescriptor& zDesc,
-                                              const TensorDescriptor& dxDesc,
-                                              const TensorDescriptor& dyDesc,
-                                              ConstData_t x,
-                                              ConstData_t y,
-                                              ConstData_t z,
-                                              Data_t dx,
-                                              Data_t dy)
-{
-    auto ctx = ExecutionContext{&handle};
-
-    const auto problem =
-        mseloss::backward_unreduced::ProblemDescription{xDesc, yDesc, zDesc, dxDesc, dyDesc};
-
-    const auto invoke_params = [&]() {
-        auto tmp   = mseloss::backward_unreduced::InvokeParams{};
-        tmp.xDesc  = &xDesc;
-        tmp.yDesc  = &yDesc;
-        tmp.zDesc  = &zDesc;
-        tmp.dxDesc = &dxDesc;
-        tmp.dyDesc = &dyDesc;
-        tmp.x      = x;
-        tmp.y      = y;
-        tmp.z      = z;
-        tmp.dx     = dx;
-        tmp.dy     = dy;
-        return tmp;
-    }();
-
-    const auto algo = AlgorithmName{"MSELossBackwardUnreduced"};
-    const auto solvers =
-        solver::SolverContainer<solver::mseloss::backward_unreduced::MSELossBackwardUnreduced>{};
-
-    solvers.ExecutePrimitive(handle, problem, algo, invoke_params);
-    return miopenStatusSuccess;
-}
-
 } // namespace miopen

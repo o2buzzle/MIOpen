@@ -36,6 +36,7 @@
 #include "../test/verify.hpp"
 #include "tensor_driver.hpp"
 #include <cstddef>
+#include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -70,93 +71,6 @@ inline std::vector<T> ComputeStrides(std::vector<T> input, bool contiguous)
 }
 
 template <typename Tgpu, typename Tref>
-void mloMSELossForwardUnreducedRunHost(miopenTensorDescriptor_t inputDesc,
-                                       miopenTensorDescriptor_t targetDesc,
-                                       miopenTensorDescriptor_t outputDesc,
-                                       Tgpu* input,
-                                       Tgpu* target,
-                                       Tref* output)
-
-{
-    tensor_view_5d_t I_tv = get_inner_expanded_tv(miopen::deref(inputDesc));
-    tensor_view_5d_t T_tv = get_inner_expanded_tv(miopen::deref(targetDesc));
-    tensor_view_5d_t O_tv = get_inner_expanded_tv(miopen::deref(outputDesc));
-
-    int64_t gid = 0;
-
-    while(true)
-    {
-        size_t n0123 = gid / I_tv.size[4], n4 = gid % I_tv.size[4];
-        size_t n012 = n0123 / I_tv.size[3], n3 = n0123 % I_tv.size[3];
-        size_t n01 = n012 / I_tv.size[2], n2 = n012 % I_tv.size[2];
-        size_t n0 = n01 / I_tv.size[1], n1 = n01 % I_tv.size[1];
-
-        if(!(n0 < I_tv.size[0]))
-            break;
-
-        size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
-        size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
-        size_t Oidx = get5DIndexAt<size_t>(O_tv, n0, n1, n2, n3, n4);
-
-        output[Oidx] =
-            static_cast<Tref>((input[Iidx] - target[Tidx]) * (input[Iidx] - target[Tidx]));
-        ++gid;
-    }
-}
-
-template <typename Tgpu, typename Tref>
-void mloMSELossBackwardUnreducedRunHost(miopenTensorDescriptor_t inputDesc,
-                                        miopenTensorDescriptor_t targetDesc,
-                                        miopenTensorDescriptor_t outputDesc,
-                                        miopenTensorDescriptor_t inputGradDesc,
-                                        miopenTensorDescriptor_t targetGradDesc,
-                                        Tgpu* input,
-                                        Tgpu* target,
-                                        Tgpu* output,
-                                        Tref* input_grad,
-                                        Tref* target_grad)
-{
-    tensor_view_5d_t I_tv  = get_inner_expanded_tv(miopen::deref(inputDesc));
-    tensor_view_5d_t T_tv  = get_inner_expanded_tv(miopen::deref(targetDesc));
-    tensor_view_5d_t O_tv  = get_inner_expanded_tv(miopen::deref(outputDesc));
-    tensor_view_5d_t IG_tv = get_inner_expanded_tv(miopen::deref(inputGradDesc));
-    tensor_view_5d_t TG_tv = get_inner_expanded_tv(miopen::deref(targetGradDesc));
-
-    int64_t gid = 0;
-
-    while(true)
-    {
-        size_t n0123 = gid / I_tv.size[4], n4 = gid % I_tv.size[4];
-        size_t n012 = n0123 / I_tv.size[3], n3 = n0123 % I_tv.size[3];
-        size_t n01 = n012 / I_tv.size[2], n2 = n012 % I_tv.size[2];
-        size_t n0 = n01 / I_tv.size[1], n1 = n01 % I_tv.size[1];
-
-        if(!(n0 < I_tv.size[0]))
-            break;
-
-        size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
-        size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
-        size_t Oidx = get5DIndexAt<size_t>(O_tv, n0, n1, n2, n3, n4);
-
-        Tref grad = static_cast<Tgpu>(2.0f) * (input[Iidx] - target[Tidx]) * (output[Oidx]);
-
-        if(input_grad != nullptr)
-        {
-            size_t IGidx      = get5DIndexAt<size_t>(IG_tv, n0, n1, n2, n3, n4);
-            input_grad[IGidx] = grad;
-        }
-
-        if(target_grad != nullptr)
-        {
-            size_t TGidx       = get5DIndexAt<size_t>(TG_tv, n0, n1, n2, n3, n4);
-            target_grad[TGidx] = -grad;
-        }
-
-        ++gid;
-    }
-}
-
-template <typename Tgpu, typename Tref>
 void mloMSELossForwardRunHost(miopenTensorDescriptor_t inputDesc,
                               miopenTensorDescriptor_t targetDesc,
                               miopenTensorDescriptor_t outputDesc,
@@ -165,15 +79,16 @@ void mloMSELossForwardRunHost(miopenTensorDescriptor_t inputDesc,
                               Tref* output,
                               float divisor)
 {
-    const int local_size = 256; 
+    const int local_size = 256;
 
     tensor_view_5d_t I_tv = get_inner_expanded_tv(miopen::deref(inputDesc));
     tensor_view_5d_t T_tv = get_inner_expanded_tv(miopen::deref(targetDesc));
     tensor_view_5d_t O_tv = get_inner_expanded_tv(miopen::deref(outputDesc));
 
     int64_t gid = 0;
-    auto size = miopen::deref(inputDesc).GetElementSize();
-    auto ref_workspace = std::vector<Tref>(size + ((size / local_size) + 1) * local_size, static_cast<Tref>(0.0f)); 
+    auto size   = miopen::deref(inputDesc).GetElementSize();
+    auto ref_workspace =
+        std::vector<Tref>(size + ((size / local_size) + 1) * local_size, static_cast<Tref>(0.0f));
 
     while(true)
     {
@@ -188,22 +103,24 @@ void mloMSELossForwardRunHost(miopenTensorDescriptor_t inputDesc,
         size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
         size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
 
-        ref_workspace[gid] = static_cast<Tref>((input[Iidx] - target[Tidx]) * (input[Iidx] - target[Tidx]) / divisor);
+        ref_workspace[gid] = static_cast<Tref>((input[Iidx] - target[Tidx]) *
+                                               (input[Iidx] - target[Tidx]) / divisor);
         ++gid;
     }
 
     // Yes this mess is actually necessary to emulate the behavior of parallel reduction.
     // Naive approach here would generate __way too much__ floating point differences
-    int offset_a         = 0;
-    int offset_b         = size;
-    size_t _size         = size;
+    int offset_a = 0;
+    int offset_b = size;
+    size_t _size = size;
     do
     {
         for(int i = 0; i < _size; i += local_size)
         {
             Tref shared[local_size];
             for(int j = 0; j < local_size; ++j)
-                shared[j] = i + j < _size ? ref_workspace[offset_a + i + j] : static_cast<Tref>(0.0f);
+                shared[j] =
+                    i + j < _size ? ref_workspace[offset_a + i + j] : static_cast<Tref>(0.0f);
             for(int offset = local_size / 2; offset > 0; offset >>= 1)
                 for(int j = 0; j < offset; ++j)
                     shared[j] += shared[j + offset];
@@ -395,8 +312,11 @@ void MSELossDriver<Tgpu, Tref>::GetInputTensorLengthsFromCmdLine()
     // Check if "reduction" is any of our hotword (ala. "none", "sum" or "mean")
     auto reduction_str = inflags.GetValueStr("reduction");
     if(reduction_str == "none")
-        // Override divisor
-        divisor = 0;
+    // Override divisor
+    {
+        printf("Unreduced operations are currently unsupported");
+        EXIT_FAILURE;
+    }
     else if(reduction_str == "sum")
         divisor = 1;
     else if(reduction_str == "mean")
@@ -472,38 +392,7 @@ int MSELossDriver<Tgpu, Tref>::RunForwardGPU()
 
     if(divisor == 0)
     {
-        for(size_t i = 0; i < inflags.GetValueInt("iter"); i++)
-        {
-            auto status = miopenMSELossForwardUnreduced(GetHandle(),
-                                                        inputDesc,
-                                                        targetDesc,
-                                                        outputDesc,
-                                                        input_buf->GetMem(),
-                                                        target_buf->GetMem(),
-                                                        output_buf->GetMem());
-
-            if(status != miopenStatusSuccess)
-            {
-                std::cerr << "Error: miopenMSELossForwardUnreduced failed" << std::endl;
-                return status;
-            }
-            float time = 0.0;
-            miopenGetKernelTime(GetHandle(), &time);
-            kernel_total_time += time;
-            if(i == 0)
-                kernel_first_time = time;
-        }
-        if(inflags.GetValueInt("time") == 1)
-        {
-            STOP_TIME
-            int iter = inflags.GetValueInt("iter");
-            if(WALL_CLOCK)
-                std::cout << "Wall-clock Time Forward MSELoss Elapsed: " << t.gettime_ms() / iter
-                          << " ms\n";
-            float kernel_average_time =
-                iter > 1 ? kernel_total_time / (iter - 1) : kernel_first_time;
-            std::cout << "Kernel Average Time Elapsed: " << kernel_average_time << " ms\n";
-        }
+        return miopenStatusUnsupportedOp;
     }
     else
     {
@@ -569,8 +458,7 @@ int MSELossDriver<Tgpu, Tref>::RunForwardCPU()
 {
     if(divisor == 0)
     {
-        mloMSELossForwardUnreducedRunHost(
-            inputDesc, targetDesc, outputDesc, input.data(), target.data(), output_host.data());
+        return miopenStatusUnsupportedOp;
     }
     else
     {
@@ -614,31 +502,7 @@ int MSELossDriver<Tgpu, Tref>::RunBackwardGPU()
 
     if(divisor == 0)
     {
-        for(size_t i = 0; i < inflags.GetValueInt("iter"); i++)
-        {
-            auto status = miopenMSELossBackwardUnreduced(GetHandle(),
-                                                         inputDesc,
-                                                         targetDesc,
-                                                         outputDesc,
-                                                         inputGradDesc,
-                                                         targetGradDesc,
-                                                         input_buf->GetMem(),
-                                                         target_buf->GetMem(),
-                                                         output_buf->GetMem(),
-                                                         input_grad_buf->GetMem(),
-                                                         target_grad_buf->GetMem());
-            if(status != miopenStatusSuccess)
-            {
-                std::cerr << "Error: miopenMSELossBackward failed" << std::endl;
-                return status;
-            }
-
-            float time = 0.0;
-            miopenGetKernelTime(GetHandle(), &time);
-            kernel_total_time += time;
-            if(i == 0)
-                kernel_first_time = time;
-        }
+        return miopenStatusUnsupportedOp;
     }
     else
     {
@@ -697,16 +561,7 @@ int MSELossDriver<Tgpu, Tref>::RunBackwardCPU()
 {
     if(divisor == 0)
     {
-        mloMSELossBackwardUnreducedRunHost(inputDesc,
-                                           targetDesc,
-                                           outputDesc,
-                                           inputGradDesc,
-                                           targetGradDesc,
-                                           input.data(),
-                                           target.data(),
-                                           output.data(),
-                                           input_grad_host.data(),
-                                           target_grad_host.data());
+        return miopenStatusUnsupportedOp;
     }
     else
     {

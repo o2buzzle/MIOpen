@@ -512,7 +512,7 @@ typedef enum
     miopenActivationABS      = 5, /*!< Absolute value \f$abs(x)\f$ */
     miopenActivationPOWER = 6, /*!< Scaled and shifted power \f$(\alpha + \beta * x)^{gamma}\f$ */
     miopenActivationCLIPPEDRELU =
-        7, /*!< Clipped Rectified Linear Unit \f$ min(\alpha, max(0,x)) \f$ */
+        7,                     /*!< Clipped Rectified Linear Unit \f$ min(\alpha, max(0,x)) \f$ */
     miopenActivationLEAKYRELU =
         8, /*!< Leaky Rectified Linear Unit \f$ \alpha * x | x <= 0; x | x > 0 \f$ */
     miopenActivationELU =
@@ -6655,57 +6655,6 @@ MIOPEN_EXPORT miopenStatus_t miopenMSELossBackward(miopenHandle_t handle,
                                                    void* dx,
                                                    void* dy,
                                                    float divisor = 1.0f);
-
-/*!
- * @brief MSELoss forward function
- *
- * MSELoss forward, unreduced function
- * @param  [in]  handle         An instance of miopenHandle_t
- * @param  [in]  xDesc          Input Tensor descriptor
- * @param  [in]  yDesc          Target Tensor descriptor
- * @param  [in]  zDesc          Output Tensor descriptor
- * @param  [in]  x              Pointer to input tensor data
- * @param  [in]  y              Pointer to target tensor data
- * @param  [out] z              Pointer to output tensor data
- */
-
-MIOPEN_EXPORT miopenStatus_t miopenMSELossForwardUnreduced(miopenHandle_t handle,
-                                                           miopenTensorDescriptor_t xDesc,
-                                                           miopenTensorDescriptor_t yDesc,
-                                                           miopenTensorDescriptor_t zDesc,
-                                                           const void* x,
-                                                           const void* y,
-                                                           void* z);
-
-/*!
- * @brief MSELoss backward function
- *
- * MSELoss backward, unreduced function
- * @param  [in]  handle         An instance of miopenHandle_t
- * @param  [in]  xDesc          Input Tensor descriptor
- * @param  [in]  yDesc          Target Tensor descriptor
- * @param  [in]  zDesc          Output Tensor descriptor
- * @param  [in]  dxDesc         Input gradiant Tensor descriptor
- * @param  [in]  dyDesc         Target gradiant Tensor descriptor
- * @param  [in]  x              Pointer to input tensor data
- * @param  [in]  y              Pointer to target tensor data
- * @param  [in]  dz             Pointer to output tensor data
- * @param  [out] dx             Pointer to input gradient data
- * @param  [out] dy             Pointer to target gradient data
- */
-
-MIOPEN_EXPORT miopenStatus_t miopenMSELossBackwardUnreduced(miopenHandle_t handle,
-                                                            miopenTensorDescriptor_t xDesc,
-                                                            miopenTensorDescriptor_t yDesc,
-                                                            miopenTensorDescriptor_t zDesc,
-                                                            miopenTensorDescriptor_t dxDesc,
-                                                            miopenTensorDescriptor_t dyDesc,
-                                                            const void* x,
-                                                            const void* y,
-                                                            const void* z,
-                                                            void* dx,
-                                                            void* dy);
-
 /*! @} */
 #endif
 
