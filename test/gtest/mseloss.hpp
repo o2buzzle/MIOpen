@@ -61,15 +61,22 @@ struct MSELossTestCase
 std::vector<MSELossTestCase> MSELossTestConfigs()
 {
     // clang-format off
-    return {{{1, 2,3}, 1.0f, false},
+    return {
+            {{10000}, 10000.0f, false},
+            {{1000000}, 1.0f, false},
+            {{25, 100}, 25000.0f, false},
+            {{2000,3000}, 1.0f, false},
+            {{1, 2,3}, 1.0f, false},
             {{8, 8,8}, 1.0f, false},
-            {{16, 128,384}, 1.0f, false},
-            {{1,2,3,4}, 1.0f, false},
+            {{16, 128,384}, 1.0f, true},
+            {{25,100,100}, 1.0f, false},
+            {{1,2,3,4}, 1.0f, true},
             {{8, 8, 8, 8}, 1.0f, false},
-            {{16, 32, 32, 32}, 1.0f, false},
+            {{16, 32, 32, 32}, 1.0f,true},
             {{1,1,16,1024}, 1.0f, false},
-            {{16, 16, 32, 32, 2}, 1.0f, false},
-            {{16, 16, 32, 32, 256}, 1.0f, false}};
+            {{16, 16, 32, 32, 2}, 1.0f, true},
+            {{16, 16, 32, 32, 256}, 1.0f, false}
+            };
     // clang-format on
 }
 
@@ -97,10 +104,18 @@ protected:
     tensor<T> output;
     tensor<T> output_ref;
 
+    tensor<T> input_grad;
+    tensor<T> target_grad;
+    tensor<T> input_grad_ref;
+    tensor<T> target_grad_ref;
+
     miopen::Allocator::ManageDataPtr input_dev;
     miopen::Allocator::ManageDataPtr target_dev;
     miopen::Allocator::ManageDataPtr output_dev;
     miopen::Allocator::ManageDataPtr workspace_dev;
+
+    miopen::Allocator::ManageDataPtr input_grad_dev;
+    miopen::Allocator::ManageDataPtr target_grad_dev;
 
     float divisor;
 
@@ -113,8 +128,13 @@ protected:
         auto in_dims = mseloss_config.lengths;
         auto strides = GetStrides(in_dims, mseloss_config.isContiguous);
 
-        input  = tensor<T>{in_dims}.generate(gen_value);
-        target = tensor<T>{in_dims}.generate(gen_value);
+        input  = tensor<T>{in_dims, strides}.generate(gen_value);
+        target = tensor<T>{in_dims, strides}.generate(gen_value);
+
+        input_grad      = tensor<T>{in_dims};
+        target_grad     = tensor<T>{in_dims};
+        input_grad_ref  = tensor<T>{in_dims};
+        target_grad_ref = tensor<T>{in_dims};
 
         input_dev  = handle.Write(input.data);
         target_dev = handle.Write(target.data);
@@ -133,8 +153,16 @@ protected:
         }
         std::fill(output.begin(), output.end(), std::numeric_limits<T>::quiet_NaN());
         std::fill(output_ref.begin(), output_ref.end(), std::numeric_limits<T>::quiet_NaN());
+        std::fill(input_grad.begin(), input_grad.end(), std::numeric_limits<T>::quiet_NaN());
+        std::fill(target_grad.begin(), target_grad.end(), std::numeric_limits<T>::quiet_NaN());
+        std::fill(
+            input_grad_ref.begin(), input_grad_ref.end(), std::numeric_limits<T>::quiet_NaN());
+        std::fill(
+            target_grad_ref.begin(), target_grad_ref.end(), std::numeric_limits<T>::quiet_NaN());
 
-        output_dev = handle.Write(output.data);
+        output_dev      = handle.Write(output.data);
+        input_grad_dev  = handle.Write(input_grad.data);
+        target_grad_dev = handle.Write(target_grad.data);
     }
 
     void RunTest()
@@ -173,8 +201,42 @@ protected:
                                       divisor);
 
         EXPECT_EQ(status, miopenStatusSuccess);
-
         output.data = handle.Read<T>(output_dev, output.data.size());
+
+        if(input.desc.GetLengths().size() == 2) // only case we support
+        {
+            cpu_mseloss_backward<T>(input.desc,
+                                    target.desc,
+                                    output.desc,
+                                    input_grad.desc,
+                                    target_grad.desc,
+                                    input.data.data(),
+                                    target.data.data(),
+                                    output_ref.data.data(),
+                                    input_grad_ref.data.data(),
+                                    target_grad_ref.data.data(),
+                                    divisor);
+
+            status = miopenMSELossBackward(handle,
+                                           input.desc,
+                                           target.desc,
+                                           output.desc,
+                                           input_grad.desc,
+                                           target_grad.desc,
+                                           input_dev.get(),
+                                           target_dev.get(),
+                                           output_dev.get(),
+                                           input_grad_dev.get(),
+                                           target_grad_dev.get(),
+                                           divisor);
+            EXPECT_EQ(status, miopenStatusSuccess);
+        }
+
+        if(input.desc.GetLengths().size() == 2)
+        {
+            input_grad.data  = handle.Read<T>(input_grad_dev, input_grad.data.size());
+            target_grad.data = handle.Read<T>(target_grad_dev, target_grad.data.size());
+        }
     }
 
     void Verify()
@@ -183,5 +245,18 @@ protected:
         auto error = miopen::rms_range(output_ref, output);
         EXPECT_TRUE(miopen::range_distance(output_ref) == miopen::range_distance(output));
         EXPECT_TRUE(error == 0) << "Outputs do not match each other. Error:" << error;
+
+        if(input.desc.GetLengths().size() == 2) // only case we support
+        {
+            error = miopen::rms_range(input_grad_ref, input_grad);
+            EXPECT_TRUE(miopen::range_distance(input_grad_ref) ==
+                        miopen::range_distance(input_grad));
+            EXPECT_TRUE(error == 0) << "Input gradients do not match each other. Error:" << error;
+
+            error = miopen::rms_range(target_grad_ref, target_grad);
+            EXPECT_TRUE(miopen::range_distance(target_grad_ref) ==
+                        miopen::range_distance(target_grad));
+            EXPECT_TRUE(error == 0) << "Target gradients do not match each other. Error:" << error;
+        }
     }
 };
