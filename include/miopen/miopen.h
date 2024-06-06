@@ -68,6 +68,7 @@
  * @defgroup argmax
  * @defgroup groupnorm
  * @defgroup cat
+ * @defgroup ImageTransform
  *
  */
 
@@ -512,7 +513,7 @@ typedef enum
     miopenActivationABS      = 5, /*!< Absolute value \f$abs(x)\f$ */
     miopenActivationPOWER = 6, /*!< Scaled and shifted power \f$(\alpha + \beta * x)^{gamma}\f$ */
     miopenActivationCLIPPEDRELU =
-        7, /*!< Clipped Rectified Linear Unit \f$ min(\alpha, max(0,x)) \f$ */
+        7,                     /*!< Clipped Rectified Linear Unit \f$ min(\alpha, max(0,x)) \f$ */
     miopenActivationLEAKYRELU =
         8, /*!< Leaky Rectified Linear Unit \f$ \alpha * x | x <= 0; x | x > 0 \f$ */
     miopenActivationELU =
@@ -6581,6 +6582,33 @@ MIOPEN_EXPORT miopenStatus_t miopenBackendInitialize(miopenBackendDescriptor_t d
 /** @} */
 // CLOSEOUT BackendAPI DOXYGEN GROUP
 #endif // MIOPEN_BETA_API
+
+#ifdef MIOPEN_BETA_API
+
+/** @addtogroup ImageTransform
+ *
+ *  @{
+ */
+
+/*! @brief Adjust the hue of an image
+ *
+ * @param[in]  handle           MIOpen handle
+ * @param[in]  inputTensorDesc  Tensor descriptor for input image
+ * @param[in]  outputTensorDesc Tensor descriptor for output image
+ * @param[in]  input_buf        Pointer to input image buffer
+ * @param[out] output_buf       Pointer to output image buffer
+ * @param[in]  hue              Hue to be adjusted (in range of [-0.5, 0.5])
+ *
+ * @retval     miopenStatusSuccess        The operation was successful
+ */
+MIOPEN_EXPORT miopenStatus_t miopenImageAdjustHue(miopenHandle_t handle,
+                                                  miopenTensorDescriptor_t inputTensorDesc,
+                                                  miopenTensorDescriptor_t outputTensorDesc,
+                                                  const void* input_buf,
+                                                  void* output_buf,
+                                                  float hue);
+/** @} */
+#endif
 
 #ifdef __cplusplus
 }
