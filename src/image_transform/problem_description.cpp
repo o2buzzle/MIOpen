@@ -25,7 +25,7 @@
  *******************************************************************************/
 
 #include "miopen/names.hpp"
-#include <miopen/image_transform/problem_description.hpp>
+#include <miopen/image_transform/adjust_hue/problem_description.hpp>
 #include <sstream>
 
 namespace miopen {

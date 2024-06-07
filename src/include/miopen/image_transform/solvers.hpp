@@ -28,7 +28,7 @@
 
 #include "miopen/conv_solution.hpp"
 #include "miopen/solver.hpp"
-#include <miopen/image_transform/problem_description.hpp>
+#include <miopen/image_transform/adjust_hue/problem_description.hpp>
 #include <string>
 
 namespace miopen {
