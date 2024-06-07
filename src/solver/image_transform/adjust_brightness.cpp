@@ -24,65 +24,48 @@
  *
  *******************************************************************************/
 
-#include "miopen/conv_solution.hpp"
-#include "miopen/datatype.hpp"
-#include "miopen/errors.hpp"
-#include "miopen/image_transform/adjust_hue/invoke_params.hpp"
-#include "miopen/image_transform/adjust_hue/problem_description.hpp"
+#include "miopen/image_transform/adjust_brightness/invoke_params.hpp"
 #include "miopen/image_transform/solvers.hpp"
-#include "miopen/invoke_params.hpp"
 #include "miopen/kernel_build_params.hpp"
+#include "miopen/kernel_info.hpp"
 #include "miopen/miopen.h"
-#include "miopen/mlo_internal.hpp"
 #include "miopen/solver.hpp"
-#include "miopen/image_transform.hpp"
 #include "miopen/tensor_view.hpp"
-#include <vector>
 
 namespace miopen {
 namespace solver {
 namespace image_transform {
-namespace adjust_hue {
+namespace adjust_brightness {
 
-bool ImageAdjustHue::IsApplicable(
+bool ImageAdjustBrightness::IsApplicable(
     const ExecutionContext& /* context */,
-    const miopen::image_transform::adjust_hue::ProblemDescription& problem) const
+    const miopen::image_transform::adjust_brightness::ProblemDescription& problem) const
 {
-    if(!problem.IsSameType())
-        return false;
-    if(!problem.IsImprovementOverROCm())
-        return false;
     return true;
 }
 
-ConvSolution ImageAdjustHue::GetSolution(
+ConvSolution ImageAdjustBrightness::GetSolution(
     const ExecutionContext& /* context */,
-    const miopen::image_transform::adjust_hue::ProblemDescription& problem) const
+    const miopen::image_transform::adjust_brightness::ProblemDescription& problem) const
 {
-    auto result = ConvSolution(miopenStatusSuccess);
+    auto result = ConvSolution{miopenStatusSuccess};
 
-    auto dtype   = problem.GetInputTensorDesc().GetType();
-    auto io_type = miopen::GetDataType(dtype);
-    auto numel   = problem.GetInputTensorDesc().GetElementSize();
-
-    auto input_size = numel / 3; // RGB image
+    auto dtype = problem.GetInputTensorDesc().GetType();
+    auto numel = problem.GetInputTensorDesc().GetElementSize();
 
     size_t xlocalsize = 256;
-    size_t xgridsize  = AlignUp(input_size, xlocalsize);
-
+    size_t xgridsize  = AlignUp(numel, xlocalsize);
     size_t ylocalsize = 1;
     size_t ygridsize  = 1;
-
     size_t zlocalsize = 1;
     size_t zgridsize  = 1;
 
-    auto kernel = KernelInfo{};
-
-    kernel.kernel_file = "MIOpenImageAdjustHue.cpp";
+    auto kernel        = KernelInfo{};
+    kernel.kernel_file = "MIOpenImageAdjustBrightness.cpp";
     if(problem.GetInputTensorDesc().IsContiguous() && problem.GetOutputTensorDesc().IsContiguous())
-        kernel.kernel_name = "ImageAdjustHueContiguous";
+        kernel.kernel_name = "ImageAdjustBrightnessContiguous";
     else
-        kernel.kernel_name = "ImageAdjustHue";
+        kernel.kernel_name = "ImageAdjustBrightness";
 
     const auto build_params =
         KernelBuildParameters{{"MIOPEN_USE_FP16", static_cast<int32_t>(dtype == miopenHalf)},
@@ -106,7 +89,7 @@ ConvSolution ImageAdjustHue::GetSolution(
         return [=](const Handle& handle_, const AnyInvokeParams& raw_params) {
             decltype(auto) kernel = handle_.Run(kernels.front());
             decltype(auto) params =
-                raw_params.CastTo<miopen::image_transform::adjust_hue::InvokeParams>();
+                raw_params.CastTo<miopen::image_transform::adjust_brightness::InvokeParams>();
 
             auto xdesc = miopen::deref(params.inputTensorDesc);
             auto ydesc = miopen::deref(params.outputTensorDesc);
@@ -114,27 +97,29 @@ ConvSolution ImageAdjustHue::GetSolution(
             auto x_tv = get_inner_expanded_4d_tv(xdesc);
             auto y_tv = get_inner_expanded_4d_tv(ydesc);
 
-            size_t N        = xdesc.GetElementSize() / 3;
-            size_t c_stride = xdesc.GetLengths()[2] * xdesc.GetLengths()[3];
+            size_t N = xdesc.GetElementSize();
 
-            if(kernel.name == "ImageAdjustHueContiguous")
+            if(kernel.name == "ImageAdjustBrightness")
+            {
+                kernel(
+                    params.input_buf, params.output_buf, x_tv, y_tv, N, params.brightness_factor);
+            }
+            else
             {
                 kernel(params.input_buf,
                        params.output_buf,
-                       params.hue,
-                       N,
-                       c_stride,
                        x_tv.offset,
-                       y_tv.offset);
+                       y_tv.offset,
+                       N,
+                       params.brightness_factor);
             }
-            else
-                kernel(params.input_buf, params.output_buf, N, c_stride, x_tv, y_tv);
         };
     };
+
     return result;
 }
 
-} // namespace adjust_hue
+} // namespace adjust_brightness
 } // namespace image_transform
 } // namespace solver
 } // namespace miopen

@@ -6607,6 +6607,26 @@ MIOPEN_EXPORT miopenStatus_t miopenImageAdjustHue(miopenHandle_t handle,
                                                   const void* input_buf,
                                                   void* output_buf,
                                                   float hue);
+
+/*! @brief Adjust the brightness of an image
+ *
+ * @param[in]  handle             MIOpen handle
+ * @param[in]  inputTensorDesc    Tensor descriptor for input image
+ * @param[in]  outputTensorDesc   Tensor descriptor for output image
+ * @param[in]  input_buf          Pointer to input image buffer
+ * @param[out] output_buf         Pointer to output image buffer
+ * @param[in]  brightness_factor  Brightness factor to be adjusted
+ *
+ * @retval     miopenStatusSuccess        The operation was successful
+ */
+
+MIOPEN_EXPORT miopenStatus_t miopenImageAdjustBrightness(miopenHandle_t handle,
+                                                         miopenTensorDescriptor_t inputTensorDesc,
+                                                         miopenTensorDescriptor_t outputTensorDesc,
+                                                         const void* input_buf,
+                                                         void* output_buf,
+                                                         float brightness_factor);
+
 /** @} */
 #endif
 

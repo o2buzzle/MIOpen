@@ -27,6 +27,7 @@
 #include "miopen/common.hpp"
 #include "miopen/execution_context.hpp"
 #include "miopen/find_solution.hpp"
+#include "miopen/image_transform/adjust_brightness/invoke_params.hpp"
 #include "miopen/image_transform/adjust_hue/invoke_params.hpp"
 #include "miopen/image_transform/adjust_hue/problem_description.hpp"
 #include "miopen/image_transform/solvers.hpp"
@@ -61,6 +62,36 @@ miopenStatus_t miopenImageAdjustHue(Handle& handle,
     const auto algo = AlgorithmName{"ImageAdjustHue"};
     const auto solver =
         solver::SolverContainer<solver::image_transform::adjust_hue::ImageAdjustHue>{};
+
+    solver.ExecutePrimitive(handle, problem, algo, invoke_params);
+
+    return miopenStatusSuccess;
+}
+
+miopenStatus_t miopenImageAdjustBrightness(Handle& handle,
+                                           const TensorDescriptor& inputTensorDesc,
+                                           const TensorDescriptor& outputTensorDesc,
+                                           ConstData_t input_buf,
+                                           Data_t output_buf,
+                                           float brightness_factor)
+{
+    auto ctx           = ExecutionContext{&handle};
+    const auto problem = image_transform::adjust_brightness::ProblemDescription{
+        inputTensorDesc, outputTensorDesc, brightness_factor};
+
+    const auto invoke_params = [&]() {
+        auto tmp              = image_transform::adjust_brightness::InvokeParams{};
+        tmp.inputTensorDesc   = &inputTensorDesc;
+        tmp.outputTensorDesc  = &outputTensorDesc;
+        tmp.input_buf         = input_buf;
+        tmp.output_buf        = output_buf;
+        tmp.brightness_factor = brightness_factor;
+        return tmp;
+    }();
+
+    const auto algo   = AlgorithmName{"ImageAdjustBrightness"};
+    const auto solver = solver::SolverContainer<
+        solver::image_transform::adjust_brightness::ImageAdjustBrightness>{};
 
     solver.ExecutePrimitive(handle, problem, algo, invoke_params);
 

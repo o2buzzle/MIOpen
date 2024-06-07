@@ -24,28 +24,40 @@
  *
  *******************************************************************************/
 
-#include "miopen/common.hpp"
+#pragma once
 
-#ifndef GUARD_MIOPEN_IMAGE_TRANSFORM_HPP_
-#define GUARD_MIOPEN_IMAGE_TRANSFORM_HPP_
+#include "miopen/names.hpp"
+#include "miopen/problem_description_base.hpp"
+#include "miopen/tensor.hpp"
 
 namespace miopen {
-struct Handle;
-struct TensorDescriptor;
+struct NetworkConfig;
 
-miopenStatus_t miopenImageAdjustHue(Handle& handle,
-                                    const TensorDescriptor& inputTensorDesc,
-                                    const TensorDescriptor& outputTensorDesc,
-                                    ConstData_t input_buf,
-                                    Data_t output_buf,
-                                    float hue);
+namespace image_transform {
+namespace adjust_brightness {
 
-miopenStatus_t miopenImageAdjustBrightness(Handle& handle,
-                                           const TensorDescriptor& inputTensorDesc,
-                                           const TensorDescriptor& outputTensorDesc,
-                                           ConstData_t input_buf,
-                                           Data_t output_buf,
-                                           float brightness_factor);
+struct ProblemDescription : public ProblemDescriptionBase
+{
+    ProblemDescription(TensorDescriptor inputTensorDesc_,
+                       TensorDescriptor outputTensorDesc_,
+                       float brightness_factor_)
+        : inputTensorDesc(inputTensorDesc_),
+          outputTensorDesc(outputTensorDesc_),
+          brightness_factor(brightness_factor_)
+    {
+    }
+
+    NetworkConfig MakeNetworkConfig() const override;
+
+    const TensorDescriptor& GetInputTensorDesc() const { return inputTensorDesc; }
+    const TensorDescriptor& GetOutputTensorDesc() const { return outputTensorDesc; }
+    float GetBrightnessFactor() const { return brightness_factor; }
+
+private:
+    TensorDescriptor inputTensorDesc;
+    TensorDescriptor outputTensorDesc;
+    float brightness_factor;
+};
+} // namespace adjust_brightness
+} // namespace image_transform
 } // namespace miopen
-
-#endif

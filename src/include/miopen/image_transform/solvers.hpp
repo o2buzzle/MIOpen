@@ -29,6 +29,7 @@
 #include "miopen/conv_solution.hpp"
 #include "miopen/solver.hpp"
 #include <miopen/image_transform/adjust_hue/problem_description.hpp>
+#include <miopen/image_transform/adjust_brightness/problem_description.hpp>
 #include <string>
 
 namespace miopen {
@@ -54,6 +55,31 @@ struct ImageAdjustHue final : ImageAdjustHueSolver
     bool MayNeedWorkspace() const override { return false; }
 };
 } // namespace adjust_hue
+
+namespace adjust_brightness {
+
+using ImageAdjustBrightnessSolver =
+    NonTunableSolverBase<ExecutionContext,
+                         miopen::image_transform::adjust_brightness::ProblemDescription>;
+
+struct ImageAdjustBrightness final : ImageAdjustBrightnessSolver
+{
+    const std::string& SolverDbId() const override
+    {
+        return GetSolverDbId<ImageAdjustBrightness>();
+    }
+
+    bool IsApplicable(const ExecutionContext& context,
+                      const miopen::image_transform::adjust_brightness::ProblemDescription& problem)
+        const override;
+
+    ConvSolution GetSolution(const ExecutionContext& context,
+                             const miopen::image_transform::adjust_brightness::ProblemDescription&
+                                 problem) const override;
+
+    bool MayNeedWorkspace() const override { return false; }
+};
+} // namespace adjust_brightness
 } // namespace image_transform
 } // namespace solver
 } // namespace miopen

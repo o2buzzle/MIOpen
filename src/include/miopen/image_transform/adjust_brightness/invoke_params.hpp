@@ -24,28 +24,34 @@
  *
  *******************************************************************************/
 
-#include "miopen/common.hpp"
+#pragma once
 
-#ifndef GUARD_MIOPEN_IMAGE_TRANSFORM_HPP_
-#define GUARD_MIOPEN_IMAGE_TRANSFORM_HPP_
+#include "miopen/common.hpp"
+#include "miopen/tensor.hpp"
+#include <cstddef>
+#include <miopen/miopen.h>
+#include "miopen/invoke_params.hpp"
 
 namespace miopen {
-struct Handle;
-struct TensorDescriptor;
+namespace image_transform {
+namespace adjust_brightness {
 
-miopenStatus_t miopenImageAdjustHue(Handle& handle,
-                                    const TensorDescriptor& inputTensorDesc,
-                                    const TensorDescriptor& outputTensorDesc,
-                                    ConstData_t input_buf,
-                                    Data_t output_buf,
-                                    float hue);
+struct InvokeParams : public miopen::InvokeParams
+{
+    InvokeParams() = default;
 
-miopenStatus_t miopenImageAdjustBrightness(Handle& handle,
-                                           const TensorDescriptor& inputTensorDesc,
-                                           const TensorDescriptor& outputTensorDesc,
-                                           ConstData_t input_buf,
-                                           Data_t output_buf,
-                                           float brightness_factor);
+    const TensorDescriptor* inputTensorDesc;
+    const TensorDescriptor* outputTensorDesc;
+
+    ConstData_t input_buf = nullptr;
+    Data_t output_buf     = nullptr;
+
+    float brightness_factor = 0.0f;
+
+    size_t workspace_size = 0;
+    size_t GetWorkspaceSize() const { return workspace_size; }
+    Data_t GetWorkspace() const { return nullptr; }
+};
+} // namespace adjust_brightness
+} // namespace image_transform
 } // namespace miopen
-
-#endif

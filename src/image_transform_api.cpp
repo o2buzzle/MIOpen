@@ -24,6 +24,7 @@
  *
  *******************************************************************************/
 
+#include "miopen/miopen.h"
 #include <miopen/errors.hpp>
 #include <miopen/handle.hpp>
 #include <miopen/logger.hpp>
@@ -46,5 +47,25 @@ extern "C" miopenStatus_t miopenImageAdjustHue(miopenHandle_t handle,
                                      DataCast(input_buf),
                                      DataCast(output_buf),
                                      hue);
+    });
+}
+
+extern "C" miopenStatus_t miopenImageAdjustBrightness(miopenHandle_t handle,
+                                                      miopenTensorDescriptor_t inputTensorDesc,
+                                                      miopenTensorDescriptor_t outputTensorDesc,
+                                                      const void* input_buf,
+                                                      void* output_buf,
+                                                      float brightness_factor)
+{
+    MIOPEN_LOG_FUNCTION(
+        handle, inputTensorDesc, outputTensorDesc, input_buf, output_buf, brightness_factor);
+
+    return miopen::try_([&] {
+        miopen::miopenImageAdjustBrightness(miopen::deref(handle),
+                                            miopen::deref(inputTensorDesc),
+                                            miopen::deref(outputTensorDesc),
+                                            DataCast(input_buf),
+                                            DataCast(output_buf),
+                                            brightness_factor);
     });
 }
