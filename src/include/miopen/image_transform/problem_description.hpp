@@ -43,6 +43,12 @@ struct ProblemDescription : ProblemDescriptionBase
                        const float hue_)
         : inputTensorDesc(inputTensorDesc_), outputTensorDesc(outputTensorDesc_), hue(hue_)
     {
+        // These are critical checks, should be run every time
+        if(!IsHueInRange())
+            MIOPEN_THROW("hue must be between -0.5 and 0.5");
+
+        if(!IsSameSize())
+            MIOPEN_THROW("input and output must have the same size");
     }
 
     NetworkConfig MakeNetworkConfig() const override;
@@ -50,6 +56,28 @@ struct ProblemDescription : ProblemDescriptionBase
     const TensorDescriptor& GetInputTensorDesc() const { return inputTensorDesc; }
     const TensorDescriptor& GetOutputTensorDesc() const { return outputTensorDesc; }
     float GetHue() const { return hue; }
+
+    bool IsSameType() const { return inputTensorDesc.GetType() == outputTensorDesc.GetType(); }
+
+    bool IsSameSize() const
+    {
+        for(int i = 0; i < inputTensorDesc.GetLengths().size(); i++)
+        {
+            if(inputTensorDesc.GetLengths()[i] != outputTensorDesc.GetLengths()[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool IsHueInRange() const { return hue >= -0.5f && hue <= 0.5f; }
+
+    bool IsImprovementOverROCm() const
+    {
+        return true; // So far, yes.
+    }
 
 private:
     TensorDescriptor inputTensorDesc;

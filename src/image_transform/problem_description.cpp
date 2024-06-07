@@ -37,7 +37,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     std::ostringstream ss;
 
     ss << "adjust_hue-";
-    ss << inputTensorDesc.GetType();
+    ss << inputTensorDesc.GetType() << "-" << outputTensorDesc.GetType() << "-";
     ss << inputTensorDesc.GetElementSize();
 
     return NetworkConfig{ss.str()};
