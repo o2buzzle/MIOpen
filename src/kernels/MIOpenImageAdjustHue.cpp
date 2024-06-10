@@ -132,7 +132,7 @@ __device__ void DeviceImageAdjustHue(const DTYPE* __restrict__ input,
     int n, c, h, w;
     getNCHW(n, c, h, w, gid, input_tv.size);
 
-    n = n * 3;
+    n = n * 3 + c;
 
     DTYPE r = get4DValueAt(input, input_tv, n, 0, h, w);
     DTYPE g = get4DValueAt(input, input_tv, n, 1, h, w);
