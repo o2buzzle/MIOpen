@@ -34,6 +34,7 @@
 #include "../test/verify.hpp"
 #include "miopen/tensor.hpp"
 #include "miopen/tensor_view.hpp"
+#include "random.hpp"
 #include "tensor_driver.hpp"
 #include "tensor_view.hpp"
 #include "timer.hpp"
@@ -41,14 +42,6 @@
 #include <cmath>
 #include <memory>
 #include "image_adjust_driver_common.hpp"
-
-template <typename T>
-T clamp(T val, T min, T max)
-{
-    val = val < min ? min : val;
-    val = val > max ? max : val;
-    return val;
-}
 
 template <typename T = float>
 void mloConvertRGBToHSV(const T r, const T g, const T b, T* h, T* s, T* v)
@@ -143,9 +136,9 @@ void mloRunImageAdjustHueHost(Tgpu* input_buf,
 
         n = n * 3 + c;
 
-        Tref r = static_cast<Tref>(get4DValueAt(input_buf, input_tv.stride, n, 0, h, w));
-        Tref g = static_cast<Tref>(get4DValueAt(input_buf, input_tv.stride, n, 1, h, w));
-        Tref b = static_cast<Tref>(get4DValueAt(input_buf, input_tv.stride, n, 2, h, w));
+        Tref r = static_cast<Tref>(get4DValueAt(input_buf, input_tv, n, 0, h, w));
+        Tref g = static_cast<Tref>(get4DValueAt(input_buf, input_tv, n, 1, h, w));
+        Tref b = static_cast<Tref>(get4DValueAt(input_buf, input_tv, n, 2, h, w));
 
         Tref hue, sat, val;
 
@@ -282,7 +275,7 @@ int ImageAdjustHueDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
 
     for(auto i = 0; i < in_size; i++)
     {
-        in_host[i] = static_cast<Tgpu>(prng::gen_0_to_B(255) / 256.0f);
+        in_host[i] = static_cast<Tgpu>(prng::gen_A_to_B(0.0f, 0.1f));
     }
 
     if(input_gpu->ToGPU(GetStream(), in_host.data()) != miopenStatusSuccess)
@@ -370,13 +363,16 @@ int ImageAdjustHueDriver<Tgpu, Tref>::VerifyForward()
 {
     RunForwardCPU();
 
-    auto error = miopen::rms_range(out_host, out_ref);
-    if(error > 1e-3)
+    for(auto i = 0; i < out_ref.size(); i++)
     {
-        std::cerr << "Image Adjust Hue Forward RMS error: " << error << std::endl;
-        return miopenStatusUnknownError;
+        if(std::abs(out_ref[i] - out_host[i]) > 1e-5)
+        {
+            std::cerr << "Mismatch at index " << i << std::endl;
+            std::cerr << "Expected: " << out_ref[i] << " Got: " << out_host[i] << std::endl;
+        }
     }
-    printf("Verification succeded\n");
+
+    printf("Verification completed\n");
 
     return miopenStatusSuccess;
 }

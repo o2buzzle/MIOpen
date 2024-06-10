@@ -32,7 +32,7 @@
 #include "float_types.h"
 #include "tensor_view.hpp"
 
-template <typename DTYPE>
+template <typename DTYPE = FLOAT_ACCUM>
 __device__ DTYPE clamp(DTYPE val, DTYPE min, DTYPE max)
 {
     val = val < min ? min : val;
@@ -40,7 +40,7 @@ __device__ DTYPE clamp(DTYPE val, DTYPE min, DTYPE max)
     return val;
 }
 
-template <typename DTYPE>
+template <typename DTYPE = FLOAT_ACCUM>
 __device__ void
 convertRGBToHSV(const DTYPE r, const DTYPE g, const DTYPE b, DTYPE* h, DTYPE* s, DTYPE* v)
 {
@@ -66,7 +66,7 @@ convertRGBToHSV(const DTYPE r, const DTYPE g, const DTYPE b, DTYPE* h, DTYPE* s,
     *h = fmod((hr + hg + hb) / (DTYPE)6.0 + (DTYPE)1.0, (DTYPE)1.0);
 }
 
-template <typename DTYPE>
+template <typename DTYPE = FLOAT_ACCUM>
 __device__ void
 convertHSVToRGB(const DTYPE h, const DTYPE s, const DTYPE v, DTYPE* r, DTYPE* g, DTYPE* b)
 {
@@ -132,11 +132,11 @@ __device__ void DeviceImageAdjustHue(const DTYPE* __restrict__ input,
     int n, c, h, w;
     getNCHW(n, c, h, w, gid, input_tv.size);
 
-    n = n * 3 + c;
+    n = n * 3;
 
-    DTYPE r = get4DValueAt(input, input_tv.stride, n, 0, h, w);
-    DTYPE g = get4DValueAt(input, input_tv.stride, n, 1, h, w);
-    DTYPE b = get4DValueAt(input, input_tv.stride, n, 2, h, w);
+    DTYPE r = get4DValueAt(input, input_tv, n, 0, h, w);
+    DTYPE g = get4DValueAt(input, input_tv, n, 1, h, w);
+    DTYPE b = get4DValueAt(input, input_tv, n, 2, h, w);
 
     FLOAT_ACCUM fr = CVT_FLOAT2ACCUM(r);
     FLOAT_ACCUM fg = CVT_FLOAT2ACCUM(g);

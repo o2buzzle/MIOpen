@@ -32,11 +32,35 @@
 #include "image_adjust_driver_common.hpp"
 #include "miopen/miopen.h"
 #include "../test/tensor_holder.hpp"
+#include "../test/verify.hpp"
+#include "miopen/tensor.hpp"
+#include "miopen/tensor_view.hpp"
 #include "tensor_driver.hpp"
+#include "tensor_view.hpp"
 #include "timer.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+
+template <typename Tgpu, typename Tref>
+void mloImageAdjustBrightnessRunHost(const Tgpu* input,
+                                     Tref* output,
+                                     miopen::TensorDescriptor inputDesc,
+                                     miopen::TensorDescriptor outputDesc,
+                                     const float brightness_factor)
+{
+    tensor_view_4d_t input_tv  = get_inner_expanded_4d_tv(inputDesc);
+    tensor_view_4d_t output_tv = get_inner_expanded_4d_tv(outputDesc);
+
+    size_t N = inputDesc.GetElementSize();
+
+    for(size_t gid = 0; gid < N; gid++)
+    {
+        Tref pixel  = get4DValueAt(input, input_tv, gid);
+        Tref result = clamp(pixel * brightness_factor, Tref(0.0f), Tref(1.0f));
+        set4DValueAt(output, output_tv, gid, result);
+    }
+}
 
 template <typename Tgpu, typename Tref>
 class ImageAdjustBrightnessDriver : public Driver
@@ -155,13 +179,23 @@ int ImageAdjustBrightnessDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
     input_gpu  = std::unique_ptr<GPUMem>(new GPUMem(ctx, input_size, sizeof(Tgpu)));
     output_gpu = std::unique_ptr<GPUMem>(new GPUMem(ctx, output_size, sizeof(Tgpu)));
 
-    in_host  = std::vector<Tgpu>(input_size);
-    out_host = std::vector<Tgpu>(output_size);
-    out_ref  = std::vector<Tref>(output_size);
+    in_host  = std::vector<Tgpu>(input_size, static_cast<Tgpu>(0));
+    out_host = std::vector<Tgpu>(output_size, static_cast<Tgpu>(0));
+    out_ref  = std::vector<Tref>(output_size, static_cast<Tref>(0));
 
-    for(auto i = 0; i < input_size; i++)
+    size_t N = GetTensorSize(inputTensorDesc);
+
+    for(auto i = 0; i < 3; i++)
     {
-        in_host[i] = static_cast<Tgpu>(prng::gen_0_to_B(255) / 256.0f);
+        for(auto j = 0; j < N / 3; j++)
+        {
+            switch(i)
+            {
+            case 0: in_host[i * N / 3 + j] = static_cast<Tgpu>(0.3f); break;
+            case 1: in_host[i * N / 3 + j] = static_cast<Tgpu>(0.6f); break;
+            case 2: in_host[i * N / 3 + j] = static_cast<Tgpu>(0.9f); break;
+            }
+        }
     }
 
     if(input_gpu->ToGPU(GetStream(), in_host.data()) != miopenStatusSuccess)
@@ -224,12 +258,30 @@ int ImageAdjustBrightnessDriver<Tgpu, Tref>::RunForwardGPU()
 template <typename Tgpu, typename Tref>
 int ImageAdjustBrightnessDriver<Tgpu, Tref>::RunForwardCPU()
 {
+    mloImageAdjustBrightnessRunHost(in_host.data(),
+                                    out_ref.data(),
+                                    miopen::deref(inputTensorDesc),
+                                    miopen::deref(outputTensorDesc),
+                                    brightness_factor);
     return miopenStatusSuccess;
 }
 
 template <typename Tgpu, typename Tref>
 int ImageAdjustBrightnessDriver<Tgpu, Tref>::VerifyForward()
 {
+    RunForwardCPU();
+
+    for(auto i = 0; i < out_ref.size(); i++)
+    {
+        if(out_ref[i] != out_host[i])
+        {
+            std::cerr << "Mismatch at index " << i << std::endl;
+            std::cerr << "Expected: " << out_ref[i] << " Got: " << out_host[i] << std::endl;
+        }
+    }
+
+    printf("Verification completed\n");
+
     return miopenStatusSuccess;
 }
 

@@ -83,43 +83,43 @@ __host__ __device__ void inline getNCHW(T& n, T& c, T& h, T& w, const U idx, con
     w = o[3];
 }
 
-template <typename T, typename U>
-__host__
-    __device__ T inline get5DValueAt(const T* x, const size_t* x_strides, U n, U c, U d, U h, U w)
+template <typename T, typename U = size_t>
+__host__ __device__
+    T inline get5DValueAt(const T* x, const tensor_view_5d_t& x_tv, U n, U c, U d, U h, U w)
 {
-    return x[n * x_strides[0] + c * x_strides[1] + d * x_strides[2] + h * x_strides[3] +
-             w * x_strides[4]];
+    return x[n * x_tv.stride[0] + c * x_tv.stride[1] + d * x_tv.stride[2] + h * x_tv.stride[3] +
+             w * x_tv.stride[4] + x_tv.offset];
 }
 
-template <typename T, typename U>
-__host__ __device__ T inline get4DValueAt(T* x, const size_t* x_strides, U n, U c, U h, U w)
+template <typename T, typename U = size_t>
+__host__ __device__ T inline get4DValueAt(T* x, const tensor_view_4d_t& x_tv, U n, U c, U h, U w)
 {
-    return x[n * x_strides[0] + c * x_strides[1] + h * x_strides[2] + w * x_strides[3]];
+    return x[n * x_tv.stride[0] + c * x_tv.stride[1] + h * x_tv.stride[2] + w * x_tv.stride[3] +
+             x_tv.offset];
+}
+
+template <typename T, typename U = size_t>
+__host__ __device__ T inline get4DValueAt(const T* x, const tensor_view_4d_t& x_tv, U gid)
+{
+    size_t o[4];
+    getNCHW(o, gid, x_tv.size);
+    return get4DValueAt(x, x_tv, o[0], o[1], o[2], o[3]);
+}
+
+template <typename T, typename U = size_t>
+__host__ __device__ void inline set5DValueAt(
+    T* x, const tensor_view_5d_t& x_tv, U n, U c, U d, U h, U w, T val)
+{
+    x[n * x_tv.stride[0] + c * x_tv.stride[1] + d * x_tv.stride[2] + h * x_tv.stride[3] +
+      w * x_tv.stride[4] + x_tv.offset] = val;
 }
 
 template <typename T>
 __host__ __device__ void inline set5DValueAt(T* x, const tensor_view_5d_t& x_tv, size_t idx, T val)
 {
     size_t o[5];
-    o[4] = x_tv.stride[0] *
-           (size_t)((idx) / x_tv.size[4] / x_tv.size[3] / x_tv.size[2] / x_tv.size[1]);
-    o[3] = x_tv.stride[1] *
-           ((size_t)((idx) / x_tv.size[4] / x_tv.size[3] / x_tv.size[2]) % x_tv.size[1]);
-    o[2] = x_tv.stride[2] * ((size_t)((idx) / x_tv.size[4] / x_tv.size[3]) % x_tv.size[2]);
-    o[1] = x_tv.stride[3] * ((size_t)((idx) / x_tv.size[4]) % x_tv.size[3]);
-    o[0] = x_tv.stride[4] * ((idx) % x_tv.size[4]) + x_tv.offset;
-    x[o[0] + o[1] + o[2] + o[3] + o[4]] = val;
-}
-
-template <typename T>
-__host__ __device__ void inline set4DValueAt(T* x, const tensor_view_4d_t& x_tv, size_t idx, T val)
-{
-    size_t o[4];
-    o[3] = x_tv.stride[0] * (size_t)((idx) / x_tv.size[3] / x_tv.size[2] / x_tv.size[1]);
-    o[2] = x_tv.stride[1] * ((size_t)((idx) / x_tv.size[3] / x_tv.size[2]) % x_tv.size[1]);
-    o[1] = x_tv.stride[2] * ((size_t)((idx) / x_tv.size[3]) % x_tv.size[2]);
-    o[0] = x_tv.stride[3] * ((idx) % x_tv.size[3]) + x_tv.offset;
-    x[o[0] + o[1] + o[2] + o[3]] = val;
+    getNCDHW(o, idx, x_tv.size);
+    set5DValueAt(x, x_tv, o[0], o[1], o[2], o[3], o[4], val);
 }
 
 template <typename T>
@@ -128,6 +128,14 @@ __host__ __device__ void inline set4DValueAt(
 {
     x[n * x_tv.stride[0] + c * x_tv.stride[1] + h * x_tv.stride[2] + w * x_tv.stride[3] +
       x_tv.offset] = val;
+}
+
+template <typename T>
+__host__ __device__ void inline set4DValueAt(T* x, const tensor_view_4d_t& x_tv, size_t gid, T val)
+{
+    size_t n, c, h, w;
+    getNCHW(n, c, h, w, gid, x_tv.size);
+    set4DValueAt(x, x_tv, n, c, h, w, val);
 }
 
 template <typename T>

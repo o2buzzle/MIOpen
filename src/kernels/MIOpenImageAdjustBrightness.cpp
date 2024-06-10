@@ -48,11 +48,11 @@ __device__ void DeviceImageAdjustBrightness(DTYPE* input,
                                             size_t N,
                                             float brightness_factor)
 {
-    size_t gid = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    size_t gid = blockIdx.x * blockDim.x + threadIdx.x;
     if(gid >= N)
         return;
 
-    DTYPE pixel    = get4DValueAt(input, input_tv.stride, gid);
+    DTYPE pixel    = get4DValueAt(input, input_tv, gid);
     FLOAT_ACCUM fp = CVT_FLOAT2ACCUM(pixel);
 
     DTYPE result = clamp(fp * brightness_factor, 0.0f, 1.0f);
@@ -67,7 +67,7 @@ __device__ void DeviceImageAdjustBrightnessContiguous(DTYPE* input,
                                                       size_t N,
                                                       float brightness_factor)
 {
-    size_t gid = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    size_t gid = blockIdx.x * blockDim.x + threadIdx.x;
     if(gid >= N)
         return;
 
