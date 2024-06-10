@@ -29,17 +29,16 @@
 #include "miopen/names.hpp"
 #include "miopen/problem_description_base.hpp"
 #include "miopen/tensor.hpp"
+#include <miopen/miopen.h>
 
 namespace miopen {
 struct NetworkConfig;
-
 namespace image_transform {
 namespace adjust_brightness {
-
 struct ProblemDescription : public ProblemDescriptionBase
 {
-    ProblemDescription(TensorDescriptor inputTensorDesc_,
-                       TensorDescriptor outputTensorDesc_,
+    ProblemDescription(const TensorDescriptor& inputTensorDesc_,
+                       const TensorDescriptor& outputTensorDesc_,
                        float brightness_factor_)
         : inputTensorDesc(inputTensorDesc_),
           outputTensorDesc(outputTensorDesc_),

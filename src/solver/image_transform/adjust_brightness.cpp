@@ -25,6 +25,7 @@
  *******************************************************************************/
 
 #include "miopen/image_transform/adjust_brightness/invoke_params.hpp"
+#include "miopen/image_transform/adjust_brightness/problem_description.hpp"
 #include "miopen/image_transform/solvers.hpp"
 #include "miopen/kernel_build_params.hpp"
 #include "miopen/kernel_info.hpp"

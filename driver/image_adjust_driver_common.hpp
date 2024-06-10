@@ -24,38 +24,21 @@
  *
  *******************************************************************************/
 
-#include "miopen/names.hpp"
-#include <miopen/image_transform/adjust_hue/problem_description.hpp>
-#include <miopen/image_transform/adjust_brightness/problem_description.hpp>
-#include <sstream>
+#ifndef MIOPEN_DRIVER_IMAGE_ADJUST_DRIVER_COMMON_HPP
+#define MIOPEN_DRIVER_IMAGE_ADJUST_DRIVER_COMMON_HPP
 
-namespace miopen {
-namespace image_transform {
-namespace adjust_hue {
-
-NetworkConfig ProblemDescription::MakeNetworkConfig() const
+template <typename T>
+inline std::vector<T> ComputeStrides(std::vector<T> input, bool contiguous)
 {
-    std::ostringstream ss;
-
-    ss << "adjust_hue-";
-    ss << inputTensorDesc.GetType() << "-" << outputTensorDesc.GetType() << "-";
-    ss << inputTensorDesc.GetElementSize();
-
-    return NetworkConfig{ss.str()};
+    if(!contiguous)
+        std::swap(input.front(), input.back());
+    std::vector<T> strides(input.size());
+    strides.back() = 1;
+    for(int i = input.size() - 2; i >= 0; --i)
+        strides[i] = strides[i + 1] * input[i + 1];
+    if(!contiguous)
+        std::swap(strides.front(), strides.back());
+    return strides;
 }
-} // namespace adjust_hue
-namespace adjust_brightness {
 
-NetworkConfig ProblemDescription::MakeNetworkConfig() const
-{
-    std::ostringstream ss;
-
-    ss << "adjust_brightness-";
-    ss << inputTensorDesc.GetType() << "-" << outputTensorDesc.GetType() << "-";
-    ss << inputTensorDesc.GetElementSize();
-
-    return NetworkConfig{ss.str()};
-}
-} // namespace adjust_brightness
-} // namespace image_transform
-} // namespace miopen
+#endif

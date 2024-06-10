@@ -26,15 +26,26 @@
 
 #include "registry_driver_maker.hpp"
 #include "image_adjust_hue_driver.hpp"
+#include "image_adjust_brightness_driver.hpp"
 
 static Driver* makeDriver(const std::string& base_arg)
 {
+    // AdjustHue
     if(base_arg == "image_adjust_hue")
         return new ImageAdjustHueDriver<float, float>();
     if(base_arg == "image_adjust_hue_fp16")
         return new ImageAdjustHueDriver<float16, float>();
     if(base_arg == "image_adjust_hue_bfp16")
         return new ImageAdjustHueDriver<bfloat16, float>();
+
+    // AdjustBrightness
+    if(base_arg == "image_adjust_brightness")
+        return new ImageAdjustBrightnessDriver<float, float>();
+    if(base_arg == "image_adjust_brightness_fp16")
+        return new ImageAdjustBrightnessDriver<float16, float>();
+    if(base_arg == "image_adjust_brightness_bfp16")
+        return new ImageAdjustBrightnessDriver<bfloat16, float>();
+
     return nullptr;
 }
 

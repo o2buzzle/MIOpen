@@ -27,9 +27,10 @@
 #include "miopen/common.hpp"
 #include "miopen/execution_context.hpp"
 #include "miopen/find_solution.hpp"
-#include "miopen/image_transform/adjust_brightness/invoke_params.hpp"
 #include "miopen/image_transform/adjust_hue/invoke_params.hpp"
 #include "miopen/image_transform/adjust_hue/problem_description.hpp"
+#include "miopen/image_transform/adjust_brightness/invoke_params.hpp"
+#include "miopen/image_transform/adjust_brightness/problem_description.hpp"
 #include "miopen/image_transform/solvers.hpp"
 #include "miopen/miopen.h"
 #include "miopen/image_transform.hpp"
@@ -73,7 +74,7 @@ miopenStatus_t miopenImageAdjustBrightness(Handle& handle,
                                            const TensorDescriptor& outputTensorDesc,
                                            ConstData_t input_buf,
                                            Data_t output_buf,
-                                           float brightness_factor)
+                                           const float brightness_factor)
 {
     auto ctx           = ExecutionContext{&handle};
     const auto problem = image_transform::adjust_brightness::ProblemDescription{
