@@ -29,7 +29,7 @@
 #include "miopen/common.hpp"
 #include "miopen/tensor.hpp"
 #include <cstddef>
-#include <miopen/miopen.h>
+#include "miopen/miopen.h"
 #include "miopen/invoke_params.hpp"
 
 namespace miopen {

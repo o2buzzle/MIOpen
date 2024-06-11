@@ -6627,6 +6627,31 @@ MIOPEN_EXPORT miopenStatus_t miopenImageAdjustBrightness(miopenHandle_t handle,
                                                          void* output_buf,
                                                          float brightness_factor);
 
+/**
+ * Normalize an image.
+ *
+ * @param[in] handle            MIOpen handle.
+ * @param[in] inputTensorDesc   Tensor descriptor of the input image.
+ * @param[in] meanTensorDesc    Tensor descriptor of the mean tensor.
+ * @param[in] stdTensorDesc     Tensor descriptor of the standard deviation tensor.
+ * @param[in] outputTensorDesc  Tensor descriptor of the output image.
+ * @param[in] input_buf         Pointer to the input image buffer.
+ * @param[in] mean_buf          Pointer to the mean tensor buffer.
+ * @param[in] std_buf           Pointer to the standard deviation tensor buffer.
+ * @param[out] output_buf       Pointer to the output image buffer.
+ *
+ * @return The status of the normalization operation.
+ */
+MIOPEN_EXPORT miopenStatus_t miopenImageNormalize(miopenHandle_t handle,
+                                                  miopenTensorDescriptor_t inputTensorDesc,
+                                                  miopenTensorDescriptor_t meanTensorDesc,
+                                                  miopenTensorDescriptor_t stdTensorDesc,
+                                                  miopenTensorDescriptor_t outputTensorDesc,
+                                                  const void* input_buf,
+                                                  const void* mean_buf,
+                                                  const void* std_buf,
+                                                  void* output_buf);
+
 /** @} */
 #endif
 

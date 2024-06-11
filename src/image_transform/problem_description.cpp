@@ -25,8 +25,9 @@
  *******************************************************************************/
 
 #include "miopen/names.hpp"
-#include <miopen/image_transform/adjust_hue/problem_description.hpp>
-#include <miopen/image_transform/adjust_brightness/problem_description.hpp>
+#include "miopen/image_transform/adjust_hue/problem_description.hpp"
+#include "miopen/image_transform/adjust_brightness/problem_description.hpp"
+#include "miopen/image_transform/normalize/problem_description.hpp"
 #include <sstream>
 
 namespace miopen {
@@ -57,5 +58,17 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     return NetworkConfig{ss.str()};
 }
 } // namespace adjust_brightness
+namespace normalize {
+NetworkConfig ProblemDescription::MakeNetworkConfig() const
+{
+    std::ostringstream ss;
+
+    ss << "normalize-";
+    ss << inputTensorDesc.GetType() << "-" << outputTensorDesc.GetType() << "-";
+    ss << inputTensorDesc.GetElementSize();
+
+    return NetworkConfig{ss.str()};
+}
+} // namespace normalize
 } // namespace image_transform
 } // namespace miopen

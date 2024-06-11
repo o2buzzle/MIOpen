@@ -31,6 +31,8 @@
 #include "miopen/image_transform/adjust_hue/problem_description.hpp"
 #include "miopen/image_transform/adjust_brightness/invoke_params.hpp"
 #include "miopen/image_transform/adjust_brightness/problem_description.hpp"
+#include "miopen/image_transform/normalize/invoke_params.hpp"
+#include "miopen/image_transform/normalize/problem_description.hpp"
 #include "miopen/image_transform/solvers.hpp"
 #include "miopen/miopen.h"
 #include "miopen/image_transform.hpp"
@@ -98,4 +100,41 @@ miopenStatus_t miopenImageAdjustBrightness(Handle& handle,
 
     return miopenStatusSuccess;
 }
+
+miopenStatus_t miopenImageNormalize(Handle& handle,
+                                    const TensorDescriptor& inputTensorDesc,
+                                    const TensorDescriptor& meanTensorDesc,
+                                    const TensorDescriptor& stdTensorDesc,
+                                    const TensorDescriptor& outputTensorDesc,
+                                    ConstData_t input_buf,
+                                    ConstData_t mean_buf,
+                                    ConstData_t std_buf,
+                                    Data_t output_buf)
+{
+    auto ctx           = ExecutionContext{&handle};
+    const auto problem = image_transform::normalize::ProblemDescription{
+        inputTensorDesc, meanTensorDesc, stdTensorDesc, outputTensorDesc};
+
+    const auto invoke_params = [&]() {
+        auto tmp             = image_transform::normalize::InvokeParams{};
+        tmp.inputTensorDesc  = &inputTensorDesc;
+        tmp.meanTensorDesc   = &meanTensorDesc;
+        tmp.stddevTensorDesc = &stdTensorDesc;
+        tmp.outputTensorDesc = &outputTensorDesc;
+        tmp.input_buf        = input_buf;
+        tmp.mean_buf         = mean_buf;
+        tmp.stddev_buf       = std_buf;
+        tmp.output_buf       = output_buf;
+        return tmp;
+    }();
+
+    const auto algo = AlgorithmName{"ImageNormalize"};
+    const auto solver =
+        solver::SolverContainer<solver::image_transform::normalize::ImageNormalize>{};
+
+    solver.ExecutePrimitive(handle, problem, algo, invoke_params);
+
+    return miopenStatusSuccess;
+}
+
 } // namespace miopen

@@ -69,3 +69,36 @@ extern "C" miopenStatus_t miopenImageAdjustBrightness(miopenHandle_t handle,
                                             brightness_factor);
     });
 }
+
+extern "C" miopenStatus_t miopenImageNormalize(miopenHandle_t handle,
+                                               miopenTensorDescriptor_t inputTensorDesc,
+                                               miopenTensorDescriptor_t meanTensorDesc,
+                                               miopenTensorDescriptor_t stdTensorDesc,
+                                               miopenTensorDescriptor_t outputTensorDesc,
+                                               const void* input_buf,
+                                               const void* mean_buf,
+                                               const void* std_buf,
+                                               void* output_buf)
+{
+    MIOPEN_LOG_FUNCTION(handle,
+                        inputTensorDesc,
+                        meanTensorDesc,
+                        stdTensorDesc,
+                        outputTensorDesc,
+                        input_buf,
+                        mean_buf,
+                        std_buf,
+                        output_buf);
+
+    return miopen::try_([&] {
+        miopen::miopenImageNormalize(miopen::deref(handle),
+                                     miopen::deref(inputTensorDesc),
+                                     miopen::deref(meanTensorDesc),
+                                     miopen::deref(stdTensorDesc),
+                                     miopen::deref(outputTensorDesc),
+                                     DataCast(input_buf),
+                                     DataCast(mean_buf),
+                                     DataCast(std_buf),
+                                     DataCast(output_buf));
+    });
+}

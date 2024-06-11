@@ -46,6 +46,17 @@ miopenStatus_t miopenImageAdjustBrightness(Handle& handle,
                                            ConstData_t input_buf,
                                            Data_t output_buf,
                                            float brightness_factor);
+
+miopenStatus_t miopenImageNormalize(Handle& handle,
+                                    const TensorDescriptor& inputTensorDesc,
+                                    const TensorDescriptor& meanTensorDesc,
+                                    const TensorDescriptor& stdTensorDesc,
+                                    const TensorDescriptor& outputTensorDesc,
+                                    ConstData_t input_buf,
+                                    ConstData_t mean_buf,
+                                    ConstData_t std_buf,
+                                    Data_t output_buf);
+
 } // namespace miopen
 
 #endif

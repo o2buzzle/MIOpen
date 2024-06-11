@@ -34,23 +34,26 @@
 
 namespace miopen {
 namespace image_transform {
-namespace adjust_hue {
+namespace normalize {
 struct InvokeParams : public miopen::InvokeParams
 {
     InvokeParams() = default;
 
     const TensorDescriptor* inputTensorDesc;
+    const TensorDescriptor* meanTensorDesc;
+    const TensorDescriptor* stddevTensorDesc;
     const TensorDescriptor* outputTensorDesc;
 
-    ConstData_t input_buf = nullptr;
-    Data_t output_buf     = nullptr;
+    ConstData_t input_buf  = nullptr;
+    ConstData_t mean_buf   = nullptr;
+    ConstData_t stddev_buf = nullptr;
 
-    float hue = 0.0f;
+    Data_t output_buf = nullptr;
 
     size_t workspace_size = 0;
     size_t GetWorkspaceSize() const { return workspace_size; }
     Data_t GetWorkspace() const { return nullptr; }
 };
-} // namespace adjust_hue
+} // namespace normalize
 } // namespace image_transform
 } // namespace miopen

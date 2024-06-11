@@ -29,7 +29,7 @@
 #include "miopen/names.hpp"
 #include "miopen/problem_description_base.hpp"
 #include "miopen/tensor.hpp"
-#include <miopen/miopen.h>
+#include "miopen/miopen.h"
 
 namespace miopen {
 struct NetworkConfig;

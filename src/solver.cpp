@@ -660,6 +660,11 @@ inline SolverRegistrar::SolverRegistrar(IdRegistryData& registry)
              Primitive::ImageTransform,
              image_transform::adjust_brightness::ImageAdjustBrightness{}.SolverDbId());
 
+    Register(registry,
+             ++id,
+             Primitive::ImageTransform,
+             image_transform::normalize::ImageNormalize{}.SolverDbId());
+
     // IMPORTANT: New solvers should be added to the end of the function!
 }
 
