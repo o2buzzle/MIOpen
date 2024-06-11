@@ -128,7 +128,7 @@ ConvSolution ImageAdjustHue::GetSolution(
                        y_tv.offset);
             }
             else
-                kernel(params.input_buf, params.output_buf, N, c_stride, x_tv, y_tv);
+                kernel(params.input_buf, params.output_buf, params.hue, N, c_stride, x_tv, y_tv);
         };
     };
     return result;

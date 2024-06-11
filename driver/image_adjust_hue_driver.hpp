@@ -369,6 +369,7 @@ int ImageAdjustHueDriver<Tgpu, Tref>::VerifyForward()
         {
             std::cerr << "Mismatch at index " << i << std::endl;
             std::cerr << "Expected: " << out_ref[i] << " Got: " << out_host[i] << std::endl;
+            return -1;
         }
     }
 
