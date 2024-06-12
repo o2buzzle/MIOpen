@@ -37,7 +37,7 @@ template <typename DTYPE>
 __device__ void DeviceImageNormalizeFwd(const DTYPE* __restrict__ input,
                                         const DTYPE* __restrict__ mean,
                                         const DTYPE* __restrict__ std,
-                                        const DTYPE* __restrict__ output,
+                                        DTYPE* __restrict__ output,
                                         tensor_view_4d_t input_tv,
                                         const size_t mean_off,
                                         const size_t std_off,
@@ -65,7 +65,7 @@ template <typename DTYPE>
 __device__ void DeviceImageNormalizeFwdContiguous(const DTYPE* __restrict__ input,
                                                   const DTYPE* __restrict__ mean,
                                                   const DTYPE* __restrict__ std,
-                                                  const DTYPE* __restrict__ output,
+                                                  DTYPE* __restrict__ output,
                                                   const size_t input_off,
                                                   const size_t mean_off,
                                                   const size_t std_off,
@@ -76,9 +76,8 @@ __device__ void DeviceImageNormalizeFwdContiguous(const DTYPE* __restrict__ inpu
 {
     size_t gid = blockDim.x * blockIdx.x + threadIdx.x;
     if(gid >= N)
-    {
         return;
-    }
+
     int c = gid / c_stride % C;
 
     FLOAT_ACCUM pixel  = CVT_FLOAT2ACCUM(input[gid + input_off]);
@@ -86,13 +85,13 @@ __device__ void DeviceImageNormalizeFwdContiguous(const DTYPE* __restrict__ inpu
     FLOAT_ACCUM std_p  = CVT_FLOAT2ACCUM(std[c + std_off]);
     FLOAT_ACCUM result = (pixel - mean_p) / std_p;
 
-    set4DValueAt(output, output_off, gid, CVT_ACCUM2FLOAT(result));
+    output[gid + output_off] = CVT_ACCUM2FLOAT(result);
 }
 
-extern "C" __global__ void ImageNormalize(const DTYPE* __restrict__ input,
-                                          const DTYPE* __restrict__ mean,
-                                          const DTYPE* __restrict__ std,
-                                          const DTYPE* __restrict__ output,
+extern "C" __global__ void ImageNormalize(const FLOAT* __restrict__ input,
+                                          const FLOAT* __restrict__ mean,
+                                          const FLOAT* __restrict__ std,
+                                          FLOAT* __restrict__ output,
                                           tensor_view_4d_t input_tv,
                                           const size_t mean_off,
                                           const size_t std_off,
@@ -105,10 +104,10 @@ extern "C" __global__ void ImageNormalize(const DTYPE* __restrict__ input,
         input, mean, std, output, input_tv, mean_off, std_off, output_tv, c_stride, C, N);
 }
 
-extern "C" __global__ void ImageNormalizeContiguous(const DTYPE* __restrict__ input,
-                                                    const DTYPE* __restrict__ mean,
-                                                    const DTYPE* __restrict__ std,
-                                                    const DTYPE* __restrict__ output,
+extern "C" __global__ void ImageNormalizeContiguous(const FLOAT* __restrict__ input,
+                                                    const FLOAT* __restrict__ mean,
+                                                    const FLOAT* __restrict__ std,
+                                                    FLOAT* __restrict__ output,
                                                     const size_t input_off,
                                                     const size_t mean_off,
                                                     const size_t std_off,

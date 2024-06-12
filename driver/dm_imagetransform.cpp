@@ -27,6 +27,7 @@
 #include "registry_driver_maker.hpp"
 #include "image_adjust_hue_driver.hpp"
 #include "image_adjust_brightness_driver.hpp"
+#include "image_normalize_driver.hpp"
 
 static Driver* makeDriver(const std::string& base_arg)
 {
@@ -45,6 +46,14 @@ static Driver* makeDriver(const std::string& base_arg)
         return new ImageAdjustBrightnessDriver<float16, float>();
     if(base_arg == "image_adjust_brightness_bfp16")
         return new ImageAdjustBrightnessDriver<bfloat16, float>();
+
+    // Normalize
+    if(base_arg == "image_normalize")
+        return new ImageNormalizeDriver<float, float>();
+    if(base_arg == "image_normalize_fp16")
+        return new ImageNormalizeDriver<float16, float>();
+    if(base_arg == "image_normalize_bfp16")
+        return new ImageNormalizeDriver<bfloat16, float>();
 
     return nullptr;
 }

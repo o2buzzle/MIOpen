@@ -152,7 +152,8 @@ inline void PadBufferSize(size_t& sz, int datatype_sz)
            "activ[fp16], softmax[fp16], bnorm[fp16], rnn[fp16], gemm[fp16], ctc, dropout[fp16], "
            "tensorop[fp16], reduce[fp16|fp64], layernorm[bfp16|fp16], sum[bfp16|fp16], "
            "argmax[bfp16|fp16], groupnorm[bfp16|fp16], cat[bfp16|fp16], "
-           "image_adjust_hue[_fp16|_bfp16], image_adjust_saturation[_fp16|_bfp16]\n");
+           "image_adjust_hue[_fp16|_bfp16], image_adjust_saturation[_fp16|_bfp16], "
+           "image_normalize[_fp16|_bfp16] \n");
     exit(0); // NOLINT (concurrency-mt-unsafe)
 }
 
@@ -180,7 +181,8 @@ inline std::string ParseBaseArg(int argc, char* argv[])
        arg != "catfp16" && arg != "catbfp16" && arg != "image_adjust_hue" &&
        arg != "image_adjust_hue_fp16" && arg != "image_adjust_hue_bfp16" &&
        arg != "image_adjust_brightness" && arg != "image_adjust_brightness_fp16" &&
-       arg != "image_adjust_brightness_bfp16" && arg != "--version")
+       arg != "image_adjust_brightness_bfp16" && arg != "image_normalize" &&
+       arg != "image_normalize_fp16" && arg != "image_normalize_bfp16" && arg != "--version")
     {
         printf("FAILED: Invalid Base Input Argument\n");
         Usage();
