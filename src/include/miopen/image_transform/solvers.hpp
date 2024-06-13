@@ -27,6 +27,8 @@
 #pragma once
 
 #include "miopen/conv_solution.hpp"
+#include "miopen/image_transform/adjust_contrast/problem_description.hpp"
+#include "miopen/image_transform/adjust_saturation/problem_description.hpp"
 #include "miopen/solver.hpp"
 #include "miopen/image_transform/adjust_hue/problem_description.hpp"
 #include "miopen/image_transform/adjust_brightness/problem_description.hpp"
@@ -82,6 +84,61 @@ struct ImageAdjustBrightness final : ImageAdjustBrightnessSolver
 };
 } // namespace adjust_brightness
 
+namespace adjust_contrast {
+
+using ImageAdjustContrastSolver =
+    NonTunableSolverBase<ExecutionContext,
+                         miopen::image_transform::adjust_contrast::ProblemDescription>;
+
+struct ImageAdjustContrast final : ImageAdjustContrastSolver
+{
+    const std::string& SolverDbId() const override { return GetSolverDbId<ImageAdjustContrast>(); }
+
+    bool IsApplicable(
+        const ExecutionContext& context,
+        const miopen::image_transform::adjust_contrast::ProblemDescription& problem) const override;
+
+    ConvSolution GetSolution(
+        const ExecutionContext& context,
+        const miopen::image_transform::adjust_contrast::ProblemDescription& problem) const override;
+
+    bool MayNeedWorkspace() const override { return true; }
+
+    size_t GetWorkspaceSize(
+        [[maybe_unused]] const ExecutionContext& context,
+        const miopen::image_transform::adjust_contrast::ProblemDescription& problem) const override;
+};
+} // namespace adjust_contrast
+
+namespace adjust_saturation {
+
+using ImageAdjustSaturationSolver =
+    NonTunableSolverBase<ExecutionContext,
+                         miopen::image_transform::adjust_saturation::ProblemDescription>;
+
+struct ImageAdjustSaturation final : ImageAdjustSaturationSolver
+{
+    const std::string& SolverDbId() const override
+    {
+        return GetSolverDbId<ImageAdjustSaturation>();
+    }
+
+    bool IsApplicable(const ExecutionContext& context,
+                      const miopen::image_transform::adjust_saturation::ProblemDescription& problem)
+        const override;
+
+    ConvSolution GetSolution(const ExecutionContext& context,
+                             const miopen::image_transform::adjust_saturation::ProblemDescription&
+                                 problem) const override;
+
+    bool MayNeedWorkspace() const override { return true; }
+
+    size_t GetWorkspaceSize([[maybe_unused]] const ExecutionContext& context,
+                            const miopen::image_transform::adjust_saturation::ProblemDescription&
+                                problem) const override;
+};
+} // namespace adjust_saturation
+
 namespace normalize {
 
 using ImageNormalizeSolver =
@@ -99,7 +156,6 @@ struct ImageNormalize final : ImageNormalizeSolver
         const ExecutionContext& context,
         const miopen::image_transform::normalize::ProblemDescription& problem) const override;
 };
-
 } // namespace normalize
 } // namespace image_transform
 } // namespace solver

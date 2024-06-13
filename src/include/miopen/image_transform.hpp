@@ -25,6 +25,7 @@
  *******************************************************************************/
 
 #include "miopen/common.hpp"
+#include "miopen/miopen.h"
 
 #ifndef GUARD_MIOPEN_IMAGE_TRANSFORM_HPP_
 #define GUARD_MIOPEN_IMAGE_TRANSFORM_HPP_
@@ -56,6 +57,30 @@ miopenStatus_t miopenImageNormalize(Handle& handle,
                                     ConstData_t mean_buf,
                                     ConstData_t std_buf,
                                     Data_t output_buf);
+
+miopenStatus_t miopenImageAdjustContrast(Handle& handle,
+                                         const TensorDescriptor& inputTensorDesc,
+                                         const TensorDescriptor& outputTensorDesc,
+                                         ConstData_t input_buf,
+                                         Data_t workspace_buf,
+                                         Data_t output_buf,
+                                         float contrast_factor);
+
+size_t miopenImageAdjustContrastGetWorkspaceSize(Handle& handle,
+                                                 const TensorDescriptor& inputTensorDesc,
+                                                 const TensorDescriptor& outputTensorDesc);
+
+miopenStatus_t miopenImageAdjustSaturation(Handle& handle,
+                                           const TensorDescriptor& inputTensorDesc,
+                                           const TensorDescriptor& outputTensorDesc,
+                                           ConstData_t input_buf,
+                                           Data_t workspace_buf,
+                                           Data_t output_buf,
+                                           float saturation_factor);
+
+size_t miopenImageAdjustSaturationGetWorkspaceSize(Handle& handle,
+                                                   const TensorDescriptor& inputTensorDesc,
+                                                   const TensorDescriptor& outputTensorDesc);
 
 } // namespace miopen
 

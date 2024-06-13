@@ -26,14 +26,12 @@
 
 #pragma once
 
-#include "miopen/common.hpp"
-#include "miopen/tensor.hpp"
-#include <cstddef>
 #include "miopen/invoke_params.hpp"
+#include "miopen/tensor.hpp"
 
 namespace miopen {
 namespace image_transform {
-namespace adjust_hue {
+namespace adjust_contrast {
 struct InvokeParams : public miopen::InvokeParams
 {
     InvokeParams() = default;
@@ -42,14 +40,16 @@ struct InvokeParams : public miopen::InvokeParams
     const TensorDescriptor* outputTensorDesc;
 
     ConstData_t input_buf = nullptr;
+    Data_t workspace_buf  = nullptr;
     Data_t output_buf     = nullptr;
 
-    float hue = 0.0f;
+    float contrast_factor = 0.0f;
 
     size_t workspace_size = 0;
+
     size_t GetWorkspaceSize() const { return workspace_size; }
     Data_t GetWorkspace() const { return nullptr; }
 };
-} // namespace adjust_hue
+} // namespace adjust_contrast
 } // namespace image_transform
 } // namespace miopen

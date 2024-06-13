@@ -23,33 +23,34 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-
 #pragma once
 
-#include "miopen/common.hpp"
+#include "miopen/names.hpp"
+#include "miopen/problem_description_base.hpp"
 #include "miopen/tensor.hpp"
-#include <cstddef>
-#include "miopen/invoke_params.hpp"
 
 namespace miopen {
+struct NetworkConfig;
 namespace image_transform {
-namespace adjust_hue {
-struct InvokeParams : public miopen::InvokeParams
+namespace adjust_saturation {
+
+struct ProblemDescription : ProblemDescriptionBase
 {
-    InvokeParams() = default;
+    ProblemDescription(const TensorDescriptor& inputTensorDesc_,
+                       const TensorDescriptor& outputTensorDesc_)
+        : inputTensorDesc(inputTensorDesc_), outputTensorDesc(outputTensorDesc_)
+    {
+    }
 
-    const TensorDescriptor* inputTensorDesc;
-    const TensorDescriptor* outputTensorDesc;
+    NetworkConfig MakeNetworkConfig() const override;
 
-    ConstData_t input_buf = nullptr;
-    Data_t output_buf     = nullptr;
+    const TensorDescriptor& GetInputTensorDesc() const { return inputTensorDesc; }
+    const TensorDescriptor& GetOutputTensorDesc() const { return outputTensorDesc; }
 
-    float hue = 0.0f;
-
-    size_t workspace_size = 0;
-    size_t GetWorkspaceSize() const { return workspace_size; }
-    Data_t GetWorkspace() const { return nullptr; }
+private:
+    TensorDescriptor inputTensorDesc;
+    TensorDescriptor outputTensorDesc;
 };
-} // namespace adjust_hue
+} // namespace adjust_saturation
 } // namespace image_transform
 } // namespace miopen

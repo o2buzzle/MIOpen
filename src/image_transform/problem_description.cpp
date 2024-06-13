@@ -24,6 +24,8 @@
  *
  *******************************************************************************/
 
+#include "miopen/image_transform/adjust_contrast/problem_description.hpp"
+#include "miopen/image_transform/adjust_saturation/problem_description.hpp"
 #include "miopen/names.hpp"
 #include "miopen/image_transform/adjust_hue/problem_description.hpp"
 #include "miopen/image_transform/adjust_brightness/problem_description.hpp"
@@ -58,6 +60,34 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     return NetworkConfig{ss.str()};
 }
 } // namespace adjust_brightness
+namespace adjust_contrast {
+
+NetworkConfig ProblemDescription::MakeNetworkConfig() const
+{
+    std::ostringstream ss;
+
+    ss << "adjust_contrast-";
+    ss << inputTensorDesc.GetType() << "-" << outputTensorDesc.GetType() << "-";
+    ss << inputTensorDesc.GetElementSize();
+
+    return NetworkConfig{ss.str()};
+}
+} // namespace adjust_contrast
+
+namespace adjust_saturation {
+
+NetworkConfig ProblemDescription::MakeNetworkConfig() const
+{
+    std::ostringstream ss;
+
+    ss << "adjust_saturation-";
+    ss << inputTensorDesc.GetType() << "-" << outputTensorDesc.GetType() << "-";
+    ss << inputTensorDesc.GetElementSize();
+
+    return NetworkConfig{ss.str()};
+}
+} // namespace adjust_saturation
+
 namespace normalize {
 NetworkConfig ProblemDescription::MakeNetworkConfig() const
 {

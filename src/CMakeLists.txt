@@ -265,6 +265,8 @@ set( MIOpen_Source
     solver/groupnorm/forward_groupnorm.cpp
     solver/image_transform/adjust_brightness.cpp
     solver/image_transform/adjust_hue.cpp
+    solver/image_transform/adjust_contrast.cpp
+    solver/image_transform/adjust_saturation.cpp
     solver/image_transform/normalize.cpp
     solver/layernorm/forward_layernorm.cpp
     solver/layernorm/forward_layernorm2d_ck.cpp
@@ -508,6 +510,7 @@ if( MIOPEN_BACKEND MATCHES "OpenCL" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN
         kernels/gcnAsmBNBwdTrainSpatial.s
         kernels/MIOpenImageAdjustBrightness.cpp
         kernels/MIOpenImageAdjustHue.cpp
+        kernels/MIOpenImageBlend.cpp
         kernels/MIOpenImageNormalize.cpp
         kernels/MIOpenTensorKernels.cl
         kernels/MIOpenTensorKernelsHip.cpp
