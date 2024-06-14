@@ -386,11 +386,6 @@ int ImageAdjustSaturationDriver<Tgpu, Tref>::VerifyForward()
             std::cout << "output_ref[" << i << "] = " << output_ref[i] << " != output_host[" << i
                       << "] = " << output_host[i] << std::endl;
         }
-        else
-        {
-            std::cout << "output_ref[" << i << "] = " << output_ref[i] << " == output_host[" << i
-                      << "] = " << output_host[i] << std::endl;
-        }
     }
 
     printf("Verification completed\n");
