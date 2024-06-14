@@ -143,52 +143,61 @@ __device__ void DeviceBlendContiguous(const DTYPE* __restrict__ img1,
     output[output_off + gid] = value;
 }
 
-extern "C" __global__ RGBToGrayscale(const FLOAT* __restrict__ img,
-                                     FLOAT* __restrict__ gray,
-                                     const tensor_view_4d_t img_tv,
-                                     const tensor_view_4d_t gray_tv,
-                                     const ulong N)
+extern "C" __global__ void RGBToGrayscale(const FLOAT* __restrict__ img,
+                                          FLOAT* __restrict__ gray,
+                                          const tensor_view_4d_t img_tv,
+                                          const tensor_view_4d_t gray_tv,
+                                          const ulong N)
 {
     DeviceRgbToGrayscale(img, gray, img_tv, gray_tv, N);
 }
 
-extern "C" __global__ RGBToGrayscaleContiguous(const FLOAT* __restrict__ img,
-                                               FLOAT* __restrict__ gray,
-                                               const ulong img_off,
-                                               const ulong gray_off,
-                                               const ulong c_stride,
-                                               const ulong N)
+extern "C" __global__ void RGBToGrayscaleContiguous(const FLOAT* __restrict__ img,
+                                                    FLOAT* __restrict__ gray,
+                                                    const ulong img_off,
+                                                    const ulong gray_off,
+                                                    const ulong c_stride,
+                                                    const ulong N)
 {
     DeviceRgbToGrayscaleContiguous(img, gray, img_off, gray_off, c_stride, N);
 }
 
-extern "C" __global__ Blend(const FLOAT* __restrict__ img1,
-                            const FLOAT* __restrict__ img2,
-                            FLOAT* __restrict__ output,
-                            const tensor_view_4d_t img1_tv,
-                            const tensor_view_4d_t img2_tv,
-                            const tensor_view_4d_t output_tv,
-                            const ulong n_stride,
-                            const ulong c_stride,
-                            const ulong N,
-                            float ratio,
-                            float bound)
+extern "C" __global__ void Blend(const FLOAT* __restrict__ img1,
+                                 const FLOAT* __restrict__ img2,
+                                 FLOAT* __restrict__ output,
+                                 const tensor_view_4d_t img1_tv,
+                                 const tensor_view_4d_t img2_tv,
+                                 const tensor_view_4d_t output_tv,
+                                 const ulong n_stride,
+                                 const ulong c_stride,
+                                 const ulong N,
+                                 float ratio,
+                                 float bound)
 {
-    DeviceBlend(
-        img1, img2, output, img1_tv, img2_tv, output_tv, n_stride, c_stride, N, ratio, bound);
+    DeviceBlend(img1,
+                img2,
+                output,
+                img1_tv,
+                img2_tv.offset,
+                output_tv,
+                n_stride,
+                c_stride,
+                N,
+                ratio,
+                bound);
 }
 
-extern "C" __global__ BlendContiguous(const FLOAT* __restrict__ img1,
-                                      const FLOAT* __restrict__ img2,
-                                      FLOAT* __restrict__ output,
-                                      const ulong img1_off,
-                                      const ulong img2_off,
-                                      const ulong output_off,
-                                      const ulong n_stride,
-                                      const ulong c_stride,
-                                      const ulong N,
-                                      float ratio,
-                                      float bound)
+extern "C" __global__ void BlendContiguous(const FLOAT* __restrict__ img1,
+                                           const FLOAT* __restrict__ img2,
+                                           FLOAT* __restrict__ output,
+                                           const ulong img1_off,
+                                           const ulong img2_off,
+                                           const ulong output_off,
+                                           const ulong n_stride,
+                                           const ulong c_stride,
+                                           const ulong N,
+                                           float ratio,
+                                           float bound)
 {
     DeviceBlendContiguous(
         img1, img2, output, img1_off, img2_off, output_off, n_stride, c_stride, N, ratio, bound);

@@ -182,7 +182,9 @@ inline std::string ParseBaseArg(int argc, char* argv[])
        arg != "image_adjust_hue_fp16" && arg != "image_adjust_hue_bfp16" &&
        arg != "image_adjust_brightness" && arg != "image_adjust_brightness_fp16" &&
        arg != "image_adjust_brightness_bfp16" && arg != "image_normalize" &&
-       arg != "image_normalize_fp16" && arg != "image_normalize_bfp16" && arg != "--version")
+       arg != "image_normalize_fp16" && arg != "image_normalize_bfp16" &&
+       arg != "image_adjust_saturation" && arg != "image_adjust_saturation_fp16" &&
+       arg != "image_adjust_saturation_bfp16" && arg != "--version")
     {
         printf("FAILED: Invalid Base Input Argument\n");
         Usage();

@@ -24,6 +24,7 @@
  *
  *******************************************************************************/
 
+#include "image_adjust_saturation_driver.hpp"
 #include "registry_driver_maker.hpp"
 #include "image_adjust_hue_driver.hpp"
 #include "image_adjust_brightness_driver.hpp"
@@ -54,6 +55,14 @@ static Driver* makeDriver(const std::string& base_arg)
         return new ImageNormalizeDriver<float16, float>();
     if(base_arg == "image_normalize_bfp16")
         return new ImageNormalizeDriver<bfloat16, float>();
+
+    // AdjustSaturation
+    if(base_arg == "image_adjust_saturation")
+        return new ImageAdjustSaturationDriver<float, float>();
+    if(base_arg == "image_adjust_saturation_fp16")
+        return new ImageAdjustSaturationDriver<float16, float>();
+    if(base_arg == "image_adjust_saturation_bfp16")
+        return new ImageAdjustSaturationDriver<bfloat16, float>();
 
     return nullptr;
 }
