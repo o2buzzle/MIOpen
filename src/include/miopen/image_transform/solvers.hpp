@@ -27,12 +27,12 @@
 #pragma once
 
 #include "miopen/conv_solution.hpp"
-#include "miopen/image_transform/adjust_contrast/problem_description.hpp"
-#include "miopen/image_transform/adjust_saturation/problem_description.hpp"
-#include "miopen/solver.hpp"
-#include "miopen/image_transform/adjust_hue/problem_description.hpp"
 #include "miopen/image_transform/adjust_brightness/problem_description.hpp"
+#include "miopen/image_transform/adjust_contrast/problem_description.hpp"
+#include "miopen/image_transform/adjust_hue/problem_description.hpp"
+#include "miopen/image_transform/adjust_saturation/problem_description.hpp"
 #include "miopen/image_transform/normalize/problem_description.hpp"
+#include "miopen/solver.hpp"
 #include <string>
 
 namespace miopen {

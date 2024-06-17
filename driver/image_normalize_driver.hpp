@@ -27,9 +27,9 @@
 #ifndef GUARD_MIOPEN_IMAGE_NORMALIZE_DRIVER_HPP
 #define GUARD_MIOPEN_IMAGE_NORMALIZE_DRIVER_HPP
 
+#include "../test/tensor_holder.hpp"
 #include "InputFlags.hpp"
 #include "driver.hpp"
-#include "../test/tensor_holder.hpp"
 #include "image_adjust_driver_common.hpp"
 #include "miopen/miopen.h"
 #include "miopen/tensor.hpp"

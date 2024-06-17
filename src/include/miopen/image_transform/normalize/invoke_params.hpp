@@ -27,10 +27,10 @@
 #pragma once
 
 #include "miopen/common.hpp"
+#include "miopen/invoke_params.hpp"
+#include "miopen/miopen.h"
 #include "miopen/tensor.hpp"
 #include <cstddef>
-#include "miopen/miopen.h"
-#include "miopen/invoke_params.hpp"
 
 namespace miopen {
 namespace image_transform {

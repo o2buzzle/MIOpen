@@ -27,9 +27,9 @@
 #include "miopen/miopen.h"
 #include <miopen/errors.hpp>
 #include <miopen/handle.hpp>
+#include <miopen/image_transform.hpp>
 #include <miopen/logger.hpp>
 #include <miopen/tensor_ops.hpp>
-#include <miopen/image_transform.hpp>
 
 extern "C" miopenStatus_t miopenImageAdjustHue(miopenHandle_t handle,
                                                miopenTensorDescriptor_t inputTensorDesc,

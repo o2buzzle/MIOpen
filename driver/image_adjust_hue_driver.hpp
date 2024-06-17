@@ -27,11 +27,12 @@
 #ifndef GUARD_MIOPEN_IMAGE_ADJUST_HUE_DRIVER_HPP
 #define GUARD_MIOPEN_IMAGE_ADJUST_HUE_DRIVER_HPP
 
-#include "InputFlags.hpp"
-#include "driver.hpp"
-#include "miopen/miopen.h"
 #include "../test/tensor_holder.hpp"
 #include "../test/verify.hpp"
+#include "InputFlags.hpp"
+#include "driver.hpp"
+#include "image_adjust_driver_common.hpp"
+#include "miopen/miopen.h"
 #include "miopen/tensor.hpp"
 #include "miopen/tensor_view.hpp"
 #include "random.hpp"
@@ -41,7 +42,6 @@
 #include <cassert>
 #include <cmath>
 #include <memory>
-#include "image_adjust_driver_common.hpp"
 
 template <typename T = float>
 void mloConvertRGBToHSV(const T r, const T g, const T b, T* h, T* s, T* v)

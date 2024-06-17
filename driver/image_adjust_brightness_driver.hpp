@@ -27,12 +27,12 @@
 #ifndef GUARD_MIOPEN_IMAGE_ADJUST_BRIGHTNESS_DRIVER_HPP
 #define GUARD_MIOPEN_IMAGE_ADJUST_BRIGHTNESS_DRIVER_HPP
 
+#include "../test/tensor_holder.hpp"
+#include "../test/verify.hpp"
 #include "InputFlags.hpp"
 #include "driver.hpp"
 #include "image_adjust_driver_common.hpp"
 #include "miopen/miopen.h"
-#include "../test/tensor_holder.hpp"
-#include "../test/verify.hpp"
 #include "miopen/tensor.hpp"
 #include "miopen/tensor_view.hpp"
 #include "tensor_driver.hpp"

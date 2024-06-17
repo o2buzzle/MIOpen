@@ -24,11 +24,11 @@
  *
  *******************************************************************************/
 
-#include "image_adjust_saturation_driver.hpp"
-#include "registry_driver_maker.hpp"
-#include "image_adjust_hue_driver.hpp"
 #include "image_adjust_brightness_driver.hpp"
+#include "image_adjust_hue_driver.hpp"
+#include "image_adjust_saturation_driver.hpp"
 #include "image_normalize_driver.hpp"
+#include "registry_driver_maker.hpp"
 
 static Driver* makeDriver(const std::string& base_arg)
 {

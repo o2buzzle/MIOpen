@@ -153,4 +153,31 @@ void cpu_image_adjust_hue(tensor<T> input, tensor<T>& output, float hue)
     mloRunImageAdjustHueHost(input.data.data(), output.data.data(), input.desc, output.desc, hue);
 }
 
+template <typename T>
+void mloImageAdjustBrightnessRunHost(const T* input,
+                                     T* output,
+                                     miopen::TensorDescriptor inputDesc,
+                                     miopen::TensorDescriptor outputDesc,
+                                     const float brightness_factor)
+{
+    tensor_view_4d_t input_tv  = get_inner_expanded_4d_tv(inputDesc);
+    tensor_view_4d_t output_tv = get_inner_expanded_4d_tv(outputDesc);
+
+    size_t N = inputDesc.GetElementSize();
+
+    for(size_t gid = 0; gid < N; gid++)
+    {
+        T pixel  = get4DValueAt(input, input_tv, gid);
+        T result = clamp(pixel * brightness_factor, T(0.0f), T(1.0f));
+        set4DValueAt(output, output_tv, gid, result);
+    }
+}
+
+template <typename T>
+void cpu_image_adjust_brightness(tensor<T> input, tensor<T>& output, float brightness)
+{
+    mloImageAdjustBrightnessRunHost(
+        input.data.data(), output.data.data(), input.desc, output.desc, brightness);
+}
+
 #endif

@@ -25,11 +25,11 @@
  *******************************************************************************/
 
 #include "miopen/image_transform/adjust_contrast/problem_description.hpp"
-#include "miopen/image_transform/adjust_saturation/problem_description.hpp"
-#include "miopen/names.hpp"
-#include "miopen/image_transform/adjust_hue/problem_description.hpp"
 #include "miopen/image_transform/adjust_brightness/problem_description.hpp"
+#include "miopen/image_transform/adjust_hue/problem_description.hpp"
+#include "miopen/image_transform/adjust_saturation/problem_description.hpp"
 #include "miopen/image_transform/normalize/problem_description.hpp"
+#include "miopen/names.hpp"
 #include <sstream>
 
 namespace miopen {

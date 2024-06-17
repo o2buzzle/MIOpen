@@ -26,25 +26,24 @@
 
 #include "get_handle.hpp"
 #include "miopen/allocator.hpp"
-#include "miopen/image_transform.hpp"
 #include "tensor_holder.hpp"
 #include "verify.hpp"
+#include "miopen/image_transform.hpp"
 #include "gtest/cpu_image_adjust.hpp"
 #include <algorithm>
 #include <gtest/gtest.h>
-#include <limits>
-struct ImageAdjustHueTestCase
+struct ImageAdjustBrightnessTestCase
 {
     size_t N;
     size_t C;
     size_t H;
     size_t W;
-    float hue;
+    float brightness;
 
-    friend std::ostream& operator<<(std::ostream& os, const ImageAdjustHueTestCase& tc)
+    friend std::ostream& operator<<(std::ostream& os, const ImageAdjustBrightnessTestCase& tc)
     {
         return os << " N:" << tc.N << " C:" << tc.C << " H:" << tc.H << " W:" << tc.W
-                  << " hue:" << tc.hue;
+                  << " brightness:" << tc.brightness;
     }
 
     std::vector<size_t> GetInput()
@@ -64,7 +63,7 @@ struct ImageAdjustHueTestCase
     }
 };
 
-std::vector<ImageAdjustHueTestCase> ImageAdjustHueTestConfigs()
+std::vector<ImageAdjustBrightnessTestCase> ImageAdjustBrightnessTestConfigs()
 {
     // clang-format off
     return {
@@ -91,14 +90,14 @@ std::vector<ImageAdjustHueTestCase> ImageAdjustHueTestConfigs()
 }
 
 template <typename T = float>
-struct ImageAdjustHueTest : public ::testing::TestWithParam<ImageAdjustHueTestCase>
+struct ImageAdjustBrightnessTest : public ::testing::TestWithParam<ImageAdjustBrightnessTestCase>
 {
 protected:
     void SetUp() override
     {
         auto&& handle  = get_handle();
         test_config    = GetParam();
-        auto gen_value = [](auto...) { return prng::gen_A_to_B(0.0f, 1.0f); };
+        auto gen_value = [](auto...) { return prng::gen_0_to_B(1.0f); };
 
         auto in_dims = test_config.GetInput();
         input        = tensor<T>{in_dims}.generate(gen_value);
@@ -114,21 +113,22 @@ protected:
         input_ptr  = handle.Write(input.data);
         output_ptr = handle.Write(output.data);
     }
-
     void RunTest()
     {
         auto&& handle = get_handle();
-        cpu_image_adjust_hue(input, ref_output, test_config.hue);
-        miopenStatus_t status;
+        cpu_image_adjust_brightness(input, ref_output, test_config.brightness);
 
-        status = miopen::miopenImageAdjustHue(
-            handle, input.desc, output.desc, input_ptr.get(), output_ptr.get(), test_config.hue);
+        auto status = miopen::miopenImageAdjustBrightness(handle,
+                                                          input.desc,
+                                                          output.desc,
+                                                          input_ptr.get(),
+                                                          output_ptr.get(),
+                                                          test_config.brightness);
 
         EXPECT_EQ(status, miopenStatusSuccess);
 
         output.data = handle.Read<T>(output_ptr, output.data.size());
     }
-
     void Verify()
     {
         double threashold = 1e-5;
@@ -138,11 +138,9 @@ protected:
         EXPECT_TRUE(error < threashold) << "Outputs do not match each other. Error:" << error;
     }
 
-    ImageAdjustHueTestCase test_config;
-
+    ImageAdjustBrightnessTestCase test_config;
     tensor<T> input;
     tensor<T> output;
-
     tensor<T> ref_output;
 
     miopen::Allocator::ManageDataPtr input_ptr;

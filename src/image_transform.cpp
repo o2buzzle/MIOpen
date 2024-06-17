@@ -24,22 +24,22 @@
  *
  *******************************************************************************/
 
+#include "miopen/image_transform.hpp"
 #include "miopen/common.hpp"
 #include "miopen/execution_context.hpp"
 #include "miopen/find_solution.hpp"
+#include "miopen/image_transform/adjust_brightness/invoke_params.hpp"
+#include "miopen/image_transform/adjust_brightness/problem_description.hpp"
 #include "miopen/image_transform/adjust_contrast/invoke_params.hpp"
 #include "miopen/image_transform/adjust_contrast/problem_description.hpp"
 #include "miopen/image_transform/adjust_hue/invoke_params.hpp"
 #include "miopen/image_transform/adjust_hue/problem_description.hpp"
-#include "miopen/image_transform/adjust_brightness/invoke_params.hpp"
-#include "miopen/image_transform/adjust_brightness/problem_description.hpp"
 #include "miopen/image_transform/adjust_saturation/invoke_params.hpp"
 #include "miopen/image_transform/adjust_saturation/problem_description.hpp"
 #include "miopen/image_transform/normalize/invoke_params.hpp"
 #include "miopen/image_transform/normalize/problem_description.hpp"
 #include "miopen/image_transform/solvers.hpp"
 #include "miopen/miopen.h"
-#include "miopen/image_transform.hpp"
 #include "miopen/names.hpp"
 #include "miopen/tensor.hpp"
 #include <cstddef>

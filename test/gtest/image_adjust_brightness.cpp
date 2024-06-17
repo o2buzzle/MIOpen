@@ -24,32 +24,45 @@
  *
  *******************************************************************************/
 
-#pragma once
+#include "image_adjust_brightness.hpp"
+#include <miopen/env.hpp>
 
-#include "miopen/common.hpp"
-#include "miopen/invoke_params.hpp"
-#include "miopen/tensor.hpp"
-#include <cstddef>
+MIOPEN_DECLARE_ENV_VAR_STR(MIOPEN_TEST_FLOAT_ARG)
+MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_TEST_ALL)
 
-namespace miopen {
-namespace image_transform {
-namespace adjust_hue {
-struct InvokeParams : public miopen::InvokeParams
+namespace image_adjust_brightness {
+
+std::string GetFloatArg()
 {
-    InvokeParams() = default;
+    const auto& tmp = miopen::GetStringEnv(ENV(MIOPEN_TEST_FLOAT_ARG));
+    if(tmp.empty())
+    {
+        return "";
+    }
+    return tmp;
+}
 
-    const TensorDescriptor* inputTensorDesc;
-    const TensorDescriptor* outputTensorDesc;
-
-    ConstData_t input_buf = nullptr;
-    Data_t output_buf     = nullptr;
-
-    float hue = 0.0f;
-
-    size_t workspace_size = 0;
-    size_t GetWorkspaceSize() const { return workspace_size; }
-    Data_t GetWorkspace() const { return nullptr; }
+struct ImageAdjustBrightnessTestFloat : ImageAdjustBrightnessTest<float>
+{
 };
-} // namespace adjust_hue
-} // namespace image_transform
-} // namespace miopen
+
+} // namespace image_adjust_brightness
+
+using namespace image_adjust_brightness;
+
+TEST_P(ImageAdjustBrightnessTestFloat, ImageAdjustBrightnessTestFw)
+{
+    if(miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--float"))
+    {
+        RunTest();
+        Verify();
+    }
+    else
+    {
+        GTEST_SKIP();
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(ImageAdjustBrightnessTest,
+                         ImageAdjustBrightnessTestFloat,
+                         testing::ValuesIn(ImageAdjustBrightnessTestConfigs()));
