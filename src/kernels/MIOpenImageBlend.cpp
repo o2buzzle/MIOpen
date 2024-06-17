@@ -77,10 +77,11 @@ __device__ void DeviceRgbToGrayscaleContiguous(const DTYPE* __restrict__ img,
     const ulong n   = gid / c_stride;
     const ulong idx = gid % c_stride;
 
-    size_t img_idx = idx + img_off + n * c_stride * 3;
-    FLOAT_ACCUM r  = CVT_FLOAT2ACCUM(img[img_idx]);
-    FLOAT_ACCUM g  = CVT_FLOAT2ACCUM(img[img_idx + c_stride]);
-    FLOAT_ACCUM b  = CVT_FLOAT2ACCUM(img[img_idx + c_stride * 2]);
+    const ulong img_base = n * c_stride * 3 + idx + img_off;
+
+    FLOAT_ACCUM r = CVT_FLOAT2ACCUM(img[img_base]);
+    FLOAT_ACCUM g = CVT_FLOAT2ACCUM(img[img_base + c_stride]);
+    FLOAT_ACCUM b = CVT_FLOAT2ACCUM(img[img_base + c_stride * 2]);
 
     DTYPE value = CVT_ACCUM2FLOAT(0.2989f * r + 0.587f * g + 0.114f * b);
 

@@ -180,4 +180,100 @@ void cpu_image_adjust_brightness(tensor<T> input, tensor<T>& output, float brigh
         input.data.data(), output.data.data(), input.desc, output.desc, brightness);
 }
 
+template <typename T>
+void RGBToGrayscale(const T* src,
+                    T* dst,
+                    const tensor_view_4d_t src_tv,
+                    const tensor_view_4d_t dst_tv,
+                    const size_t N)
+{
+    for(size_t gid = 0; gid < N; gid++)
+    {
+        int n, c, h, w;
+        getNCHW(n, c, h, w, gid, dst_tv.size);
+
+        T r = get4DValueAt(src, src_tv, n, 0, h, w);
+        T g = get4DValueAt(src, src_tv, n, 1, h, w);
+        T b = get4DValueAt(src, src_tv, n, 2, h, w);
+
+        T value = 0.2989f * r + 0.587f * g + 0.114f * b;
+
+        // We expect the workspace here to always stay contiguous
+        dst[dst_tv.offset + gid] = value;
+    }
+}
+
+template <typename T>
+void Blend(const T* img1,
+           const T* img2,
+           T* output,
+           const tensor_view_4d_t img1_tv,
+           const tensor_view_4d_t img2_tv,
+           const tensor_view_4d_t output_tv,
+           const size_t n_stride,
+           const size_t c_stride,
+           const size_t N,
+           float ratio,
+           float bound)
+
+{
+    for(size_t gid = 0; gid < N; gid++)
+    {
+        const size_t n        = gid / n_stride;
+        const size_t img2_idx = n * c_stride + gid % c_stride;
+
+        T img1_v = get4DValueAt(img1, img1_tv, gid);
+        T img2_v = img2[img2_tv.offset + img2_idx];
+
+        T result = clamp((ratio * img1_v + (1.0f - ratio) * img2_v), 0.0f, bound);
+
+        set4DValueAt(output, output_tv, gid, result);
+    }
+}
+
+template <typename T>
+void mloImageAdjustSaturationRunHost(miopen::TensorDescriptor inputDesc,
+                                     miopen::TensorDescriptor outputDesc,
+                                     const T* input,
+                                     T* output,
+                                     float saturation_factor)
+
+{
+    tensor_view_4d_t input_tv  = get_inner_expanded_4d_tv(inputDesc);
+    tensor_view_4d_t output_tv = get_inner_expanded_4d_tv(outputDesc);
+
+    // temporary view for workspace (basically a contiguous vector with same size as input_tv)
+    std::vector<T> workspace = std::vector<T>(inputDesc.GetElementSize(), 0);
+    miopen::TensorDescriptor wsDesc =
+        miopen::TensorDescriptor{inputDesc.GetType(), inputDesc.GetLengths()};
+
+    auto ws_tv = get_inner_expanded_4d_tv(wsDesc);
+
+    auto N        = inputDesc.GetElementSize();
+    auto c_stride = input_tv.size[2] * input_tv.size[3];
+    auto n_stride = c_stride * input_tv.size[1];
+
+    float bound = 1.0f;
+
+    RGBToGrayscale(input, workspace.data(), input_tv, ws_tv, N);
+    Blend(input,
+          workspace.data(),
+          output,
+          input_tv,
+          ws_tv,
+          output_tv,
+          n_stride,
+          c_stride,
+          N,
+          saturation_factor,
+          bound);
+}
+
+template <typename T>
+void cpu_image_adjust_saturation(tensor<T> input, tensor<T>& output, float saturation_factor)
+{
+    mloImageAdjustSaturationRunHost(
+        input.desc, output.desc, input.data.data(), output.data.data(), saturation_factor);
+}
+
 #endif

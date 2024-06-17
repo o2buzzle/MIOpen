@@ -26,7 +26,6 @@
 
 #include "miopen/conv_solution.hpp"
 #include "miopen/datatype.hpp"
-#include "miopen/image_transform/adjust_contrast/invoke_params.hpp"
 #include "miopen/image_transform/adjust_saturation/invoke_params.hpp"
 #include "miopen/image_transform/solvers.hpp"
 #include "miopen/tensor.hpp"
@@ -72,7 +71,7 @@ ConvSolution ImageAdjustSaturation::GetSolution(
     auto numel = problem.GetInputTensorDesc().GetElementSize();
 
     size_t xlocalsize = 256;
-    size_t xgridsize  = AlignUp(numel, xlocalsize);
+    size_t xgridsize  = AlignUp(numel / 3, xlocalsize);
     size_t ylocalsize = 1;
     size_t ygridsize  = 1;
     size_t zlocalsize = 1;
@@ -81,10 +80,11 @@ ConvSolution ImageAdjustSaturation::GetSolution(
     // first, RGB to Grayscale
     auto rgb_kernel        = KernelInfo{};
     rgb_kernel.kernel_file = "MIOpenImageBlend.cpp";
-    if(problem.GetInputTensorDesc().IsContiguous() && problem.GetOutputTensorDesc().IsContiguous())
-        rgb_kernel.kernel_name = "RGBToGrayscaleContiguous";
-    else
-        rgb_kernel.kernel_name = "RGBToGrayscale";
+    // if(problem.GetInputTensorDesc().IsContiguous() &&
+    // problem.GetOutputTensorDesc().IsContiguous())
+    //     rgb_kernel.kernel_name = "RGBToGrayscaleContiguous";
+    // else
+    rgb_kernel.kernel_name = "RGBToGrayscale";
 
     const auto build_params =
         KernelBuildParameters{{"MIOPEN_USE_FP16", static_cast<int32_t>(dtype == miopenHalf)},
@@ -110,6 +110,7 @@ ConvSolution ImageAdjustSaturation::GetSolution(
         blend_kernel.kernel_name = "BlendContiguous";
     else
         blend_kernel.kernel_name = "Blend";
+    xgridsize = AlignUp(numel, xlocalsize);
 
     blend_kernel.comp_options = build_params.GenerateFor(kbp::HIP{});
 
@@ -127,6 +128,8 @@ ConvSolution ImageAdjustSaturation::GetSolution(
         return [=](const Handle& handle, const AnyInvokeParams& raw_params) {
             decltype(auto) params =
                 raw_params.CastTo<miopen::image_transform::adjust_saturation::InvokeParams>();
+
+            auto elapsed = 0.0f;
 
             auto xdesc = miopen::deref(params.inputTensorDesc);
             auto ydesc = miopen::deref(params.outputTensorDesc);
@@ -148,7 +151,7 @@ ConvSolution ImageAdjustSaturation::GetSolution(
             auto kernel = handle.Run(kernels[0]); // RGB to Grayscale
             if(kernel.name == "RGBToGrayscale")
             {
-                kernel(params.input_buf, params.workspace_buf, x_tv, ws_tv, numel);
+                kernel(params.input_buf, params.workspace_buf, x_tv, ws_tv, numel / 3);
             }
             else
             {
@@ -157,7 +160,12 @@ ConvSolution ImageAdjustSaturation::GetSolution(
                        x_tv.offset,
                        ws_tv.offset,
                        c_stride,
-                       numel);
+                       numel / 3);
+            }
+
+            if(handle.IsProfilingEnabled())
+            {
+                elapsed = handle.GetKernelTime();
             }
 
             kernel = handle.Run(kernels[1]); // Blend
@@ -189,6 +197,13 @@ ConvSolution ImageAdjustSaturation::GetSolution(
                        numel,
                        params.saturation_factor,
                        bound);
+            }
+
+            if(handle.IsProfilingEnabled())
+            {
+                elapsed += handle.GetKernelTime();
+                handle.ResetKernelTime();
+                handle.AccumKernelTime(elapsed);
             }
         };
     };

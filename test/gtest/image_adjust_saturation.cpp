@@ -24,13 +24,13 @@
  *
  *******************************************************************************/
 
-#include "image_adjust_hue.hpp"
+#include "image_adjust_saturation.hpp"
 #include <miopen/env.hpp>
 
 MIOPEN_DECLARE_ENV_VAR_STR(MIOPEN_TEST_FLOAT_ARG)
 MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_TEST_ALL)
 
-namespace image_adjust_hue {
+namespace image_adjust_saturation {
 
 std::string GetFloatArg()
 {
@@ -42,15 +42,15 @@ std::string GetFloatArg()
     return tmp;
 }
 
-struct ImageAdjustHueTestFloat : ImageAdjustHueTest<float>
+struct ImageAdjustSaturationTestFloat : ImageAdjustSaturationTest<float>
 {
 };
 
-} // namespace image_adjust_hue
+} // namespace image_adjust_saturation
 
-using namespace image_adjust_hue;
+using namespace image_adjust_saturation;
 
-TEST_P(ImageAdjustHueTestFloat, ImageAdjustHueTestFw)
+TEST_P(ImageAdjustSaturationTestFloat, ImageAdjustSaturationTestFw)
 {
     if(miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--float"))
     {
@@ -63,6 +63,6 @@ TEST_P(ImageAdjustHueTestFloat, ImageAdjustHueTestFw)
     }
 }
 
-INSTANTIATE_TEST_SUITE_P(ImageAdjustHueTest,
-                         ImageAdjustHueTestFloat,
-                         testing::ValuesIn(ImageAdjustHueTestConfigs()));
+INSTANTIATE_TEST_SUITE_P(ImageAdjustSaturationTest,
+                         ImageAdjustSaturationTestFloat,
+                         testing::ValuesIn(ImageAdjustSaturationTestConfigs()));

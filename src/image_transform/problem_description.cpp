@@ -82,7 +82,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
 
     ss << "adjust_saturation-";
     ss << inputTensorDesc.GetType() << "-" << outputTensorDesc.GetType() << "-";
-    ss << inputTensorDesc.GetElementSize();
+    ss << inputTensorDesc.GetElementSize() << "-";
 
     return NetworkConfig{ss.str()};
 }

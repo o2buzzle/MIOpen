@@ -119,7 +119,7 @@ void mloImageAdjustSaturationRunHost(miopen::TensorDescriptor inputDesc,
 
     float bound = 1.0f;
 
-    RGBToGrayscale(input, workspace.data(), input_tv, ws_tv, N);
+    RGBToGrayscale(input, workspace.data(), input_tv, ws_tv, N / 3);
     Blend(input,
           workspace.data(),
           output,
