@@ -276,4 +276,47 @@ void cpu_image_adjust_saturation(tensor<T> input, tensor<T>& output, float satur
         input.desc, output.desc, input.data.data(), output.data.data(), saturation_factor);
 }
 
+template <typename T>
+void mloImageNormalizeRunHost(miopen::TensorDescriptor inputDesc,
+                              miopen::TensorDescriptor outputDesc,
+                              miopen::TensorDescriptor meanDesc,
+                              miopen::TensorDescriptor stdvarDesc,
+                              const T* input,
+                              T* output,
+                              const T* mean,
+                              const T* stdvar)
+{
+    tensor_view_4d_t input_tv  = get_inner_expanded_4d_tv(inputDesc);
+    tensor_view_4d_t output_tv = get_inner_expanded_4d_tv(outputDesc);
+    tensor_view_4d_t mean_tv   = get_inner_expanded_4d_tv(meanDesc);
+    tensor_view_4d_t stdvar_tv = get_inner_expanded_4d_tv(stdvarDesc);
+
+    auto N         = inputDesc.GetElementSize();
+    auto C         = input_tv.size[1];
+    auto c_strides = input_tv.stride[1];
+
+    for(size_t gid = 0; gid < N; gid++)
+    {
+        auto c = gid / c_strides % C;
+
+        T pixel  = get4DValueAt(input, input_tv, gid);
+        T result = (pixel - static_cast<T>(mean[c + mean_tv.offset])) /
+                   static_cast<T>(stdvar[c + stdvar_tv.offset]);
+        set4DValueAt(output, output_tv, gid, result);
+    }
+}
+
+template <typename T>
+void cpu_image_normalize(tensor<T> input, tensor<T>& output, tensor<T> mean, tensor<T> stdvar)
+{
+    mloImageNormalizeRunHost(input.desc,
+                             output.desc,
+                             mean.desc,
+                             stdvar.desc,
+                             input.data.data(),
+                             output.data.data(),
+                             mean.data.data(),
+                             stdvar.data.data());
+}
+
 #endif
