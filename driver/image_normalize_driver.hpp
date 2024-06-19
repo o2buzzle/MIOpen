@@ -328,6 +328,10 @@ int ImageNormalizeDriver<Tgpu, Tref>::VerifyForward()
             std::cerr << "out_ref[" << i << "] = " << out_ref[i] << " != output_host[" << i
                       << "] = " << output_host[i] << std::endl;
         }
+        else
+        {
+            std::cout << "out_host[" << i << "]: " << out_ref[i] << std::endl;
+        }
     }
 
     printf("Verification completed\n");

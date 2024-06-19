@@ -183,19 +183,9 @@ int ImageAdjustBrightnessDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
     out_host = std::vector<Tgpu>(output_size, static_cast<Tgpu>(0));
     out_ref  = std::vector<Tref>(output_size, static_cast<Tref>(0));
 
-    size_t N = GetTensorSize(inputTensorDesc);
-
-    for(auto i = 0; i < 3; i++)
+    for(auto i = 0; i < input_size; i++)
     {
-        for(auto j = 0; j < N / 3; j++)
-        {
-            switch(i)
-            {
-            case 0: in_host[i * N / 3 + j] = static_cast<Tgpu>(0.3f); break;
-            case 1: in_host[i * N / 3 + j] = static_cast<Tgpu>(0.6f); break;
-            case 2: in_host[i * N / 3 + j] = static_cast<Tgpu>(0.9f); break;
-            }
-        }
+        in_host[i] = static_cast<Tgpu>(i);
     }
 
     if(input_gpu->ToGPU(GetStream(), in_host.data()) != miopenStatusSuccess)

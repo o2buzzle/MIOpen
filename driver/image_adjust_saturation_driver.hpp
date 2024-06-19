@@ -251,36 +251,9 @@ int ImageAdjustSaturationDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
     output_host = std::vector<Tgpu>(output_size, static_cast<Tgpu>(0));
     output_ref  = std::vector<Tref>(output_size, static_cast<Tref>(0));
 
-    // for(int i = 0; i < input_size; i++)
-    // {
-    //     input_host[i] = static_cast<Tgpu>(prng::gen_A_to_B(0.0f, 1.0f));
-    // }
-
-    for(int i = 0; i < miopen::deref(inputTensorDesc).GetLengths()[1]; i++)
+    for(int i = 0; i < input_size; i++)
     {
-        for(int j = 0; j < miopen::deref(inputTensorDesc).GetLengths()[2] *
-                               miopen::deref(inputTensorDesc).GetLengths()[3];
-            j++)
-        {
-            switch(i)
-            {
-            case 0:
-                input_host[i * miopen::deref(inputTensorDesc).GetLengths()[2] *
-                               miopen::deref(inputTensorDesc).GetLengths()[3] +
-                           j] = static_cast<Tgpu>(0.3f);
-                break;
-            case 1:
-                input_host[i * miopen::deref(inputTensorDesc).GetLengths()[2] *
-                               miopen::deref(inputTensorDesc).GetLengths()[3] +
-                           j] = static_cast<Tgpu>(0.6f);
-                break;
-            case 2:
-                input_host[i * miopen::deref(inputTensorDesc).GetLengths()[2] *
-                               miopen::deref(inputTensorDesc).GetLengths()[3] +
-                           j] = static_cast<Tgpu>(0.9f);
-                break;
-            }
-        }
+        input_host[i] = static_cast<Tgpu>(prng::gen_A_to_B(0.0f, 1.0f));
     }
 
     if(input_gpu->ToGPU(GetStream(), input_host.data()) != miopenStatusSuccess)
