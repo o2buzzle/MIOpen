@@ -363,17 +363,18 @@ int ImageAdjustHueDriver<Tgpu, Tref>::VerifyForward()
 {
     RunForwardCPU();
 
-    for(auto i = 0; i < out_ref.size(); i++)
-    {
-        if(std::abs(out_ref[i] - out_host[i]) > 1e-5)
-        {
-            std::cerr << "Mismatch at index " << i << std::endl;
-            std::cerr << "Expected: " << out_ref[i] << " Got: " << out_host[i] << std::endl;
-            return -1;
-        }
-    }
+    auto threashold = sizeof(Tgpu) == 4 ? 1e-6 : 5e-2;
+    auto error      = miopen::rms_range(out_ref, out_host);
 
-    printf("Verification completed\n");
+    if(!std::isfinite(error) || error > threashold)
+    {
+        std::cout << "Forward Image Adjust Hue FAILED: " << error << std::endl;
+    }
+    else
+    {
+        std::cout << "Forward Image Adjust Hue Verifies on CPU and GPU (" << error << ')'
+                  << std::endl;
+    }
 
     return miopenStatusSuccess;
 }

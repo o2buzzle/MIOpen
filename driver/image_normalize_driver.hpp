@@ -28,6 +28,7 @@
 #define GUARD_MIOPEN_IMAGE_NORMALIZE_DRIVER_HPP
 
 #include "../test/tensor_holder.hpp"
+#include "../test/verify.hpp"
 #include "InputFlags.hpp"
 #include "driver.hpp"
 #include "image_adjust_driver_common.hpp"
@@ -311,7 +312,7 @@ int ImageNormalizeDriver<Tgpu, Tref>::RunForwardCPU()
 }
 
 template <typename Tgpu, typename Tref>
-int ImageNormalizeDriver<Tgpu, Tref>::RunBackwardCPU()
+output_ref int ImageNormalizeDriver<Tgpu, Tref>::RunBackwardCPU()
 {
     return miopenStatusSuccess;
 }
@@ -321,20 +322,19 @@ int ImageNormalizeDriver<Tgpu, Tref>::VerifyForward()
 {
     RunForwardCPU();
 
-    for(auto i = 0; i < out_ref.size(); i++)
+    auto threashold = sizeof(Tgpu) == 4 ? 1e-6 : 5e-2;
+    auto error      = miopen::rms_range(out_ref, output_host);
+
+    if(!std::isfinite(error) || error > threashold)
     {
-        if(out_ref[i] != output_host[i])
-        {
-            std::cerr << "out_ref[" << i << "] = " << out_ref[i] << " != output_host[" << i
-                      << "] = " << output_host[i] << std::endl;
-        }
-        else
-        {
-            std::cout << "out_host[" << i << "]: " << out_ref[i] << std::endl;
-        }
+        std::cout << "Forward Image Normalize FAILED: " << error << std::endl;
+    }
+    else
+    {
+        std::cout << "Forward Image Normalize Verifies on CPU and GPU (" << error << ')'
+                  << std::endl;
     }
 
-    printf("Verification completed\n");
     return miopenStatusSuccess;
 }
 

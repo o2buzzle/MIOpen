@@ -261,16 +261,18 @@ int ImageAdjustBrightnessDriver<Tgpu, Tref>::VerifyForward()
 {
     RunForwardCPU();
 
-    for(auto i = 0; i < out_ref.size(); i++)
-    {
-        if(out_ref[i] != out_host[i])
-        {
-            std::cerr << "Mismatch at index " << i << std::endl;
-            std::cerr << "Expected: " << out_ref[i] << " Got: " << out_host[i] << std::endl;
-        }
-    }
+    auto threashold = sizeof(Tgpu) == 4 ? 1e-6 : 5e-2;
+    auto error      = miopen::rms_range(out_ref, out_host);
 
-    printf("Verification completed\n");
+    if(!std::isfinite(error) || error > threashold)
+    {
+        std::cout << "Forward Image Adjust Brightness FAILED: " << error << std::endl;
+    }
+    else
+    {
+        std::cout << "Forward Image Adjust Brightness Verifies on CPU and GPU (" << error << ')'
+                  << std::endl;
+    }
 
     return miopenStatusSuccess;
 }

@@ -28,6 +28,7 @@
 #define GUARD_MIOPEN_IMAGE_ADJUST_SATURATION_DRIVER_HPP
 
 #include "../test/tensor_holder.hpp"
+#include "../test/verify.hpp"
 #include "InputFlags.hpp"
 #include "driver.hpp"
 #include "image_adjust_driver_common.hpp"
@@ -352,16 +353,19 @@ int ImageAdjustSaturationDriver<Tgpu, Tref>::VerifyForward()
 {
     RunForwardCPU();
 
-    for(auto i = 0; i < output_ref.size(); i++)
+    auto threashold = sizeof(Tgpu) == 4 ? 1e-6 : 5e-2;
+    auto error      = miopen::rms_range(output_ref, output_host);
+
+    if(!std::isfinite(error) || error > threashold)
     {
-        if(output_ref[i] != output_host[i])
-        {
-            std::cout << "output_ref[" << i << "] = " << output_ref[i] << " != output_host[" << i
-                      << "] = " << output_host[i] << std::endl;
-        }
+        std::cout << "Forward Image Adjust Saturation FAILED: " << error << std::endl;
+    }
+    else
+    {
+        std::cout << "Forward Image Adjust Saturation Verifies on CPU and GPU (" << error << ')'
+                  << std::endl;
     }
 
-    printf("Verification completed\n");
     return miopenStatusSuccess;
 }
 
