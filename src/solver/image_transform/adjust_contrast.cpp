@@ -38,7 +38,7 @@ namespace image_transform {
 namespace adjust_contrast {
 
 bool ImageAdjustContrast::IsApplicable(
-    const ExecutionContext& context,
+    const ExecutionContext& /*context*/,
     const miopen::image_transform::adjust_contrast::ProblemDescription& problem) const
 {
     if(!problem.IsSameType())
@@ -49,7 +49,7 @@ bool ImageAdjustContrast::IsApplicable(
 }
 
 size_t ImageAdjustContrast::GetWorkspaceSize(
-    const ExecutionContext& context,
+    const ExecutionContext& /*context*/,
     const miopen::image_transform::adjust_contrast::ProblemDescription& problem) const
 {
     auto dtype   = problem.GetInputTensorDesc().GetType();
@@ -61,7 +61,7 @@ size_t ImageAdjustContrast::GetWorkspaceSize(
 }
 
 ConvSolution ImageAdjustContrast::GetSolution(
-    const ExecutionContext& context,
+    const ExecutionContext& /*context*/,
     const miopen::image_transform::adjust_contrast::ProblemDescription& problem) const
 {
     auto result = ConvSolution{miopenStatusSuccess};

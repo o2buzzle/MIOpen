@@ -43,7 +43,7 @@ bool isDtypeFP(miopenDataType_t dtype)
 }
 
 bool ImageAdjustSaturation::IsApplicable(
-    const ExecutionContext& context,
+    const ExecutionContext& /*context*/,
     const miopen::image_transform::adjust_saturation::ProblemDescription& problem) const
 {
     if(!problem.IsSameType())
@@ -54,7 +54,7 @@ bool ImageAdjustSaturation::IsApplicable(
 }
 
 size_t ImageAdjustSaturation::GetWorkspaceSize(
-    const ExecutionContext& context,
+    const ExecutionContext& /*context*/,
     const miopen::image_transform::adjust_saturation::ProblemDescription& problem) const
 {
     auto dtype   = problem.GetInputTensorDesc().GetType();
@@ -66,7 +66,7 @@ size_t ImageAdjustSaturation::GetWorkspaceSize(
 }
 
 ConvSolution ImageAdjustSaturation::GetSolution(
-    const ExecutionContext& context,
+    const ExecutionContext& /*context*/,
     const miopen::image_transform::adjust_saturation::ProblemDescription& problem) const
 {
     auto result = ConvSolution{miopenStatusSuccess};
