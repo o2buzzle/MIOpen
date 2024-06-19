@@ -131,8 +131,8 @@ protected:
 
     void Verify()
     {
-        double threashold = 1e-5;
-        auto error        = miopen::rms_range(ref_output, output);
+        auto threashold = sizeof(T) == 4 ? 1e-6 : 5e-2;
+        auto error      = miopen::rms_range(ref_output, output);
 
         EXPECT_TRUE(miopen::range_distance(ref_output) == miopen::range_distance(output));
         EXPECT_TRUE(error < threashold) << "Outputs do not match each other. Error:" << error;

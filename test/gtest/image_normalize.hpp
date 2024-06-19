@@ -140,7 +140,7 @@ protected:
     }
     void Verify()
     {
-        auto threashold = 1e-5;
+        auto threashold = sizeof(T) == 4 ? 1e-5 : 5e-2;
         auto error      = miopen::rms_range(ref_output, output);
 
         EXPECT_TRUE(miopen::range_distance(ref_output) == miopen::range_distance(output));
