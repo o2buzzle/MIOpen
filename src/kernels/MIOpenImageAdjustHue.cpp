@@ -110,9 +110,7 @@ convertHSVToRGB(const DTYPE h, const DTYPE s, const DTYPE v, DTYPE* r, DTYPE* g,
         *g = p;
         *b = q;
         break;
-    default:
-        // Achievement Get: How Did We Get Here?
-        return;
+    default: return;
     }
 }
 
