@@ -6667,47 +6667,6 @@ MIOPEN_EXPORT miopenStatus_t miopenImageNormalize(miopenHandle_t handle,
  *
  */
 
-MIOPEN_EXPORT miopenStatus_t miopenImageAdjustContrast(miopenHandle_t handle,
-                                                       miopenTensorDescriptor_t inputTensorDesc,
-                                                       miopenTensorDescriptor_t outputTensorDesc,
-                                                       const void* input_buf,
-                                                       void* workspace_buf,
-                                                       void* output_buf,
-                                                       float contrast_factor);
-
-/**
- * @brief Retrieves the workspace size required for the miopenAdjustContrast function.
- *
- * @param[in]  handle                   MIOpen handle
- * @param[in]  inputTensorDesc          Tensor descriptor for the input image
- * @param[in]  outputTensorDesc         Tensor descriptor for the output image
- * @param[out] workspace_size           Size of the workspace
- *
- * @retval     miopenStatusSuccess      The operation was successful
- *
- */
-
-MIOPEN_EXPORT miopenStatus_t
-miopenImageAdjustConstrastGetWorkspaceSize(miopenHandle_t handle,
-                                           miopenTensorDescriptor_t inputTensorDesc,
-                                           miopenTensorDescriptor_t outputTensorDesc,
-                                           size_t* workspace_size);
-
-/**
- * @brief Adjusts the saturation of an image.
- *
- * @param[in]  handle                   MIOpen handle.
- * @param[in]  inputTensorDesc          Tensor descriptor of the input image.
- * @param[in]  outputTensorDesc         Tensor descriptor of the output image.
- * @param[in]  input_buf                Pointer to the input image buffer.
- * @param[in]  workspace_buf            Pointer to the workspace buffer.
- * @param[out] output_buf               Pointer to the output image buffer.
- * @param[in]  saturation_factor        Factor to adjust the saturation by.
- *
- * @retval miopenStatusSuccess          The operation was successful
- *
- */
-
 MIOPEN_EXPORT miopenStatus_t miopenImageAdjustSaturation(miopenHandle_t handle,
                                                          miopenTensorDescriptor_t inputTensorDesc,
                                                          miopenTensorDescriptor_t outputTensorDesc,
