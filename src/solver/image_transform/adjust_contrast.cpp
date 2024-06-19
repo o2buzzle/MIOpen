@@ -41,6 +41,10 @@ bool ImageAdjustContrast::IsApplicable(
     const ExecutionContext& context,
     const miopen::image_transform::adjust_contrast::ProblemDescription& problem) const
 {
+    if(!problem.IsSameType())
+        return false;
+    if(!problem.IsImprovementOverROCm())
+        return false;
     return true;
 }
 

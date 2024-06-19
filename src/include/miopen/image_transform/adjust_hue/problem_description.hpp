@@ -49,6 +49,9 @@ struct ProblemDescription : ProblemDescriptionBase
 
         if(!IsSameSize())
             MIOPEN_THROW("input and output must have the same size");
+
+        if(!IsInputSizesValid())
+            MIOPEN_THROW("input sizes must be 4d");
     }
 
     NetworkConfig MakeNetworkConfig() const override;
@@ -73,6 +76,19 @@ struct ProblemDescription : ProblemDescriptionBase
     }
 
     bool IsHueInRange() const { return hue >= -0.5f && hue <= 0.5f; }
+
+    bool IsInputSizesValid()
+    {
+        // We can only really support 4d tensors (ala. NCHW).
+        if(inputTensorDesc.GetLengths().size() != 4)
+            return false;
+
+        // This op only support colored images
+        if(inputTensorDesc.GetLengths()[1] != 3)
+            return false;
+
+        return true;
+    }
 
     bool IsImprovementOverROCm() const
     {

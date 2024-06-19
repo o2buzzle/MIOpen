@@ -40,6 +40,10 @@ bool ImageNormalize::IsApplicable(
     const ExecutionContext& context,
     const miopen::image_transform::normalize::ProblemDescription& problem) const
 {
+    if(!problem.IsSameType())
+        return false;
+    if(!problem.IsImprovementOverROCm())
+        return false;
     return true;
 };
 

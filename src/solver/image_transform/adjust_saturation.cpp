@@ -46,6 +46,10 @@ bool ImageAdjustSaturation::IsApplicable(
     const ExecutionContext& context,
     const miopen::image_transform::adjust_saturation::ProblemDescription& problem) const
 {
+    if(!problem.IsSameType())
+        return false;
+    if(!problem.IsImprovementOverROCm())
+        return false;
     return true;
 }
 

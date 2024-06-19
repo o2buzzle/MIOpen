@@ -52,6 +52,38 @@ struct ProblemDescription : public ProblemDescriptionBase
     const TensorDescriptor& GetOutputTensorDesc() const { return outputTensorDesc; }
     float GetBrightnessFactor() const { return brightness_factor; }
 
+    bool IsSameType() const { return inputTensorDesc.GetType() == outputTensorDesc.GetType(); }
+
+    bool IsSameSize() const
+    {
+        for(int i = 0; i < inputTensorDesc.GetLengths().size(); i++)
+        {
+            if(inputTensorDesc.GetLengths()[i] != outputTensorDesc.GetLengths()[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool IsInputSizesValid()
+    {
+        // We can only really support 4d tensors (ala. NCHW).
+        if(inputTensorDesc.GetLengths().size() == 4)
+            return true;
+
+        return false;
+    }
+
+    bool IsImprovementOverROCm() const
+    {
+        if(inputTensorDesc.IsContiguous() && outputTensorDesc.IsContiguous())
+            return true;
+
+        return false;
+    }
+
 private:
     TensorDescriptor inputTensorDesc;
     TensorDescriptor outputTensorDesc;
