@@ -63,7 +63,7 @@ struct ImageAdjustBrightnessTestCase
     }
 };
 
-std::vector<ImageAdjustBrightnessTestCase> ImageAdjustBrightnessTestConfigs()
+inline std::vector<ImageAdjustBrightnessTestCase> ImageAdjustBrightnessTestConfigs()
 {
     // clang-format off
     return {

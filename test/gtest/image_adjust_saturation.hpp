@@ -65,7 +65,7 @@ struct ImageAdjustSaturationTestCase
     }
 };
 
-std::vector<ImageAdjustSaturationTestCase> ImageAdjustSaturationTestConfigs()
+inline std::vector<ImageAdjustSaturationTestCase> ImageAdjustSaturationTestConfigs()
 {
     // clang-format off
     return {

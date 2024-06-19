@@ -64,7 +64,7 @@ struct ImageAdjustHueTestCase
     }
 };
 
-std::vector<ImageAdjustHueTestCase> ImageAdjustHueTestConfigs()
+inline std::vector<ImageAdjustHueTestCase> ImageAdjustHueTestConfigs()
 {
     // clang-format off
     return {

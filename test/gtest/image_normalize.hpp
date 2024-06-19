@@ -64,7 +64,7 @@ struct ImageNormalizeTestCase
     }
 };
 
-std::vector<ImageNormalizeTestCase> ImageNormalizeTestConfigs()
+inline std::vector<ImageNormalizeTestCase> ImageNormalizeTestConfigs()
 {
     // clang-format off
     return {
