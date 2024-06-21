@@ -312,7 +312,7 @@ int ImageNormalizeDriver<Tgpu, Tref>::RunForwardCPU()
 }
 
 template <typename Tgpu, typename Tref>
-output_ref int ImageNormalizeDriver<Tgpu, Tref>::RunBackwardCPU()
+int ImageNormalizeDriver<Tgpu, Tref>::RunBackwardCPU()
 {
     return miopenStatusSuccess;
 }
@@ -322,7 +322,7 @@ int ImageNormalizeDriver<Tgpu, Tref>::VerifyForward()
 {
     RunForwardCPU();
 
-    auto threashold = sizeof(Tgpu) == 4 ? 1e-6 : 5e-2;
+    auto threashold = std::numeric_limits<Tgpu>::epsilon();
     auto error      = miopen::rms_range(out_ref, output_host);
 
     if(!std::isfinite(error) || error > threashold)

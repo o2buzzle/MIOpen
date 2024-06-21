@@ -261,7 +261,7 @@ int ImageAdjustBrightnessDriver<Tgpu, Tref>::VerifyForward()
 {
     RunForwardCPU();
 
-    auto threashold = sizeof(Tgpu) == 4 ? 1e-6 : 5e-2;
+    auto threashold = std::numeric_limits<Tgpu>::epsilon();
     auto error      = miopen::rms_range(out_ref, out_host);
 
     if(!std::isfinite(error) || error > threashold)

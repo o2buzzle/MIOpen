@@ -353,7 +353,7 @@ int ImageAdjustSaturationDriver<Tgpu, Tref>::VerifyForward()
 {
     RunForwardCPU();
 
-    auto threashold = sizeof(Tgpu) == 4 ? 1e-6 : 5e-2;
+    auto threashold = std::numeric_limits<Tgpu>::epsilon();
     auto error      = miopen::rms_range(output_ref, output_host);
 
     if(!std::isfinite(error) || error > threashold)
