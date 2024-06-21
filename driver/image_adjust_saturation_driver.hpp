@@ -224,7 +224,7 @@ int ImageAdjustSaturationDriver<Tgpu, Tref>::GetandSetData()
     assert(input_vec.lengths.size() == 4 || input_vec.lengths.size() == 3);
     if(input_vec.lengths.size() == 3)
     {
-        // n=1
+        // If we get a 3d tensor, adds n=1 (to make it conforms to 4d input)
         input_vec.lengths.insert(input_vec.lengths.begin(), 1);
     }
 
@@ -353,7 +353,7 @@ int ImageAdjustSaturationDriver<Tgpu, Tref>::VerifyForward()
 {
     RunForwardCPU();
 
-    auto threashold = sizeof(Tgpu) == 4 ? 1e-6 : 5e-2;
+    auto threashold = std::numeric_limits<Tgpu>::epsilon();
     auto error      = miopen::rms_range(output_ref, output_host);
 
     if(!std::isfinite(error) || error > threashold)

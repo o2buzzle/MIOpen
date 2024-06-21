@@ -32,6 +32,7 @@
 #include "InputFlags.hpp"
 #include "driver.hpp"
 #include "image_adjust_driver_common.hpp"
+#include "miopen/errors.hpp"
 #include "miopen/miopen.h"
 #include "miopen/tensor.hpp"
 #include "miopen/tensor_view.hpp"
@@ -112,9 +113,9 @@ void mloConvertHSVToRGB(const T h, const T s, const T v, T* r, T* g, T* b)
         *b = q;
         break;
     default:
-        // Panic Get: How Did We Get Here?
-        printf("i_case = %d\n", i_case);
-        assert(false);
+        // This case should never happen (i_case is guaranteed to be in range [0,5])
+        // Just in case this ever does, panic immediately
+        MIOPEN_THROW("i_case out of range");
         break;
     }
 }
@@ -246,7 +247,7 @@ int ImageAdjustHueDriver<Tgpu, Tref>::GetandSetData()
     assert(input_vec.lengths.size() == 4 || input_vec.lengths.size() == 3);
     if(input_vec.lengths.size() == 3)
     {
-        // n=1
+        // If we get a 3d tensor, adds n=1 (to make it conforms to 4d input)
         input_vec.lengths.insert(input_vec.lengths.begin(), 1);
     }
     assert(input_vec.lengths[1] == 3);
@@ -364,7 +365,7 @@ int ImageAdjustHueDriver<Tgpu, Tref>::VerifyForward()
 {
     RunForwardCPU();
 
-    auto threashold = sizeof(Tgpu) == 4 ? 1e-6 : 5e-2;
+    auto threashold = std::numeric_limits<Tgpu>::epsilon();
     auto error      = miopen::rms_range(out_ref, out_host);
 
     if(!std::isfinite(error) || error > threashold)

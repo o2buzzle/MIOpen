@@ -43,7 +43,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     ss << "adjust_hue-";
     ss << inputTensorDesc.GetType() << "-" << outputTensorDesc.GetType() << "-";
     ss << inputTensorDesc.GetElementSize();
-    ss << "-" << inputTensorDesc.IsContiguous() ? "contiguous" : "non-contiguous";
+    ss << "-" << (inputTensorDesc.IsContiguous() ? "contiguous" : "non-contiguous");
 
     return NetworkConfig{ss.str()};
 }
@@ -57,7 +57,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     ss << "adjust_brightness-";
     ss << inputTensorDesc.GetType() << "-" << outputTensorDesc.GetType() << "-";
     ss << inputTensorDesc.GetElementSize();
-    ss << "-" << inputTensorDesc.IsContiguous() ? "contiguous" : "non-contiguous";
+    ss << "-" << (inputTensorDesc.IsContiguous() ? "contiguous" : "non-contiguous");
 
     return NetworkConfig{ss.str()};
 }
@@ -71,7 +71,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     ss << "adjust_contrast-";
     ss << inputTensorDesc.GetType() << "-" << outputTensorDesc.GetType() << "-";
     ss << inputTensorDesc.GetElementSize();
-    ss << "-" << inputTensorDesc.IsContiguous() ? "contiguous" : "non-contiguous";
+    ss << "-" << (inputTensorDesc.IsContiguous() ? "contiguous" : "non-contiguous");
 
     return NetworkConfig{ss.str()};
 }
@@ -86,7 +86,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     ss << "adjust_saturation-";
     ss << inputTensorDesc.GetType() << "-" << outputTensorDesc.GetType() << "-";
     ss << inputTensorDesc.GetElementSize() << "-";
-    ss << "-" << inputTensorDesc.IsContiguous() ? "contiguous" : "non-contiguous";
+    ss << "-" << (inputTensorDesc.IsContiguous() ? "contiguous" : "non-contiguous");
 
     return NetworkConfig{ss.str()};
 }
@@ -100,7 +100,7 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     ss << "normalize-";
     ss << inputTensorDesc.GetType() << "-" << outputTensorDesc.GetType() << "-";
     ss << inputTensorDesc.GetElementSize();
-    ss << "-" << inputTensorDesc.IsContiguous() ? "contiguous" : "non-contiguous";
+    ss << "-" << (inputTensorDesc.IsContiguous() ? "contiguous" : "non-contiguous");
 
     return NetworkConfig{ss.str()};
 }
