@@ -461,6 +461,52 @@ bool TensorDescriptor::AllDimsFitIntoInt() const
     return true;
 }
 
+void TensorDescriptor::Reshape(const std::vector<std::size_t>& shape)
+{
+    if(!IsContiguous())
+        MIOPEN_THROW(miopenStatusBadParm, "Tensor must be contiguous for reshape");
+
+    auto numel = GetElementSpace();
+
+    int64_t inferred_dim = -1;
+    int64_t new_numel    = 1;
+    for(size_t i = 0; i < shape.size(); i++)
+    {
+        auto dim = shape[i];
+        if(dim == -1)
+        {
+            if(inferred_dim != -1)
+                MIOPEN_THROW(miopenStatusBadParm, "only one dimension can be inferred");
+            inferred_dim = i;
+        }
+        else
+        {
+            if(dim <= 0)
+                MIOPEN_THROW(miopenStatusBadParm, "invalid shape dimension {}", dim);
+            new_numel *= dim;
+        }
+    }
+    if(numel < new_numel)
+        MIOPEN_THROW(miopenStatusBadParm, "invalid shape size");
+
+    lens.resize(shape.size());
+    std::copy(shape.begin(), shape.end(), lens.begin());
+    if(inferred_dim != -1)
+    {
+        if(numel % new_numel != 0)
+            MIOPEN_THROW(miopenStatusBadParm, "invalid shape size");
+
+        lens[inferred_dim] = numel / new_numel;
+    }
+    else
+    {
+        if(numel != new_numel)
+            MIOPEN_THROW(miopenStatusBadParm, "invalid shape size");
+    }
+
+    strides = ContiguousStridesOf(lens);
+}
+
 bool TensorDescriptor::operator==(const TensorDescriptor& rhs) const
 {
     assert(this->lens.size() == rhs.strides.size());

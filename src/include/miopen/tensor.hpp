@@ -123,6 +123,20 @@ std::ptrdiff_t integer_division_ceil(X x, Y y)
     return (tx + ty - 1) / ty;
 }
 
+inline std::vector<size_t> ContiguousStridesOf(const std::vector<size_t>& dimension)
+{
+    std::vector<size_t> strides(dimension.size(), 1L);
+    auto dimension_itr = std::crbegin(dimension);
+    auto dimension_end = std::crend(dimension);
+    auto stride_itr    = std::rbegin(strides);
+    for(size_t stride = 1; dimension_itr != dimension_end; ++stride_itr, ++dimension_itr)
+    {
+        *stride_itr = stride;
+        stride *= *dimension_itr;
+    }
+    return strides;
+}
+
 struct MIOPEN_EXPORT TensorDescriptor : miopenTensorDescriptor
 {
     TensorDescriptor();
@@ -207,6 +221,8 @@ struct MIOPEN_EXPORT TensorDescriptor : miopenTensorDescriptor
     bool IsPacked() const;
     bool IsContiguous() const;
     bool AllDimsFitIntoInt() const;
+
+    void Reshape(const std::vector<std::size_t>& shape);
 
     bool operator==(const TensorDescriptor& rhs) const;
     bool operator!=(const TensorDescriptor& rhs) const;

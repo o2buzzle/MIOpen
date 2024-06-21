@@ -101,3 +101,69 @@ extern "C" __global__ void SumFwdContiguous(const FLOAT* __restrict__ x,
 
     y[gid] = CVT_ACCUM2FLOAT(sum);
 }
+
+extern "C" __global__ void SumLastDimForwardContiguous(const FLOAT* __restrict__ input,
+                                                       half* __restrict__ input_half,
+                                                       FLOAT* __restrict__ output,
+                                                       FLOAT* __restrict__ tmp,
+                                                       long inner_size,
+                                                       long st,
+                                                       char is_last,
+                                                       long input_off,
+                                                       long input_half_off,
+                                                       long output_off,
+                                                       char ignore_nan)
+{
+    // size_t gid_0    = get_global_id(0);
+    // size_t gid_1    = get_group_id(1) * (get_local_size(1) * 2) + get_local_id(1);
+    // size_t lid      = get_local_id(1);
+
+    size_t gid_0 = threadIdx.x + blockIdx.x * blockDim.x;
+    size_t gid_1 = blockIdx.y * blockDim.y * 2 + threadIdx.y;
+    size_t lid   = threadIdx.y;
+
+    long input_base = (gid_0 / st) * st * inner_size + gid_0 % st;
+
+    if(gid_1 < inner_size)
+    {
+        long input_idx = input_base + gid_1 * st;
+        tmp[lid]       = input ? input[input_off + input_idx]
+                               : CVT_FLOAT2ACCUM(input_half[input_half_off + input_idx]);
+    }
+    else
+    {
+        tmp[lid] = 0;
+    }
+    long reduce_size = get_local_size(1);
+    FLOAT val;
+    if(gid_1 + reduce_size < inner_size)
+    {
+        long input_idx = input_base + (gid_1 + reduce_size) * st;
+        val            = input ? input[input_off + input_idx]
+                               : CVT_FLOAT2ACCUM(input_half[input_half_off + input_idx]);
+    }
+    else
+    {
+        val = 0;
+    }
+    tmp[lid] += val;
+    __syncthreads();
+
+    LocalReduceSumOpt256(tmp, lid);
+
+    if(lid == 0)
+    {
+        DTYPE res = tmp[0];
+        if(is_last != 0)
+        {
+            output[output_off + gid_0] = res;
+        }
+        else
+        {
+            reduce_size *= 2;
+            long workspace_inner_size       = (inner_size + reduce_size - 1) / reduce_size;
+            long output_idx                 = gid_0 * workspace_inner_size + gid_1 / reduce_size;
+            output[output_off + output_idx] = res;
+        }
+    }
+}
