@@ -32,6 +32,7 @@
 #include "InputFlags.hpp"
 #include "driver.hpp"
 #include "image_adjust_driver_common.hpp"
+#include "miopen/errors.hpp"
 #include "miopen/miopen.h"
 #include "miopen/tensor.hpp"
 #include "miopen/tensor_view.hpp"
@@ -112,9 +113,9 @@ void mloConvertHSVToRGB(const T h, const T s, const T v, T* r, T* g, T* b)
         *b = q;
         break;
     default:
-        // Panic Get: How Did We Get Here?
-        printf("i_case = %d\n", i_case);
-        assert(false);
+        // This case should never happen (i_case is guaranteed to be in range [0,5])
+        // Just in case this ever does, panic immediately
+        MIOPEN_THROW("i_case out of range");
         break;
     }
 }
