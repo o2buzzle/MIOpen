@@ -56,9 +56,9 @@ void mloConvertRGBToHSV(const T r, const T g, const T b, T* h, T* s, T* v)
     T gc         = (maxc - g) / cr_divisor;
     T bc         = (maxc - b) / cr_divisor;
 
-    T hr = (maxc == r) * (bc - gc);
-    T hg = ((maxc == g) && (maxc != r)) * ((T)2.0f + rc - bc);
-    T hb = ((maxc != g) && (maxc != r)) * ((T)4.0f + gc - rc);
+    T hr = static_cast<T>((maxc == r) * (bc - gc));
+    T hg = static_cast<T>(((maxc == g) && (maxc != r)) * ((T)2.0f + rc - bc));
+    T hb = static_cast<T>(((maxc != g) && (maxc != r)) * ((T)4.0f + gc - rc));
 
     *h = fmod((hr + hg + hb) / 6.0 + 1.0, 1.0);
 }
@@ -66,13 +66,13 @@ void mloConvertRGBToHSV(const T r, const T g, const T b, T* h, T* s, T* v)
 template <typename T = float>
 void mloConvertHSVToRGB(const T h, const T s, const T v, T* r, T* g, T* b)
 {
-    T i        = floor(h * 6.0);
-    T f        = h * 6.0 - i;
+    T i        = static_cast<T>(floor(h * 6.0));
+    T f        = static_cast<T>(h * 6.0 - i);
     int i_case = ((int)i + 6) % 6;
 
-    T p = clamp(v * (1.0 - s), 0.0, 1.0);
-    T q = clamp(v * (1.0 - s * f), 0.0, 1.0);
-    T t = clamp(v * (1.0 - s * (1.0 - f)), 0.0, 1.0);
+    T p = static_cast<T>(clamp(v * (1.0f - s), 0.0f, 1.0f));
+    T q = static_cast<T>(clamp(v * (1.0f - s * f), 0.0f, 1.0f));
+    T t = static_cast<T>(clamp(v * (1.0f - s * (1.0f - f)), 0.0f, 1.0f));
 
     switch(i_case)
     {
@@ -169,7 +169,7 @@ void mloImageAdjustBrightnessRunHost(const T* input,
     for(size_t gid = 0; gid < N; gid++)
     {
         T pixel  = get4DValueAt(input, input_tv, gid);
-        T result = clamp(pixel * brightness_factor, T(0.0f), T(1.0f));
+        T result = static_cast<T>(clamp(static_cast<float>(pixel) * brightness_factor, 0.0f, 1.0f));
         set4DValueAt(output, output_tv, gid, result);
     }
 }
@@ -197,7 +197,7 @@ void RGBToGrayscale(const T* src,
         T g = get4DValueAt(src, src_tv, n, 1, h, w);
         T b = get4DValueAt(src, src_tv, n, 2, h, w);
 
-        T value = 0.2989f * r + 0.587f * g + 0.114f * b;
+        T value = static_cast<T>(0.2989 * r + 0.587 * g + 0.114 * b);
 
         // We expect the workspace here to always stay contiguous
         dst[dst_tv.offset + gid] = value;
@@ -226,7 +226,7 @@ void Blend(const T* img1,
         T img1_v = get4DValueAt(img1, img1_tv, gid);
         T img2_v = img2[img2_tv.offset + img2_idx];
 
-        T result = clamp((ratio * img1_v + (1.0f - ratio) * img2_v), 0.0f, bound);
+        T result = static_cast<T>(clamp((ratio * img1_v + (1.0f - ratio) * img2_v), 0.0f, bound));
 
         set4DValueAt(output, output_tv, gid, result);
     }
@@ -244,7 +244,7 @@ void mloImageAdjustSaturationRunHost(miopen::TensorDescriptor inputDesc,
     tensor_view_4d_t output_tv = get_inner_expanded_4d_tv(outputDesc);
 
     // temporary view for workspace (basically a contiguous vector with same size as input_tv)
-    std::vector<T> workspace = std::vector<T>(inputDesc.GetElementSize(), 0);
+    std::vector<T> workspace = std::vector<T>(inputDesc.GetElementSize(), static_cast<T>(0.0f));
     miopen::TensorDescriptor wsDesc =
         miopen::TensorDescriptor{inputDesc.GetType(), inputDesc.GetLengths()};
 

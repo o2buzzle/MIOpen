@@ -46,13 +46,50 @@ struct ImageNormalizeTestFloat : ImageNormalizeTest<float>
 {
 };
 
+struct ImageNormalizeTestHalf : ImageNormalizeTest<half>
+{
+};
+
+struct ImageNormalizeTestBfloat16 : ImageNormalizeTest<bfloat16>
+{
+};
+
 } // namespace image_normalize
 
 using namespace image_normalize;
 
 TEST_P(ImageNormalizeTestFloat, ImageNormalizeTestFw)
 {
-    if(miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--float"))
+    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
+       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--float")))
+    {
+        RunTest();
+        Verify();
+    }
+    else
+    {
+        GTEST_SKIP();
+    }
+}
+
+TEST_P(ImageNormalizeTestHalf, ImageNormalizeTestFw)
+{
+    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
+       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--half")))
+    {
+        RunTest();
+        Verify();
+    }
+    else
+    {
+        GTEST_SKIP();
+    }
+}
+
+TEST_P(ImageNormalizeTestBfloat16, ImageNormalizeTestFw)
+{
+    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
+       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--bfloat16")))
     {
         RunTest();
         Verify();
@@ -65,4 +102,12 @@ TEST_P(ImageNormalizeTestFloat, ImageNormalizeTestFw)
 
 INSTANTIATE_TEST_SUITE_P(ImageNormalizeTestFloat,
                          ImageNormalizeTestFloat,
+                         testing::ValuesIn(ImageNormalizeTestConfigs()));
+
+INSTANTIATE_TEST_SUITE_P(ImageNormalizeTestHalf,
+                         ImageNormalizeTestHalf,
+                         testing::ValuesIn(ImageNormalizeTestConfigs()));
+
+INSTANTIATE_TEST_SUITE_P(ImageNormalizeTestBfloat16,
+                         ImageNormalizeTestBfloat16,
                          testing::ValuesIn(ImageNormalizeTestConfigs()));

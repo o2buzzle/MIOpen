@@ -55,7 +55,7 @@ __device__ void DeviceImageAdjustBrightness(DTYPE* input,
     DTYPE pixel    = get4DValueAt(input, input_tv, gid);
     FLOAT_ACCUM fp = CVT_FLOAT2ACCUM(pixel);
 
-    DTYPE result = clamp(fp * brightness_factor, 0.0f, 1.0f);
+    FLOAT_ACCUM result = clamp(fp * brightness_factor, 0.0f, 1.0f);
     set4DValueAt(output, output_tv, gid, CVT_ACCUM2FLOAT(result));
 }
 
@@ -74,7 +74,7 @@ __device__ void DeviceImageAdjustBrightnessContiguous(DTYPE* input,
     DTYPE pixel    = input[input_off + gid];
     FLOAT_ACCUM fp = CVT_FLOAT2ACCUM(pixel);
 
-    DTYPE result             = clamp(fp * brightness_factor, 0.0f, 1.0f);
+    FLOAT_ACCUM result       = clamp(fp * brightness_factor, 0.0f, 1.0f);
     output[output_off + gid] = CVT_ACCUM2FLOAT(result);
 }
 

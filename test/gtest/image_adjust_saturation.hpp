@@ -121,18 +121,18 @@ protected:
         auto&& handle = get_handle();
         cpu_image_adjust_saturation(input, ref_output, test_config.saturation);
 
-        workspace_size =
-            miopen::miopenImageAdjustSaturationGetWorkspaceSize(handle, input.desc, output.desc);
+        workspace_size = miopen::ImageAdjustSaturationGetWorkspaceSize(
+            handle, input.desc, output.desc, test_config.saturation);
 
         workspace_ptr = handle.Create(workspace_size);
 
-        auto status = miopen::miopenImageAdjustSaturation(handle,
-                                                          input.desc,
-                                                          output.desc,
-                                                          input_ptr.get(),
-                                                          workspace_ptr.get(),
-                                                          output_ptr.get(),
-                                                          test_config.saturation);
+        auto status = miopen::ImageAdjustSaturation(handle,
+                                                    input.desc,
+                                                    output.desc,
+                                                    input_ptr.get(),
+                                                    workspace_ptr.get(),
+                                                    output_ptr.get(),
+                                                    test_config.saturation);
 
         EXPECT_EQ(status, miopenStatusSuccess);
 

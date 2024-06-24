@@ -118,12 +118,12 @@ protected:
         auto&& handle = get_handle();
         cpu_image_adjust_brightness(input, ref_output, test_config.brightness);
 
-        auto status = miopen::miopenImageAdjustBrightness(handle,
-                                                          input.desc,
-                                                          output.desc,
-                                                          input_ptr.get(),
-                                                          output_ptr.get(),
-                                                          test_config.brightness);
+        auto status = miopen::ImageAdjustBrightness(handle,
+                                                    input.desc,
+                                                    output.desc,
+                                                    input_ptr.get(),
+                                                    output_ptr.get(),
+                                                    test_config.brightness);
 
         EXPECT_EQ(status, miopenStatusSuccess);
 

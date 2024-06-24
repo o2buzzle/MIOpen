@@ -25,6 +25,8 @@
  *******************************************************************************/
 
 #include "image_adjust_saturation.hpp"
+#include "miopen/bfloat16.hpp"
+#include "tensor_holder.hpp"
 #include <miopen/env.hpp>
 
 MIOPEN_DECLARE_ENV_VAR_STR(MIOPEN_TEST_FLOAT_ARG)
@@ -46,13 +48,50 @@ struct ImageAdjustSaturationTestFloat : ImageAdjustSaturationTest<float>
 {
 };
 
+struct ImageAdjustSaturationTestHalf : ImageAdjustSaturationTest<half>
+{
+};
+
+struct ImageAdjustSaturationBfloat16 : ImageAdjustSaturationTest<bfloat16>
+{
+};
+
 } // namespace image_adjust_saturation
 
 using namespace image_adjust_saturation;
 
 TEST_P(ImageAdjustSaturationTestFloat, ImageAdjustSaturationTestFw)
 {
-    if(miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--float"))
+    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
+       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--float")))
+    {
+        RunTest();
+        Verify();
+    }
+    else
+    {
+        GTEST_SKIP();
+    }
+}
+
+TEST_P(ImageAdjustSaturationTestHalf, ImageAdjustSaturationTestFw)
+{
+    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
+       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--half")))
+    {
+        RunTest();
+        Verify();
+    }
+    else
+    {
+        GTEST_SKIP();
+    }
+}
+
+TEST_P(ImageAdjustSaturationBfloat16, ImageAdjustSaturationTestFw)
+{
+    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
+       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--bfloat16")))
     {
         RunTest();
         Verify();
@@ -65,4 +104,12 @@ TEST_P(ImageAdjustSaturationTestFloat, ImageAdjustSaturationTestFw)
 
 INSTANTIATE_TEST_SUITE_P(ImageAdjustSaturationTest,
                          ImageAdjustSaturationTestFloat,
+                         testing::ValuesIn(ImageAdjustSaturationTestConfigs()));
+
+INSTANTIATE_TEST_SUITE_P(ImageAdjustSaturationTest,
+                         ImageAdjustSaturationTestHalf,
+                         testing::ValuesIn(ImageAdjustSaturationTestConfigs()));
+
+INSTANTIATE_TEST_SUITE_P(ImageAdjustSaturationTest,
+                         ImageAdjustSaturationBfloat16,
                          testing::ValuesIn(ImageAdjustSaturationTestConfigs()));

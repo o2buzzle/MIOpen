@@ -124,15 +124,15 @@ protected:
         auto&& handle = get_handle();
         cpu_image_normalize(input, ref_output, mean, stdvar);
 
-        auto status = miopen::miopenImageNormalize(handle,
-                                                   input.desc,
-                                                   mean.desc,
-                                                   stdvar.desc,
-                                                   output.desc,
-                                                   input_ptr.get(),
-                                                   mean_ptr.get(),
-                                                   stdvar_ptr.get(),
-                                                   output_ptr.get());
+        auto status = miopen::ImageNormalize(handle,
+                                             input.desc,
+                                             mean.desc,
+                                             stdvar.desc,
+                                             output.desc,
+                                             input_ptr.get(),
+                                             mean_ptr.get(),
+                                             stdvar_ptr.get(),
+                                             output_ptr.get());
 
         EXPECT_EQ(status, miopenStatusSuccess);
 

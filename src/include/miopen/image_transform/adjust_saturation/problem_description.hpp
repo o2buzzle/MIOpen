@@ -37,9 +37,14 @@ namespace adjust_saturation {
 struct ProblemDescription : ProblemDescriptionBase
 {
     ProblemDescription(const TensorDescriptor& inputTensorDesc_,
-                       const TensorDescriptor& outputTensorDesc_)
-        : inputTensorDesc(inputTensorDesc_), outputTensorDesc(outputTensorDesc_)
+                       const TensorDescriptor& outputTensorDesc_,
+                       const float saturation_factor_)
+        : inputTensorDesc(inputTensorDesc_),
+          outputTensorDesc(outputTensorDesc_),
+          saturation_factor(saturation_factor_)
     {
+        if(!IsSaturationValueValid())
+            MIOPEN_THROW("saturation must be larger than 0.0");
     }
 
     NetworkConfig MakeNetworkConfig() const override;
@@ -61,7 +66,7 @@ struct ProblemDescription : ProblemDescriptionBase
 
         return true;
     }
-    bool IsInputSizesValid()
+    bool IsInputSizesValid() const
     {
         // We can only really support 4d tensors (ala. NCHW).
         if(inputTensorDesc.GetLengths().size() == 4)
@@ -78,9 +83,13 @@ struct ProblemDescription : ProblemDescriptionBase
         return false;
     }
 
+    bool IsSaturationValueValid() const { return saturation_factor >= 0.0f; }
+
 private:
     TensorDescriptor inputTensorDesc;
     TensorDescriptor outputTensorDesc;
+
+    float saturation_factor;
 };
 } // namespace adjust_saturation
 } // namespace image_transform

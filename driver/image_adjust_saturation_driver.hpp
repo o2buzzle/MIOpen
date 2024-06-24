@@ -272,7 +272,7 @@ int ImageAdjustSaturationDriver<Tgpu, Tref>::RunForwardGPU()
     size_t workspace_size;
 
     auto status = miopenImageAdjustSaturationGetWorkspaceSize(
-        GetHandle(), inputTensorDesc, outputTensorDesc, &workspace_size);
+        GetHandle(), inputTensorDesc, outputTensorDesc, saturation_factor, &workspace_size);
 
     assert(status == miopenStatusSuccess);
     workspace_gpu = std::make_unique<GPUMem>(0, workspace_size, 1);

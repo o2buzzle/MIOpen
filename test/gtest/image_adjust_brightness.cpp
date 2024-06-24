@@ -46,13 +46,50 @@ struct ImageAdjustBrightnessTestFloat : ImageAdjustBrightnessTest<float>
 {
 };
 
+struct ImageAdjustBrightnessTestHalf : ImageAdjustBrightnessTest<half>
+{
+};
+
+struct ImageAdjustBrightnessTestBfloat16 : ImageAdjustBrightnessTest<bfloat16>
+{
+};
+
 } // namespace image_adjust_brightness
 
 using namespace image_adjust_brightness;
 
 TEST_P(ImageAdjustBrightnessTestFloat, ImageAdjustBrightnessTestFw)
 {
-    if(miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--float"))
+    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
+       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--float")))
+    {
+        RunTest();
+        Verify();
+    }
+    else
+    {
+        GTEST_SKIP();
+    }
+}
+
+TEST_P(ImageAdjustBrightnessTestHalf, ImageAdjustBrightnessTestFw)
+{
+    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
+       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--half")))
+    {
+        RunTest();
+        Verify();
+    }
+    else
+    {
+        GTEST_SKIP();
+    }
+}
+
+TEST_P(ImageAdjustBrightnessTestBfloat16, ImageAdjustBrightnessTestFw)
+{
+    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
+       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--bfloat16")))
     {
         RunTest();
         Verify();
@@ -65,4 +102,12 @@ TEST_P(ImageAdjustBrightnessTestFloat, ImageAdjustBrightnessTestFw)
 
 INSTANTIATE_TEST_SUITE_P(ImageAdjustBrightnessTest,
                          ImageAdjustBrightnessTestFloat,
+                         testing::ValuesIn(ImageAdjustBrightnessTestConfigs()));
+
+INSTANTIATE_TEST_SUITE_P(ImageAdjustBrightnessTest,
+                         ImageAdjustBrightnessTestHalf,
+                         testing::ValuesIn(ImageAdjustBrightnessTestConfigs()));
+
+INSTANTIATE_TEST_SUITE_P(ImageAdjustBrightnessTest,
+                         ImageAdjustBrightnessTestBfloat16,
                          testing::ValuesIn(ImageAdjustBrightnessTestConfigs()));

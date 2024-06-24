@@ -121,7 +121,7 @@ protected:
         cpu_image_adjust_hue(input, ref_output, test_config.hue);
         miopenStatus_t status;
 
-        status = miopen::miopenImageAdjustHue(
+        status = miopen::ImageAdjustHue(
             handle, input.desc, output.desc, input_ptr.get(), output_ptr.get(), test_config.hue);
 
         EXPECT_EQ(status, miopenStatusSuccess);

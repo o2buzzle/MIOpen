@@ -41,12 +41,12 @@ extern "C" miopenStatus_t miopenImageAdjustHue(miopenHandle_t handle,
     MIOPEN_LOG_FUNCTION(handle, inputTensorDesc, outputTensorDesc, input_buf, output_buf, hue);
 
     return miopen::try_([&] {
-        miopen::miopenImageAdjustHue(miopen::deref(handle),
-                                     miopen::deref(inputTensorDesc),
-                                     miopen::deref(outputTensorDesc),
-                                     DataCast(input_buf),
-                                     DataCast(output_buf),
-                                     hue);
+        miopen::ImageAdjustHue(miopen::deref(handle),
+                               miopen::deref(inputTensorDesc),
+                               miopen::deref(outputTensorDesc),
+                               DataCast(input_buf),
+                               DataCast(output_buf),
+                               hue);
     });
 }
 
@@ -61,12 +61,12 @@ extern "C" miopenStatus_t miopenImageAdjustBrightness(miopenHandle_t handle,
         handle, inputTensorDesc, outputTensorDesc, input_buf, output_buf, brightness_factor);
 
     return miopen::try_([&] {
-        miopen::miopenImageAdjustBrightness(miopen::deref(handle),
-                                            miopen::deref(inputTensorDesc),
-                                            miopen::deref(outputTensorDesc),
-                                            DataCast(input_buf),
-                                            DataCast(output_buf),
-                                            brightness_factor);
+        miopen::ImageAdjustBrightness(miopen::deref(handle),
+                                      miopen::deref(inputTensorDesc),
+                                      miopen::deref(outputTensorDesc),
+                                      DataCast(input_buf),
+                                      DataCast(output_buf),
+                                      brightness_factor);
     });
 }
 
@@ -91,15 +91,15 @@ extern "C" miopenStatus_t miopenImageNormalize(miopenHandle_t handle,
                         output_buf);
 
     return miopen::try_([&] {
-        miopen::miopenImageNormalize(miopen::deref(handle),
-                                     miopen::deref(inputTensorDesc),
-                                     miopen::deref(meanTensorDesc),
-                                     miopen::deref(stdTensorDesc),
-                                     miopen::deref(outputTensorDesc),
-                                     DataCast(input_buf),
-                                     DataCast(mean_buf),
-                                     DataCast(std_buf),
-                                     DataCast(output_buf));
+        miopen::ImageNormalize(miopen::deref(handle),
+                               miopen::deref(inputTensorDesc),
+                               miopen::deref(meanTensorDesc),
+                               miopen::deref(stdTensorDesc),
+                               miopen::deref(outputTensorDesc),
+                               DataCast(input_buf),
+                               DataCast(mean_buf),
+                               DataCast(std_buf),
+                               DataCast(output_buf));
     });
 }
 
@@ -120,13 +120,13 @@ extern "C" miopenStatus_t miopenImageAdjustContrast(miopenHandle_t handle,
                         contrast_factor);
 
     return miopen::try_([&] {
-        miopen::miopenImageAdjustContrast(miopen::deref(handle),
-                                          miopen::deref(inputTensorDesc),
-                                          miopen::deref(outputTensorDesc),
-                                          DataCast(input_buf),
-                                          DataCast(workspace_buf),
-                                          DataCast(output_buf),
-                                          contrast_factor);
+        miopen::ImageAdjustContrast(miopen::deref(handle),
+                                    miopen::deref(inputTensorDesc),
+                                    miopen::deref(outputTensorDesc),
+                                    DataCast(input_buf),
+                                    DataCast(workspace_buf),
+                                    DataCast(output_buf),
+                                    contrast_factor);
     });
 }
 
@@ -138,7 +138,7 @@ miopenImageAdjustConstrastGetWorkspaceSize(miopenHandle_t handle,
 {
     MIOPEN_LOG_FUNCTION(handle, inputTensorDesc, outputTensorDesc, workspace_size);
     return miopen::try_([&] {
-        miopen::deref(workspace_size) = miopen::miopenImageAdjustContrastGetWorkspaceSize(
+        miopen::deref(workspace_size) = miopen::ImageAdjustContrastGetWorkspaceSize(
             miopen::deref(handle), miopen::deref(inputTensorDesc), miopen::deref(outputTensorDesc));
     });
 }
@@ -160,13 +160,13 @@ extern "C" miopenStatus_t miopenImageAdjustSaturation(miopenHandle_t handle,
                         saturation_factor);
 
     return miopen::try_([&] {
-        miopen::miopenImageAdjustSaturation(miopen::deref(handle),
-                                            miopen::deref(inputTensorDesc),
-                                            miopen::deref(outputTensorDesc),
-                                            DataCast(input_buf),
-                                            DataCast(workspace_buf),
-                                            DataCast(output_buf),
-                                            saturation_factor);
+        miopen::ImageAdjustSaturation(miopen::deref(handle),
+                                      miopen::deref(inputTensorDesc),
+                                      miopen::deref(outputTensorDesc),
+                                      DataCast(input_buf),
+                                      DataCast(workspace_buf),
+                                      DataCast(output_buf),
+                                      saturation_factor);
     });
 }
 
@@ -174,12 +174,16 @@ extern "C" miopenStatus_t
 miopenImageAdjustSaturationGetWorkspaceSize(miopenHandle_t handle,
                                             miopenTensorDescriptor_t inputTensorDesc,
                                             miopenTensorDescriptor_t outputTensorDesc,
+                                            float saturation_factor,
                                             size_t* workspace_size)
 {
     MIOPEN_LOG_FUNCTION(handle, inputTensorDesc, outputTensorDesc, workspace_size);
 
     return miopen::try_([&] {
-        miopen::deref(workspace_size) = miopen::miopenImageAdjustSaturationGetWorkspaceSize(
-            miopen::deref(handle), miopen::deref(inputTensorDesc), miopen::deref(outputTensorDesc));
+        miopen::deref(workspace_size) =
+            miopen::ImageAdjustSaturationGetWorkspaceSize(miopen::deref(handle),
+                                                          miopen::deref(inputTensorDesc),
+                                                          miopen::deref(outputTensorDesc),
+                                                          saturation_factor);
     });
 }

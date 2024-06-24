@@ -44,6 +44,8 @@ bool ImageNormalize::IsApplicable(
         return false;
     if(!problem.IsImprovementOverROCm())
         return false;
+    if(!problem.IsInputSizesValid())
+        return false;
     return true;
 };
 
