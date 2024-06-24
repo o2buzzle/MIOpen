@@ -34,54 +34,54 @@ namespace miopen {
 struct Handle;
 struct TensorDescriptor;
 
-miopenStatus_t miopenImageAdjustHue(Handle& handle,
-                                    const TensorDescriptor& inputTensorDesc,
-                                    const TensorDescriptor& outputTensorDesc,
-                                    ConstData_t input_buf,
-                                    Data_t output_buf,
-                                    float hue);
+miopenStatus_t ImageAdjustHue(Handle& handle,
+                              const TensorDescriptor& inputTensorDesc,
+                              const TensorDescriptor& outputTensorDesc,
+                              ConstData_t input_buf,
+                              Data_t output_buf,
+                              float hue);
 
-miopenStatus_t miopenImageAdjustBrightness(Handle& handle,
+miopenStatus_t ImageAdjustBrightness(Handle& handle,
+                                     const TensorDescriptor& inputTensorDesc,
+                                     const TensorDescriptor& outputTensorDesc,
+                                     ConstData_t input_buf,
+                                     Data_t output_buf,
+                                     float brightness_factor);
+
+miopenStatus_t ImageNormalize(Handle& handle,
+                              const TensorDescriptor& inputTensorDesc,
+                              const TensorDescriptor& meanTensorDesc,
+                              const TensorDescriptor& stdTensorDesc,
+                              const TensorDescriptor& outputTensorDesc,
+                              ConstData_t input_buf,
+                              ConstData_t mean_buf,
+                              ConstData_t std_buf,
+                              Data_t output_buf);
+
+miopenStatus_t ImageAdjustContrast(Handle& handle,
+                                   const TensorDescriptor& inputTensorDesc,
+                                   const TensorDescriptor& outputTensorDesc,
+                                   ConstData_t input_buf,
+                                   Data_t workspace_buf,
+                                   Data_t output_buf,
+                                   float contrast_factor);
+
+size_t ImageAdjustContrastGetWorkspaceSize(Handle& handle,
                                            const TensorDescriptor& inputTensorDesc,
-                                           const TensorDescriptor& outputTensorDesc,
-                                           ConstData_t input_buf,
-                                           Data_t output_buf,
-                                           float brightness_factor);
+                                           const TensorDescriptor& outputTensorDesc);
 
-miopenStatus_t miopenImageNormalize(Handle& handle,
-                                    const TensorDescriptor& inputTensorDesc,
-                                    const TensorDescriptor& meanTensorDesc,
-                                    const TensorDescriptor& stdTensorDesc,
-                                    const TensorDescriptor& outputTensorDesc,
-                                    ConstData_t input_buf,
-                                    ConstData_t mean_buf,
-                                    ConstData_t std_buf,
-                                    Data_t output_buf);
+miopenStatus_t ImageAdjustSaturation(Handle& handle,
+                                     const TensorDescriptor& inputTensorDesc,
+                                     const TensorDescriptor& outputTensorDesc,
+                                     ConstData_t input_buf,
+                                     Data_t workspace_buf,
+                                     Data_t output_buf,
+                                     float saturation_factor);
 
-miopenStatus_t miopenImageAdjustContrast(Handle& handle,
-                                         const TensorDescriptor& inputTensorDesc,
-                                         const TensorDescriptor& outputTensorDesc,
-                                         ConstData_t input_buf,
-                                         Data_t workspace_buf,
-                                         Data_t output_buf,
-                                         float contrast_factor);
-
-size_t miopenImageAdjustContrastGetWorkspaceSize(Handle& handle,
-                                                 const TensorDescriptor& inputTensorDesc,
-                                                 const TensorDescriptor& outputTensorDesc);
-
-miopenStatus_t miopenImageAdjustSaturation(Handle& handle,
-                                           const TensorDescriptor& inputTensorDesc,
-                                           const TensorDescriptor& outputTensorDesc,
-                                           ConstData_t input_buf,
-                                           Data_t workspace_buf,
-                                           Data_t output_buf,
-                                           float saturation_factor);
-
-size_t miopenImageAdjustSaturationGetWorkspaceSize(Handle& handle,
-                                                   const TensorDescriptor& inputTensorDesc,
-                                                   const TensorDescriptor& outputTensorDesc,
-                                                   float saturation_factor);
+size_t ImageAdjustSaturationGetWorkspaceSize(Handle& handle,
+                                             const TensorDescriptor& inputTensorDesc,
+                                             const TensorDescriptor& outputTensorDesc,
+                                             float saturation_factor);
 
 } // namespace miopen
 

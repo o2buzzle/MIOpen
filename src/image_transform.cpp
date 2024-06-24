@@ -46,12 +46,12 @@
 
 namespace miopen {
 
-miopenStatus_t miopenImageAdjustHue(Handle& handle,
-                                    const TensorDescriptor& inputTensorDesc,
-                                    const TensorDescriptor& outputTensorDesc,
-                                    ConstData_t input_buf,
-                                    Data_t output_buf,
-                                    float hue)
+miopenStatus_t ImageAdjustHue(Handle& handle,
+                              const TensorDescriptor& inputTensorDesc,
+                              const TensorDescriptor& outputTensorDesc,
+                              ConstData_t input_buf,
+                              Data_t output_buf,
+                              float hue)
 {
     auto ctx = ExecutionContext{&handle};
     const auto problem =
@@ -76,12 +76,12 @@ miopenStatus_t miopenImageAdjustHue(Handle& handle,
     return miopenStatusSuccess;
 }
 
-miopenStatus_t miopenImageAdjustBrightness(Handle& handle,
-                                           const TensorDescriptor& inputTensorDesc,
-                                           const TensorDescriptor& outputTensorDesc,
-                                           ConstData_t input_buf,
-                                           Data_t output_buf,
-                                           const float brightness_factor)
+miopenStatus_t ImageAdjustBrightness(Handle& handle,
+                                     const TensorDescriptor& inputTensorDesc,
+                                     const TensorDescriptor& outputTensorDesc,
+                                     ConstData_t input_buf,
+                                     Data_t output_buf,
+                                     const float brightness_factor)
 {
     auto ctx           = ExecutionContext{&handle};
     const auto problem = image_transform::adjust_brightness::ProblemDescription{
@@ -106,15 +106,15 @@ miopenStatus_t miopenImageAdjustBrightness(Handle& handle,
     return miopenStatusSuccess;
 }
 
-miopenStatus_t miopenImageNormalize(Handle& handle,
-                                    const TensorDescriptor& inputTensorDesc,
-                                    const TensorDescriptor& meanTensorDesc,
-                                    const TensorDescriptor& stdTensorDesc,
-                                    const TensorDescriptor& outputTensorDesc,
-                                    ConstData_t input_buf,
-                                    ConstData_t mean_buf,
-                                    ConstData_t std_buf,
-                                    Data_t output_buf)
+miopenStatus_t ImageNormalize(Handle& handle,
+                              const TensorDescriptor& inputTensorDesc,
+                              const TensorDescriptor& meanTensorDesc,
+                              const TensorDescriptor& stdTensorDesc,
+                              const TensorDescriptor& outputTensorDesc,
+                              ConstData_t input_buf,
+                              ConstData_t mean_buf,
+                              ConstData_t std_buf,
+                              Data_t output_buf)
 {
     auto ctx           = ExecutionContext{&handle};
     const auto problem = image_transform::normalize::ProblemDescription{
@@ -142,13 +142,13 @@ miopenStatus_t miopenImageNormalize(Handle& handle,
     return miopenStatusSuccess;
 }
 
-miopenStatus_t miopenImageAdjustContrast(Handle& handle,
-                                         const TensorDescriptor& inputTensorDesc,
-                                         const TensorDescriptor& outputTensorDesc,
-                                         ConstData_t input_buf,
-                                         Data_t workspace_buf,
-                                         Data_t output_buf,
-                                         float contrast_factor)
+miopenStatus_t ImageAdjustContrast(Handle& handle,
+                                   const TensorDescriptor& inputTensorDesc,
+                                   const TensorDescriptor& outputTensorDesc,
+                                   ConstData_t input_buf,
+                                   Data_t workspace_buf,
+                                   Data_t output_buf,
+                                   float contrast_factor)
 {
     auto ctx = ExecutionContext{&handle};
     const auto problem =
@@ -174,9 +174,9 @@ miopenStatus_t miopenImageAdjustContrast(Handle& handle,
     return miopenStatusSuccess;
 }
 
-size_t miopenImageAdjustContrastGetWorkspaceSize(Handle& handle,
-                                                 const TensorDescriptor& inputTensorDesc,
-                                                 const TensorDescriptor& outputTensorDesc)
+size_t ImageAdjustContrastGetWorkspaceSize(Handle& handle,
+                                           const TensorDescriptor& inputTensorDesc,
+                                           const TensorDescriptor& outputTensorDesc)
 {
     auto ctx = ExecutionContext{&handle};
     const auto problem =
@@ -192,13 +192,13 @@ size_t miopenImageAdjustContrastGetWorkspaceSize(Handle& handle,
     return workspace_sizes.empty() ? static_cast<size_t>(0) : workspace_sizes.front().second;
 }
 
-miopenStatus_t miopenImageAdjustSaturation(Handle& handle,
-                                           const TensorDescriptor& inputTensorDesc,
-                                           const TensorDescriptor& outputTensorDesc,
-                                           ConstData_t input_buf,
-                                           Data_t workspace_buf,
-                                           Data_t output_buf,
-                                           float saturation_factor)
+miopenStatus_t ImageAdjustSaturation(Handle& handle,
+                                     const TensorDescriptor& inputTensorDesc,
+                                     const TensorDescriptor& outputTensorDesc,
+                                     ConstData_t input_buf,
+                                     Data_t workspace_buf,
+                                     Data_t output_buf,
+                                     float saturation_factor)
 {
     auto ctx           = ExecutionContext{&handle};
     const auto problem = image_transform::adjust_saturation::ProblemDescription{
@@ -225,10 +225,10 @@ miopenStatus_t miopenImageAdjustSaturation(Handle& handle,
     return miopenStatusSuccess;
 }
 
-size_t miopenImageAdjustSaturationGetWorkspaceSize(Handle& handle,
-                                                   const TensorDescriptor& inputTensorDesc,
-                                                   const TensorDescriptor& outputTensorDesc,
-                                                   float saturation_factor)
+size_t ImageAdjustSaturationGetWorkspaceSize(Handle& handle,
+                                             const TensorDescriptor& inputTensorDesc,
+                                             const TensorDescriptor& outputTensorDesc,
+                                             float saturation_factor)
 {
     auto ctx           = ExecutionContext{&handle};
     const auto problem = image_transform::adjust_saturation::ProblemDescription{
