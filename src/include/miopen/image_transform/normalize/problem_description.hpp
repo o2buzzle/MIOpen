@@ -46,6 +46,8 @@ struct ProblemDescription : public ProblemDescriptionBase
           stddevTensorDesc(stddevTensorDesc_),
           outputTensorDesc(outputTensorDesc_)
     {
+        if(!IsMeanAndStdDevContiguous())
+            MIOPEN_THROW("Mean and stddev tensors are not contiguous.");
     }
 
     NetworkConfig MakeNetworkConfig() const override;
@@ -69,7 +71,7 @@ struct ProblemDescription : public ProblemDescriptionBase
 
         return true;
     }
-    bool IsInputSizesValid()
+    bool IsInputSizesValid() const
     {
         // We can only really support 4d tensors (ala. NCHW).
         if(inputTensorDesc.GetLengths().size() == 4)
@@ -84,6 +86,12 @@ struct ProblemDescription : public ProblemDescriptionBase
             return true;
 
         return false;
+    }
+
+    bool IsMeanAndStdDevContiguous() const
+    {
+        // We cannot handle a case where they are not unfortunately
+        return meanTensorDesc.IsContiguous() && stddevTensorDesc.IsContiguous();
     }
 
 private:
