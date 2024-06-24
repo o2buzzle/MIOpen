@@ -80,7 +80,8 @@ miopenStatus_t miopenImageAdjustSaturation(Handle& handle,
 
 size_t miopenImageAdjustSaturationGetWorkspaceSize(Handle& handle,
                                                    const TensorDescriptor& inputTensorDesc,
-                                                   const TensorDescriptor& outputTensorDesc);
+                                                   const TensorDescriptor& outputTensorDesc,
+                                                   float saturation_factor);
 
 } // namespace miopen
 

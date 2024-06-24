@@ -200,9 +200,9 @@ miopenStatus_t miopenImageAdjustSaturation(Handle& handle,
                                            Data_t output_buf,
                                            float saturation_factor)
 {
-    auto ctx = ExecutionContext{&handle};
-    const auto problem =
-        image_transform::adjust_saturation::ProblemDescription{inputTensorDesc, outputTensorDesc};
+    auto ctx           = ExecutionContext{&handle};
+    const auto problem = image_transform::adjust_saturation::ProblemDescription{
+        inputTensorDesc, outputTensorDesc, saturation_factor};
 
     const auto invoke_params = [&]() {
         auto tmp              = image_transform::adjust_saturation::InvokeParams{};
@@ -227,11 +227,12 @@ miopenStatus_t miopenImageAdjustSaturation(Handle& handle,
 
 size_t miopenImageAdjustSaturationGetWorkspaceSize(Handle& handle,
                                                    const TensorDescriptor& inputTensorDesc,
-                                                   const TensorDescriptor& outputTensorDesc)
+                                                   const TensorDescriptor& outputTensorDesc,
+                                                   float saturation_factor)
 {
-    auto ctx = ExecutionContext{&handle};
-    const auto problem =
-        image_transform::adjust_saturation::ProblemDescription{inputTensorDesc, outputTensorDesc};
+    auto ctx           = ExecutionContext{&handle};
+    const auto problem = image_transform::adjust_saturation::ProblemDescription{
+        inputTensorDesc, outputTensorDesc, saturation_factor};
 
     const auto algo = AlgorithmName{"ImageAdjustSaturation"};
 

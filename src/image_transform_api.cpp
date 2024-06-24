@@ -174,12 +174,16 @@ extern "C" miopenStatus_t
 miopenImageAdjustSaturationGetWorkspaceSize(miopenHandle_t handle,
                                             miopenTensorDescriptor_t inputTensorDesc,
                                             miopenTensorDescriptor_t outputTensorDesc,
+                                            float saturation_factor,
                                             size_t* workspace_size)
 {
     MIOPEN_LOG_FUNCTION(handle, inputTensorDesc, outputTensorDesc, workspace_size);
 
     return miopen::try_([&] {
-        miopen::deref(workspace_size) = miopen::miopenImageAdjustSaturationGetWorkspaceSize(
-            miopen::deref(handle), miopen::deref(inputTensorDesc), miopen::deref(outputTensorDesc));
+        miopen::deref(workspace_size) =
+            miopen::miopenImageAdjustSaturationGetWorkspaceSize(miopen::deref(handle),
+                                                                miopen::deref(inputTensorDesc),
+                                                                miopen::deref(outputTensorDesc),
+                                                                saturation_factor);
     });
 }

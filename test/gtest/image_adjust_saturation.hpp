@@ -121,8 +121,8 @@ protected:
         auto&& handle = get_handle();
         cpu_image_adjust_saturation(input, ref_output, test_config.saturation);
 
-        workspace_size =
-            miopen::miopenImageAdjustSaturationGetWorkspaceSize(handle, input.desc, output.desc);
+        workspace_size = miopen::miopenImageAdjustSaturationGetWorkspaceSize(
+            handle, input.desc, output.desc, test_config.saturation);
 
         workspace_ptr = handle.Create(workspace_size);
 
