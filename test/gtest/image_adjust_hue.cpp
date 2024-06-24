@@ -46,13 +46,50 @@ struct ImageAdjustHueTestFloat : ImageAdjustHueTest<float>
 {
 };
 
+struct ImageAdjustHueTestHalf : ImageAdjustHueTest<half>
+{
+};
+
+struct ImageAdjustHueTestBfloat16 : ImageAdjustHueTest<bfloat16>
+{
+};
+
 } // namespace image_adjust_hue
 
 using namespace image_adjust_hue;
 
 TEST_P(ImageAdjustHueTestFloat, ImageAdjustHueTestFw)
 {
-    if(miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--float"))
+    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
+       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--float")))
+    {
+        RunTest();
+        Verify();
+    }
+    else
+    {
+        GTEST_SKIP();
+    }
+}
+
+TEST_P(ImageAdjustHueTestHalf, ImageAdjustHueTestFw)
+{
+    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
+       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--half")))
+    {
+        RunTest();
+        Verify();
+    }
+    else
+    {
+        GTEST_SKIP();
+    }
+}
+
+TEST_P(ImageAdjustHueTestBfloat16, ImageAdjustHueTestFw)
+{
+    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
+       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--bfloat16")))
     {
         RunTest();
         Verify();
@@ -65,4 +102,12 @@ TEST_P(ImageAdjustHueTestFloat, ImageAdjustHueTestFw)
 
 INSTANTIATE_TEST_SUITE_P(ImageAdjustHueTest,
                          ImageAdjustHueTestFloat,
+                         testing::ValuesIn(ImageAdjustHueTestConfigs()));
+
+INSTANTIATE_TEST_SUITE_P(ImageAdjustHueTest,
+                         ImageAdjustHueTestHalf,
+                         testing::ValuesIn(ImageAdjustHueTestConfigs()));
+
+INSTANTIATE_TEST_SUITE_P(ImageAdjustHueTest,
+                         ImageAdjustHueTestBfloat16,
                          testing::ValuesIn(ImageAdjustHueTestConfigs()));
