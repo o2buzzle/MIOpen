@@ -86,10 +86,6 @@ ConvSolution ImageAdjustSaturation::GetSolution(
     // first, RGB to Grayscale
     auto rgb_kernel        = KernelInfo{};
     rgb_kernel.kernel_file = "MIOpenImageBlend.cpp";
-    // if(problem.GetInputTensorDesc().IsContiguous() &&
-    // problem.GetOutputTensorDesc().IsContiguous())
-    //     rgb_kernel.kernel_name = "RGBToGrayscaleContiguous";
-    // else
     rgb_kernel.kernel_name = "RGBToGrayscale";
 
     const auto build_params =
