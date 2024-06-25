@@ -30,8 +30,6 @@
 #include "miopen/find_solution.hpp"
 #include "miopen/image_transform/adjust_brightness/invoke_params.hpp"
 #include "miopen/image_transform/adjust_brightness/problem_description.hpp"
-#include "miopen/image_transform/adjust_contrast/invoke_params.hpp"
-#include "miopen/image_transform/adjust_contrast/problem_description.hpp"
 #include "miopen/image_transform/adjust_hue/invoke_params.hpp"
 #include "miopen/image_transform/adjust_hue/problem_description.hpp"
 #include "miopen/image_transform/adjust_saturation/invoke_params.hpp"
@@ -140,56 +138,6 @@ miopenStatus_t ImageNormalize(Handle& handle,
     solver.ExecutePrimitive(handle, problem, algo, invoke_params);
 
     return miopenStatusSuccess;
-}
-
-miopenStatus_t ImageAdjustContrast(Handle& handle,
-                                   const TensorDescriptor& inputTensorDesc,
-                                   const TensorDescriptor& outputTensorDesc,
-                                   ConstData_t input_buf,
-                                   Data_t workspace_buf,
-                                   Data_t output_buf,
-                                   float contrast_factor)
-{
-    auto ctx = ExecutionContext{&handle};
-    const auto problem =
-        image_transform::adjust_contrast::ProblemDescription{inputTensorDesc, outputTensorDesc};
-
-    const auto invoke_params = [&]() {
-        auto tmp             = image_transform::adjust_contrast::InvokeParams{};
-        tmp.inputTensorDesc  = &inputTensorDesc;
-        tmp.outputTensorDesc = &outputTensorDesc;
-        tmp.input_buf        = input_buf;
-        tmp.workspace_buf    = workspace_buf;
-        tmp.output_buf       = output_buf;
-        tmp.contrast_factor  = contrast_factor;
-        return tmp;
-    }();
-
-    const auto algo = AlgorithmName{"ImageAdjustContrast"};
-    const auto solver =
-        solver::SolverContainer<solver::image_transform::adjust_contrast::ImageAdjustContrast>{};
-
-    solver.ExecutePrimitive(handle, problem, algo, invoke_params);
-
-    return miopenStatusSuccess;
-}
-
-size_t ImageAdjustContrastGetWorkspaceSize(Handle& handle,
-                                           const TensorDescriptor& inputTensorDesc,
-                                           const TensorDescriptor& outputTensorDesc)
-{
-    auto ctx = ExecutionContext{&handle};
-    const auto problem =
-        image_transform::adjust_contrast::ProblemDescription{inputTensorDesc, outputTensorDesc};
-
-    const auto algo = AlgorithmName{"ImageAdjustContrast"};
-
-    const auto solvers =
-        solver::SolverContainer<solver::image_transform::adjust_contrast::ImageAdjustContrast>{};
-
-    auto workspace_sizes = solvers.GetWorkspaceSizes(ctx, problem);
-
-    return workspace_sizes.empty() ? static_cast<size_t>(0) : workspace_sizes.front().second;
 }
 
 miopenStatus_t ImageAdjustSaturation(Handle& handle,

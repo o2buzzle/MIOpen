@@ -513,7 +513,7 @@ typedef enum
     miopenActivationABS      = 5, /*!< Absolute value \f$abs(x)\f$ */
     miopenActivationPOWER = 6, /*!< Scaled and shifted power \f$(\alpha + \beta * x)^{gamma}\f$ */
     miopenActivationCLIPPEDRELU =
-        7,                     /*!< Clipped Rectified Linear Unit \f$ min(\alpha, max(0,x)) \f$ */
+        7, /*!< Clipped Rectified Linear Unit \f$ min(\alpha, max(0,x)) \f$ */
     miopenActivationLEAKYRELU =
         8, /*!< Leaky Rectified Linear Unit \f$ \alpha * x | x <= 0; x | x > 0 \f$ */
     miopenActivationELU =
@@ -6653,7 +6653,7 @@ MIOPEN_EXPORT miopenStatus_t miopenImageNormalize(miopenHandle_t handle,
                                                   void* output_buf);
 
 /**
- * @brief Adjusts the contrast of an image.
+ * @brief Adjusts the saturation of an image.
  *
  * @param[in]  handle                   MIOpen handle.
  * @param[in]  inputTensorDesc          Tensor descriptor of the input image.
@@ -6661,7 +6661,7 @@ MIOPEN_EXPORT miopenStatus_t miopenImageNormalize(miopenHandle_t handle,
  * @param[in]  input_buf                Pointer to the input image buffer.
  * @param[in]  workspace_buf            Pointer to the workspace buffer.
  * @param[out] output_buf               Pointer to the output image buffer.
- * @param[in]  contrast_factor          Factor to adjust the contrast by.
+ * @param[in]  saturation_factor          Factor to adjust the saturation by.
  *
  * @retval miopenStatusSuccess          The operation was successful
  *

@@ -28,7 +28,6 @@
 
 #include "miopen/conv_solution.hpp"
 #include "miopen/image_transform/adjust_brightness/problem_description.hpp"
-#include "miopen/image_transform/adjust_contrast/problem_description.hpp"
 #include "miopen/image_transform/adjust_hue/problem_description.hpp"
 #include "miopen/image_transform/adjust_saturation/problem_description.hpp"
 #include "miopen/image_transform/normalize/problem_description.hpp"
@@ -83,32 +82,6 @@ struct ImageAdjustBrightness final : ImageAdjustBrightnessSolver
     bool MayNeedWorkspace() const override { return false; }
 };
 } // namespace adjust_brightness
-
-namespace adjust_contrast {
-
-using ImageAdjustContrastSolver =
-    NonTunableSolverBase<ExecutionContext,
-                         miopen::image_transform::adjust_contrast::ProblemDescription>;
-
-struct ImageAdjustContrast final : ImageAdjustContrastSolver
-{
-    const std::string& SolverDbId() const override { return GetSolverDbId<ImageAdjustContrast>(); }
-
-    bool IsApplicable(
-        const ExecutionContext& context,
-        const miopen::image_transform::adjust_contrast::ProblemDescription& problem) const override;
-
-    ConvSolution GetSolution(
-        const ExecutionContext& context,
-        const miopen::image_transform::adjust_contrast::ProblemDescription& problem) const override;
-
-    bool MayNeedWorkspace() const override { return true; }
-
-    size_t GetWorkspaceSize(
-        [[maybe_unused]] const ExecutionContext& context,
-        const miopen::image_transform::adjust_contrast::ProblemDescription& problem) const override;
-};
-} // namespace adjust_contrast
 
 namespace adjust_saturation {
 

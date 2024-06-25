@@ -58,18 +58,6 @@ miopenStatus_t ImageNormalize(Handle& handle,
                               ConstData_t std_buf,
                               Data_t output_buf);
 
-miopenStatus_t ImageAdjustContrast(Handle& handle,
-                                   const TensorDescriptor& inputTensorDesc,
-                                   const TensorDescriptor& outputTensorDesc,
-                                   ConstData_t input_buf,
-                                   Data_t workspace_buf,
-                                   Data_t output_buf,
-                                   float contrast_factor);
-
-size_t ImageAdjustContrastGetWorkspaceSize(Handle& handle,
-                                           const TensorDescriptor& inputTensorDesc,
-                                           const TensorDescriptor& outputTensorDesc);
-
 miopenStatus_t ImageAdjustSaturation(Handle& handle,
                                      const TensorDescriptor& inputTensorDesc,
                                      const TensorDescriptor& outputTensorDesc,

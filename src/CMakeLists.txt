@@ -264,7 +264,6 @@ set( MIOpen_Source
     solver/gemm_wrw.cpp
     solver/groupnorm/forward_groupnorm.cpp
     solver/image_transform/adjust_brightness.cpp
-    solver/image_transform/adjust_contrast.cpp
     solver/image_transform/adjust_hue.cpp
     solver/image_transform/adjust_saturation.cpp
     solver/image_transform/normalize.cpp
