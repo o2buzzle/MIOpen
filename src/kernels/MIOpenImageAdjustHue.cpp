@@ -187,39 +187,6 @@ __device__ void DeviceImageAdjustHueContiguous(const DTYPE* __restrict__ input,
     output[pixel_idx + c_stride * 2 + output_off] = CVT_ACCUM2FLOAT(fb);
 }
 
-template <typename DTYPE>
-__device__ void DeviceImageAdjustHueNHWCContiguous(const DTYPE* __restrict__ input,
-                                                   DTYPE* __restrict__ output,
-                                                   const float hue_factor,
-                                                   const size_t N,
-                                                   const size_t /* c_stride */,
-                                                   const size_t input_off,
-                                                   const size_t output_off)
-{
-    size_t gid = blockIdx.x * blockDim.x + threadIdx.x;
-    if(gid >= N)
-        return;
-
-    DTYPE r = input[gid * 3 + input_off];
-    DTYPE g = input[gid * 3 + 1 + input_off];
-    DTYPE b = input[gid * 3 + 2 + input_off];
-
-    FLOAT_ACCUM fr = CVT_FLOAT2ACCUM(r);
-    FLOAT_ACCUM fg = CVT_FLOAT2ACCUM(g);
-    FLOAT_ACCUM fb = CVT_FLOAT2ACCUM(b);
-
-    FLOAT_ACCUM hue, sat, val;
-    convertRGBToHSV(fr, fg, fb, &hue, &sat, &val);
-
-    hue = fmod(hue + hue_factor, 1.0f);
-
-    convertHSVToRGB(hue, sat, val, &fr, &fg, &fb);
-
-    output[gid * 3 + output_off]     = CVT_ACCUM2FLOAT(fr);
-    output[gid * 3 + 1 + output_off] = CVT_ACCUM2FLOAT(fg);
-    output[gid * 3 + 2 + output_off] = CVT_ACCUM2FLOAT(fb);
-}
-
 // Trampolines
 extern "C" __global__ void ImageAdjustHue(const FLOAT* __restrict__ input,
                                           FLOAT* __restrict__ output,
