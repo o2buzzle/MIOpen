@@ -48,7 +48,7 @@ struct InvokeParams : public miopen::InvokeParams
     size_t workspace_size = 0;
 
     size_t GetWorkspaceSize() const { return workspace_size; }
-    Data_t GetWorkspace() const { return nullptr; }
+    Data_t GetWorkspace() const { return workspace_buf; }
 };
 } // namespace adjust_saturation
 } // namespace image_transform
