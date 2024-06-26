@@ -67,10 +67,7 @@ ConvSolution ImageNormalize::GetSolution(
 
     auto kernel        = KernelInfo{};
     kernel.kernel_file = "MIOpenImageNormalize.cpp";
-    if(problem.GetInputTensorDesc().IsContiguous() && problem.GetOutputTensorDesc().IsContiguous())
-        kernel.kernel_name = "ImageNormalizeContiguous";
-    else
-        kernel.kernel_name = "ImageNormalize";
+    kernel.kernel_name = "ImageNormalizeContiguous";
 
     const auto build_params =
         KernelBuildParameters{{"MIOPEN_USE_FP16", static_cast<int32_t>(dtype == miopenHalf)},
@@ -105,34 +102,17 @@ ConvSolution ImageNormalize::GetSolution(
             size_t C        = input_tv.size[1];
             size_t c_stride = input_tv.stride[1];
 
-            if(kernel.name == "ImageNormalizeContiguous")
-            {
-                kernel(params.input_buf,
-                       params.mean_buf,
-                       params.stddev_buf,
-                       params.output_buf,
-                       input_tv.offset,
-                       mean_tv.offset,
-                       std_tv.offset,
-                       output_tv.offset,
-                       c_stride,
-                       C,
-                       N);
-            }
-            else
-            {
-                kernel(params.input_buf,
-                       params.mean_buf,
-                       params.stddev_buf,
-                       params.output_buf,
-                       input_tv,
-                       mean_tv.offset,
-                       std_tv.offset,
-                       output_tv,
-                       c_stride,
-                       C,
-                       N);
-            }
+            kernel(params.input_buf,
+                   params.mean_buf,
+                   params.stddev_buf,
+                   params.output_buf,
+                   input_tv.offset,
+                   mean_tv.offset,
+                   std_tv.offset,
+                   output_tv.offset,
+                   c_stride,
+                   C,
+                   N);
         };
     };
 

@@ -108,10 +108,8 @@ ConvSolution ImageAdjustSaturation::GetSolution(
 
     auto blend_kernel        = KernelInfo{};
     blend_kernel.kernel_file = "MIOpenImageBlend.cpp";
-    if(problem.GetInputTensorDesc().IsContiguous() && problem.GetOutputTensorDesc().IsContiguous())
-        blend_kernel.kernel_name = "BlendContiguous";
-    else
-        blend_kernel.kernel_name = "Blend";
+    blend_kernel.kernel_name = "BlendContiguous";
+
     xgridsize = AlignUp(numel, xlocalsize);
 
     blend_kernel.comp_options = build_params.GenerateFor(kbp::HIP{});
@@ -151,19 +149,8 @@ ConvSolution ImageAdjustSaturation::GetSolution(
             float bound = isDtypeFP(dtype) ? 1.0f : 255.0f;
 
             auto kernel = handle.Run(kernels[0]); // RGB to Grayscale
-            if(kernel.name == "RGBToGrayscale")
-            {
-                kernel(params.input_buf, params.workspace_buf, x_tv, ws_tv, numel / 3);
-            }
-            else
-            {
-                kernel(params.input_buf,
-                       params.workspace_buf,
-                       x_tv.offset,
-                       ws_tv.offset,
-                       c_stride,
-                       numel / 3);
-            }
+
+            kernel(params.input_buf, params.workspace_buf, x_tv, ws_tv, numel / 3);
 
             if(handle.IsProfilingEnabled())
             {
@@ -172,34 +159,17 @@ ConvSolution ImageAdjustSaturation::GetSolution(
 
             kernel = handle.Run(kernels[1]); // Blend
 
-            if(kernel.name == "Blend")
-            {
-                kernel(params.input_buf,
-                       params.workspace_buf,
-                       params.output_buf,
-                       x_tv,
-                       ws_tv,
-                       y_tv,
-                       n_stride,
-                       c_stride,
-                       numel,
-                       params.saturation_factor,
-                       bound);
-            }
-            else
-            {
-                kernel(params.input_buf,
-                       params.workspace_buf,
-                       params.output_buf,
-                       x_tv.offset,
-                       ws_tv.offset,
-                       y_tv.offset,
-                       n_stride,
-                       c_stride,
-                       numel,
-                       params.saturation_factor,
-                       bound);
-            }
+            kernel(params.input_buf,
+                   params.workspace_buf,
+                   params.output_buf,
+                   x_tv.offset,
+                   ws_tv.offset,
+                   y_tv.offset,
+                   n_stride,
+                   c_stride,
+                   numel,
+                   params.saturation_factor,
+                   bound);
 
             if(handle.IsProfilingEnabled())
             {

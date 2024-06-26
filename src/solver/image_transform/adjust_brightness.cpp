@@ -67,10 +67,7 @@ ConvSolution ImageAdjustBrightness::GetSolution(
 
     auto kernel        = KernelInfo{};
     kernel.kernel_file = "MIOpenImageAdjustBrightness.cpp";
-    if(problem.GetInputTensorDesc().IsContiguous() && problem.GetOutputTensorDesc().IsContiguous())
-        kernel.kernel_name = "ImageAdjustBrightnessContiguous";
-    else
-        kernel.kernel_name = "ImageAdjustBrightness";
+    kernel.kernel_name = "ImageAdjustBrightnessContiguous";
 
     const auto build_params =
         KernelBuildParameters{{"MIOPEN_USE_FP16", static_cast<int32_t>(dtype == miopenHalf)},
@@ -104,20 +101,12 @@ ConvSolution ImageAdjustBrightness::GetSolution(
 
             size_t N = xdesc.GetElementSize();
 
-            if(kernel.name == "ImageAdjustBrightness")
-            {
-                kernel(
-                    params.input_buf, params.output_buf, x_tv, y_tv, N, params.brightness_factor);
-            }
-            else
-            {
-                kernel(params.input_buf,
-                       params.output_buf,
-                       x_tv.offset,
-                       y_tv.offset,
-                       N,
-                       params.brightness_factor);
-            }
+            kernel(params.input_buf,
+                   params.output_buf,
+                   x_tv.offset,
+                   y_tv.offset,
+                   N,
+                   params.brightness_factor);
         };
     };
 

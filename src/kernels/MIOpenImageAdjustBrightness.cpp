@@ -41,25 +41,6 @@ __device__ DTYPE clamp(DTYPE val, DTYPE min, DTYPE max)
 }
 
 template <typename DTYPE>
-__device__ void DeviceImageAdjustBrightness(DTYPE* input,
-                                            DTYPE* output,
-                                            tensor_view_4d_t input_tv,
-                                            tensor_view_4d_t output_tv,
-                                            size_t N,
-                                            float brightness_factor)
-{
-    size_t gid = blockIdx.x * blockDim.x + threadIdx.x;
-    if(gid >= N)
-        return;
-
-    DTYPE pixel    = get4DValueAt(input, input_tv, gid);
-    FLOAT_ACCUM fp = CVT_FLOAT2ACCUM(pixel);
-
-    FLOAT_ACCUM result = clamp(fp * brightness_factor, 0.0f, 1.0f);
-    set4DValueAt(output, output_tv, gid, CVT_ACCUM2FLOAT(result));
-}
-
-template <typename DTYPE>
 __device__ void DeviceImageAdjustBrightnessContiguous(DTYPE* input,
                                                       DTYPE* output,
                                                       size_t input_off,
@@ -76,16 +57,6 @@ __device__ void DeviceImageAdjustBrightnessContiguous(DTYPE* input,
 
     FLOAT_ACCUM result       = clamp(fp * brightness_factor, 0.0f, 1.0f);
     output[output_off + gid] = CVT_ACCUM2FLOAT(result);
-}
-
-extern "C" __global__ void ImageAdjustBrightness(FLOAT* input,
-                                                 FLOAT* output,
-                                                 tensor_view_4d_t input_tv,
-                                                 tensor_view_4d_t output_tv,
-                                                 size_t N,
-                                                 float brightness_factor)
-{
-    DeviceImageAdjustBrightness<FLOAT>(input, output, input_tv, output_tv, N, brightness_factor);
 }
 
 extern "C" __global__ void ImageAdjustBrightnessContiguous(FLOAT* input,
