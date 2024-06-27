@@ -33,35 +33,35 @@
 static Driver* makeDriver(const std::string& base_arg)
 {
     // AdjustHue
-    if(base_arg == "image_adjust_hue")
+    if(base_arg == "imageadjusthue")
         return new ImageAdjustHueDriver<float, float>();
-    if(base_arg == "image_adjust_hue_fp16")
+    if(base_arg == "imageadjusthuefp16")
         return new ImageAdjustHueDriver<float16, float>();
-    if(base_arg == "image_adjust_hue_bfp16")
+    if(base_arg == "imageadjusthuebfp16")
         return new ImageAdjustHueDriver<bfloat16, float>();
 
     // AdjustBrightness
-    if(base_arg == "image_adjust_brightness")
+    if(base_arg == "imageadjustbrightness")
         return new ImageAdjustBrightnessDriver<float, float>();
-    if(base_arg == "image_adjust_brightness_fp16")
+    if(base_arg == "imageadjustbrightnessfp16")
         return new ImageAdjustBrightnessDriver<float16, float>();
-    if(base_arg == "image_adjust_brightness_bfp16")
+    if(base_arg == "imageadjustbrightness_bfp16")
         return new ImageAdjustBrightnessDriver<bfloat16, float>();
 
     // Normalize
-    if(base_arg == "image_normalize")
+    if(base_arg == "imagenormalize")
         return new ImageNormalizeDriver<float, float>();
-    if(base_arg == "image_normalize_fp16")
+    if(base_arg == "imagenormalizefp16")
         return new ImageNormalizeDriver<float16, float>();
-    if(base_arg == "image_normalize_bfp16")
+    if(base_arg == "imagenormalizebfp16")
         return new ImageNormalizeDriver<bfloat16, float>();
 
     // AdjustSaturation
-    if(base_arg == "image_adjust_saturation")
+    if(base_arg == "imageadjustsaturation")
         return new ImageAdjustSaturationDriver<float, float>();
-    if(base_arg == "image_adjust_saturation_fp16")
+    if(base_arg == "imageadjustsaturationfp16")
         return new ImageAdjustSaturationDriver<float16, float>();
-    if(base_arg == "image_adjust_saturation_bfp16")
+    if(base_arg == "imageadjustsaturationbfp16")
         return new ImageAdjustSaturationDriver<bfloat16, float>();
 
     return nullptr;
