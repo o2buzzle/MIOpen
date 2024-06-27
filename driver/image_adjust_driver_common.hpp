@@ -41,12 +41,4 @@ inline std::vector<T> ComputeStrides(std::vector<T> input, bool contiguous)
     return strides;
 }
 
-template <typename T>
-T clamp(T val, T min, T max)
-{
-    val = val < min ? min : val;
-    val = val > max ? max : val;
-    return val;
-}
-
 #endif

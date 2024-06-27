@@ -90,7 +90,7 @@ void Blend(const Tgpu* img1,
         Tref img1_v = get4DValueAt(img1, img1_tv, gid);
         Tref img2_v = img2[img2_tv.offset + img2_idx];
 
-        Tref result = clamp((ratio * img1_v + (1.0f - ratio) * img2_v), 0.0f, bound);
+        Tref result = std::clamp((ratio * img1_v + (1.0f - ratio) * img2_v), 0.0f, bound);
 
         set4DValueAt(output, output_tv, gid, result);
     }

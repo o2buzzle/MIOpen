@@ -76,9 +76,9 @@ void mloConvertHSVToRGB(const T h, const T s, const T v, T* r, T* g, T* b)
     T f        = h * 6.0 - i;
     int i_case = ((int)i + 6) % 6;
 
-    T p = clamp(v * (1.0 - s), 0.0, 1.0);
-    T q = clamp(v * (1.0 - s * f), 0.0, 1.0);
-    T t = clamp(v * (1.0 - s * (1.0 - f)), 0.0, 1.0);
+    T p = std::clamp(v * (1.0 - s), 0.0, 1.0);
+    T q = std::clamp(v * (1.0 - s * f), 0.0, 1.0);
+    T t = std::clamp(v * (1.0 - s * (1.0 - f)), 0.0, 1.0);
 
     switch(i_case)
     {

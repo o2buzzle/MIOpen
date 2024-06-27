@@ -57,7 +57,7 @@ void mloImageAdjustBrightnessRunHost(const Tgpu* input,
     for(size_t gid = 0; gid < N; gid++)
     {
         Tref pixel  = get4DValueAt(input, input_tv, gid);
-        Tref result = clamp(pixel * brightness_factor, Tref(0.0f), Tref(1.0f));
+        Tref result = std::clamp(pixel * brightness_factor, Tref(0.0f), Tref(1.0f));
         set4DValueAt(output, output_tv, gid, result);
     }
 }
