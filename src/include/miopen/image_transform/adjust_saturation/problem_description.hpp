@@ -72,6 +72,10 @@ struct ProblemDescription : ProblemDescriptionBase
         if(inputTensorDesc.GetLengths().size() == 4)
             return true;
 
+        // This operation can only support color image (ala C = 3)
+        if(inputTensorDesc.GetLengths()[1] == 3)
+            return true;
+
         return false;
     }
 
