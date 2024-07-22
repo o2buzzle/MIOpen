@@ -179,6 +179,8 @@ set( MIOpen_Source
     rnn/Solutions/modular_base.cpp
     rnn/Solutions/bwd_s_stream.cpp
     rnn/Solutions/bwd_multi_stream.cpp
+    roialign.cpp
+    roialign_api.cpp
     scalar.cpp
     softmax.cpp
     softmax_api.cpp
@@ -305,6 +307,7 @@ set( MIOpen_Source
     solver/reduce/forward_min.cpp
     solver/reduce/forward_prod.cpp
     solver/reduce/forward_sum.cpp
+    solver/roialign/roialign.cpp
     solver/softmax/attn_softmax.cpp
     solver/softmax/softmax.cpp
     subbuffers.cpp
@@ -533,6 +536,7 @@ if( MIOPEN_BACKEND MATCHES "OpenCL" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN
         kernels/MIOpenConvFwd_LxL_11.cl
         kernels/MIOpenConvFFT.cl
         kernels/MIOpenRNNHiddenStateUpdate.cl
+        kernels/MIOpenRoIAlign.cpp
         kernels/bugzilla_34765_detect.s
         kernels/dummy_kernel.s
         kernels/conv3x3.s

@@ -70,6 +70,7 @@
  * @defgroup SGD
  * @defgroup getitem
  * @defgroup ReduceCalculation
+ * @defgroup RoIAlign
  *
  */
 
@@ -7619,6 +7620,44 @@ MIOPEN_EXPORT miopenStatus_t miopenGetitemBackward(miopenHandle_t handle,
 
 /** @} */
 // CLOSEOUT GETITEM DOXYGEN GROUP
+
+/** @addtogroup RoIAlign
+ *
+ *  @{
+ */
+
+/**
+ * @brief Performs Region-of-Interest (RoI) Align
+ *
+ * @param [in]  handle          MIOpen handle
+ * @param [in]  inputDesc       Input tensor descriptor
+ * @param [in]  input           Input tensor
+ * @param [in]  roisDesc        RoI tensor descriptor
+ * @param [in]  rois            RoI tensor
+ * @param [in]  outputDesc      Output tensor descriptor
+ * @param [out] output          Output tensor
+ * @param [in]  alignedHeight   Height of the aligned output
+ * @param [in]  alignedWidth    Width of the aligned output
+ * @param [in]  spatialScale    RoI spatial scale
+
+ */
+MIOPEN_EXPORT miopenStatus_t miopenRoIAlignForward(miopenHandle_t handle,
+                                                   const miopenTensorDescriptor_t inputDesc,
+                                                   const void* input,
+                                                   const miopenTensorDescriptor_t roisDesc,
+                                                   const void* rois,
+                                                   const miopenTensorDescriptor_t outputDesc,
+                                                   void* output,
+                                                   int32_t alignedHeight,
+                                                   int32_t alignedWidth,
+                                                   float spatialScale,
+                                                   int32_t samplingRatio,
+                                                   bool aligned,
+                                                   int roi_batch_index);
+
+/** @}*/
+// CLOSEOUT RoIAlign DOXYGEN GROUP
+
 #endif // MIOPEN_BETA_API
 
 #ifdef __cplusplus
