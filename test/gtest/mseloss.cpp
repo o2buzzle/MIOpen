@@ -34,7 +34,7 @@ MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_TEST_ALL)
 namespace mseloss {
 std::string GetFloatArg()
 {
-    const auto& tmp = miopen::GetStringEnv(ENV(MIOPEN_TEST_FLOAT_ARG));
+    const auto& tmp = env::value(MIOPEN_TEST_FLOAT_ARG);
     if(tmp.empty())
     {
         return "";
@@ -58,7 +58,7 @@ struct MSELossTestBfloat16 : MSELossTest<bfloat16>
 using namespace mseloss;
 TEST_P(MSELossTestFloat, MSELossTestFw)
 {
-    if(miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--float"))
+    if(env::enabled(MIOPEN_TEST_ALL) || (GetFloatArg() == "--float"))
     {
         RunTest();
         Verify();
@@ -69,7 +69,7 @@ TEST_P(MSELossTestFloat, MSELossTestFw)
 
 TEST_P(MSELossTestHalf, MSELossTestFw)
 {
-    if(miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--half"))
+    if(env::enabled(MIOPEN_TEST_ALL) || (GetFloatArg() == "--half"))
     {
         RunTest();
         Verify();
@@ -80,7 +80,7 @@ TEST_P(MSELossTestHalf, MSELossTestFw)
 
 TEST_P(MSELossTestBfloat16, MSELossTestFw)
 {
-    if(miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--bfloat16"))
+    if(env::enabled(MIOPEN_TEST_ALL) || (GetFloatArg() == "--bfloat16"))
     {
         RunTest();
         Verify();
