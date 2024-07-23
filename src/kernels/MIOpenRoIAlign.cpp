@@ -486,3 +486,30 @@ __global__ void RoIAlignBackwardAtomic(DTYPE* output_grad,
         }
     }
 }
+
+extern "C" __global__ void RoIAlignForward(FLOAT* input,
+                                           FLOAT* rois,
+                                           FLOAT* output,
+                                           int output_h,
+                                           int output_w,
+                                           FLOAT spatial_scale,
+                                           int sampling_ratio,
+                                           char aligned,
+                                           int roi_batch_base_idx,
+                                           tensor_view_t<4> input_tv,
+                                           tensor_view_t<2> rois_tv,
+                                           tensor_view_t<4> output_tv)
+{
+    RoIAlignForward<FLOAT>(input,
+                           rois,
+                           output,
+                           output_h,
+                           output_w,
+                           spatial_scale,
+                           sampling_ratio,
+                           aligned,
+                           roi_batch_base_idx,
+                           input_tv,
+                           rois_tv,
+                           output_tv);
+}

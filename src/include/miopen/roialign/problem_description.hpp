@@ -61,6 +61,9 @@ struct ProblemDescription : ProblemDescriptionBase
     const TensorDescriptor& GetRoisDesc() const { return roisDesc; }
     const TensorDescriptor& GetOutputDesc() const { return outputDesc; }
 
+    int32_t GetAlignedHeight() const { return alignedHeight; }
+    int32_t GetAlignedWidth() const { return alignedWidth; }
+
     NetworkConfig MakeNetworkConfig() const override;
 
 private:
