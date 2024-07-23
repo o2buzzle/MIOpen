@@ -103,15 +103,16 @@ set(MIOPEN_ENABLE_SQLITE_BACKOFF On CACHE BOOL "")
 
 option( BUILD_DEV "Build for development only" OFF)
 option(MIOPEN_ENABLE_FIN "Enable the fin driver for MIOpen"  OFF)
+option(MIOPEN_STRIP_SYMBOLS "Strip symbols in release mode" ON)
 
 
 # Strip symbols for release
-if(NOT WIN32 AND NOT APPLE)
+if(MIOPEN_STRIP_SYMBOLS AND NOT WIN32 AND NOT APPLE)
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 endif()
 
-rocm_setup_version(VERSION 3.1.0)
+rocm_setup_version(VERSION 3.2.0)
 
 list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake )
 include(TargetFlags)
@@ -282,7 +283,7 @@ if(HAS_HIP)
 else()
     # CXX compiler is not HIP compiler, let's analyze HIP version.
     set(MIOPEN_HIP_COMPILER_HAS_OPTION_OFFLOAD_UNIFORM_BLOCK Off)
-    if(${MIOPEN_hip_VERSION_FLAT} GREATER_EQUAL 500723302)
+    if(MIOPEN_hip_VERSION_FLAT GREATER_EQUAL 500723302)
         set(MIOPEN_HIP_COMPILER_HAS_OPTION_OFFLOAD_UNIFORM_BLOCK On)
     endif()
     message(STATUS "MIOPEN_HIP_COMPILER_HAS_OPTION_OFFLOAD_UNIFORM_BLOCK: ${MIOPEN_HIP_COMPILER_HAS_OPTION_OFFLOAD_UNIFORM_BLOCK}")
@@ -302,18 +303,19 @@ add_compile_definitions($<$<COMPILE_LANGUAGE:CXX>:HIP_COMPILER_FLAGS=${HIP_COMPI
 # HIP
 if( MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_BACKEND STREQUAL "HIPNOGPU")
     if(MIOPEN_USE_COMPOSABLEKERNEL)
-        find_package(composable_kernel 1.0.0 COMPONENTS device_other_operations device_gemm_operations device_conv_operations device_contraction_operations device_reduction_operations)
+        find_package(composable_kernel 1.0.0 COMPONENTS device_other_operations device_gemm_operations device_conv_operations device_reduction_operations)
     endif()
     if( MIOPEN_BACKEND STREQUAL "HIPNOGPU")
         set(MIOPEN_MODE_NOGPU 1)
     endif()
     set(MIOPEN_BACKEND_HIP 1)
 
-    find_program(HIP_OC_COMPILER amdclang
+    find_program(HIP_OC_COMPILER NAMES amdclang clang
         PATH_SUFFIXES bin
         PATHS
             /opt/rocm
             ${CMAKE_INSTALL_PREFIX}
+        ENV HIP_PATH
     )
     if(HIP_OC_COMPILER)
         message(STATUS "OpenCL compiler: ${HIP_OC_COMPILER}")
@@ -367,27 +369,37 @@ if(MIOPEN_USE_MLIR)
     if(NOT ${BUILD_SHARED_LIBS} AND ${MIOPEN_USE_COMGR})
         message(FATAL_ERROR "Potential symbol conflict between mlir and comgr in static build")
     endif()
-    # Try to find package rocMLIR
-    # REQUIRED is omitted since we do not want cmake to abort if the package is not found
-    find_package(rocMLIR 1.0.0 CONFIG)
-    if(NOT rocMLIR_FOUND)
-        message(STATUS "Falling back to find library libMLIRMIOpen")
-        # Backward compatibility with ROCm 5.3
-        # If the rocMLIR package is not found, try to find the library libMLIRMIOpen directly
-        find_library(LIBMLIRMIOPEN MLIRMIOpen REQUIRED)
-        if(NOT LIBMLIRMIOPEN)
-            message(FATAL_ERROR "library libMLIRMIOpen not found, please reinstall dependencies. \
-            Refer to https://github.com/ROCm/MIOpen#installing-the-dependencies")
-        else()
-            message(STATUS "Build with library libMLIRMIOpen: " ${LIBMLIRMIOPEN})
-            set(rocMLIR_VERSION 0.0.1)
-        endif()
+    if(WIN32)
+        # Windows does not support earlier ROCm versions hence no fallback to MLIRMIOpen.
+        find_package(rocMLIR 1.0.0 CONFIG REQUIRED)
     else()
-        message(STATUS "Build with rocMLIR::rockCompiler ${rocMLIR_VERSION}")
+        # Try to find package rocMLIR
+        # REQUIRED is omitted since we do not want cmake to abort if the package is not found
+        find_package(rocMLIR 1.0.0 CONFIG)
+        if(NOT rocMLIR_FOUND)
+            message(STATUS "Falling back to find library libMLIRMIOpen")
+            # Backward compatibility with ROCm 5.3
+            # If the rocMLIR package is not found, try to find the library libMLIRMIOpen directly
+            find_library(LIBMLIRMIOPEN MLIRMIOpen REQUIRED)
+            if(NOT LIBMLIRMIOPEN)
+                message(FATAL_ERROR "library libMLIRMIOpen not found, please reinstall dependencies. \
+                Refer to https://github.com/ROCm/MIOpen#installing-the-dependencies")
+            else()
+                message(STATUS "Build with library libMLIRMIOpen: " ${LIBMLIRMIOPEN})
+                set(rocMLIR_VERSION 0.0.1)
+            endif()
+        endif()
     endif()
+    message(STATUS "Build with rocMLIR::rockCompiler ${rocMLIR_VERSION}")
 endif()
 
-set(MIOPEN_PACKAGE_REQS "hip-rocclr")
+# Update HIP Runtime Package Dependency
+if(ENABLE_ASAN_PACKAGING)
+  set(DEPENDS_HIP_RUNTIME "hip-runtime-amd-asan" )
+else()
+  set(DEPENDS_HIP_RUNTIME "hip-runtime-amd" )
+endif()
+set(MIOPEN_PACKAGE_REQS "${DEPENDS_HIP_RUNTIME}")
 
 # Online assembler
 find_program(MIOPEN_AMDGCN_ASSEMBLER
@@ -596,8 +608,8 @@ function(install_kdb FILE_NAME COMPONENT_NAME)
 endfunction()
 
 # Both the lists below should be in sync always
-set(KDB_BZ2_FILES gfx942.kdb.bz2 gfx90a.kdb.bz2 gfx1030.kdb.bz2 gfx908.kdb.bz2 gfx906.kdb.bz2 gfx900.kdb.bz2)
-set(COMPONENT_LST gfx942kdb gfx90akdb gfx1030kdb gfx908kdb gfx906kdb gfx900kdb)
+set(KDB_BZ2_FILES gfx90a.kdb.bz2 gfx1030.kdb.bz2 gfx908.kdb.bz2 gfx906.kdb.bz2 gfx900.kdb.bz2)
+set(COMPONENT_LST gfx90akdb gfx1030kdb gfx908kdb gfx906kdb gfx900kdb)
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.17)
     foreach(__file __component IN ZIP_LISTS KDB_BZ2_FILES COMPONENT_LST)
@@ -630,7 +642,7 @@ endif()
 
 rocm_create_package(
     NAME MIOpen-${MIOPEN_BACKEND}
-    DESCRIPTION "AMD's DNN Library"
+    DESCRIPTION "AMD DNN Library"
     MAINTAINER "MIOpen Maintainer <miopen-lib.support@amd.com>"
     LDCONFIG
     # DEPENDS rocm-opencl hip-rocclr tinygemm

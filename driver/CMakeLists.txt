@@ -30,7 +30,8 @@ add_executable(MIOpenDriver
     InputFlags.cpp
     conv_common.cpp
     dm_activ.cpp
-    dm_argmax.cpp
+    dm_adam.cpp
+    dm_addlayernorm.cpp
     dm_bnorm.cpp
     dm_cat.cpp
     dm_conv.cpp
@@ -48,9 +49,11 @@ add_executable(MIOpenDriver
     dm_mseloss.cpp
     dm_pool.cpp
     dm_reduce.cpp
+    dm_reduceextreme.cpp
     dm_rnn.cpp
     dm_softmax.cpp
     dm_sum.cpp
+    dm_t5layernorm.cpp
     dm_tensorop.cpp
     main.cpp
     registry_driver_maker.cpp

@@ -78,18 +78,18 @@ public:
     operator miopen::TensorDescriptor() const
     {
         return {mDataType,
-                std::vector<std::size_t>(mDimensions.cbegin(), mDimensions.cbegin()),
-                std::vector<std::size_t>(mStrides.cbegin(), mStrides.cbegin())};
+                std::vector<std::size_t>(mDimensions.cbegin(), mDimensions.cend()),
+                std::vector<std::size_t>(mStrides.cbegin(), mStrides.cend())};
     }
 
     miopenDataType_t getDataType() const noexcept { return mDataType; }
     const std::vector<int64_t>& getDimensions() const noexcept { return mDimensions; }
     const std::vector<int64_t>& getStrides() const noexcept { return mStrides; }
     int64_t getId() const noexcept { return mId; }
-    bool getVirtual() const noexcept { return mVirtual; }
+    bool isVirtual() const noexcept { return mVirtual; }
 };
 
-class TensorBuilder
+class MIOPEN_INTERNALS_EXPORT TensorBuilder
 {
 private:
     std::vector<int64_t> mDimensions;
@@ -138,7 +138,7 @@ public:
     Tensor build() &&;
 };
 
-class BackendTensorDescriptor : public BackendDescriptor
+class MIOPEN_INTERNALS_EXPORT BackendTensorDescriptor : public BackendDescriptor
 {
 private:
     TensorBuilder mBuilder;

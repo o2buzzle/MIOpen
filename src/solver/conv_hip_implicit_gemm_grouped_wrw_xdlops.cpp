@@ -34,9 +34,11 @@
 #if MIOPEN_BACKEND_HIP && MIOPEN_USE_COMPOSABLEKERNEL
 #include <miopen/solver/ck_utility_common.hpp>
 #include <ck/library/tensor_operation_instance/gpu/grouped_convolution_backward_weight.hpp>
+#include <miopen/conv/heuristics/ai_heuristics.hpp>
 #endif
 #include <miopen/solver/implicitgemm_ck_util.hpp>
 MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_DEBUG_GROUP_CONV_IMPLICIT_GEMM_HIP_WRW_XDLOPS)
+MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_DEBUG_GROUP_CONV_IMPLICIT_GEMM_HIP_WRW_XDLOPS_AI_HEUR)
 
 namespace miopen {
 namespace solver {
@@ -68,22 +70,23 @@ struct CKArgs
 {
     CKArgs(const ProblemDescription& problem)
     {
-        G  = ProblemInterpreter::GetGroupCountG(problem);
-        N  = ProblemInterpreter::GetBatchN(problem);
-        K1 = ProblemInterpreter::GetOutputChannelK(problem);
-        C1 = ProblemInterpreter::GetInputChannelC(problem);
-        C  = C1 / G; // Number of input Channel per group
-        K  = K1 / G; // Number of output Channel per group
-        Hi = ProblemInterpreter::GetInputHeightHi(problem);
-        Wi = ProblemInterpreter::GetInputWidthWi(problem);
-        Ho = ProblemInterpreter::GetOutputHeightHo(problem);
-        Wo = ProblemInterpreter::GetOutputWidthWo(problem);
-        Y  = ProblemInterpreter::GetFilterHeightY(problem);
-        X  = ProblemInterpreter::GetFilterWidthX(problem);
-
-        input  = {G, N, C, Hi, Wi};
-        output = {G, N, K, Ho, Wo};
-        weight = {G, K, C, Y, X};
+        G               = ProblemInterpreter::GetGroupCountG(problem);
+        N               = ProblemInterpreter::GetBatchN(problem);
+        K1              = ProblemInterpreter::GetOutputChannelK(problem);
+        C1              = ProblemInterpreter::GetInputChannelC(problem);
+        C               = C1 / G; // Number of input Channel per group
+        K               = K1 / G; // Number of output Channel per group
+        Hi              = ProblemInterpreter::GetInputHeightHi(problem);
+        Wi              = ProblemInterpreter::GetInputWidthWi(problem);
+        Ho              = ProblemInterpreter::GetOutputHeightHo(problem);
+        Wo              = ProblemInterpreter::GetOutputWidthWo(problem);
+        Y               = ProblemInterpreter::GetFilterHeightY(problem);
+        X               = ProblemInterpreter::GetFilterWidthX(problem);
+        data_type       = ProblemInterpreter::GetOutputDataType(problem);
+        alpha_beta_case = ProblemInterpreter::GetAlphaBetaCase(problem);
+        input           = {G, N, C, Hi, Wi};
+        output          = {G, N, K, Ho, Wo};
+        weight          = {G, K, C, Y, X};
 
         // CK strides are in GNCDHW order
         if(problem.IsLayoutNHWC())
@@ -131,8 +134,15 @@ struct CKArgs
     CKArgs& operator=(const CKArgs&) = default;
 
     template <typename ConvPtr>
-    auto MakeArgPtr(const ConvPtr& conv_ptr, ConstData_t x, Data_t dw, ConstData_t dy) const
+    auto MakeArgPtr(const ConvPtr& conv_ptr,
+                    ConstData_t x,
+                    Data_t dw,
+                    ConstData_t dy,
+                    float alpha,
+                    float beta) const
     {
+        (void)alpha;
+        (void)beta;
         return conv_ptr->MakeArgumentPointer(x,
                                              dw,
                                              dy,
@@ -153,15 +163,24 @@ struct CKArgs
     }
 
     template <typename ConvPtr>
-    auto MakeArgPtr(const ConvPtr& conv_ptr, const ConvWrwTensors& tensors) const
+    auto MakeArgPtr(const ConvPtr& conv_ptr,
+                    const ConvWrwTensors& tensors,
+                    float alpha,
+                    float beta) const
     {
-        return MakeArgPtr(conv_ptr, tensors.x, tensors.dw, tensors.dy);
+        return MakeArgPtr(conv_ptr, tensors.x, tensors.dw, tensors.dy, alpha, beta);
     }
 
     template <typename ConvPtr>
     bool IsSupportedBy(const ConvPtr& conv_ptr) const
     {
-        auto arg_ptr = MakeArgPtr(conv_ptr, nullptr, nullptr, nullptr);
+        auto arg_ptr = MakeArgPtr(conv_ptr, nullptr, nullptr, nullptr, 1.0f, 0.0f);
+        if(CKWrwRequireWorkspace(G, C, K, data_type, alpha_beta_case))
+        {
+            // Creat dummy workspace to pass the ck IsSupportedArgument check.
+            int dummy_var = 1;
+            conv_ptr->SetWorkSpacePointer(arg_ptr.get(), &dummy_var);
+        }
         return conv_ptr->IsSupportedArgument(arg_ptr.get());
     }
 
@@ -178,6 +197,8 @@ struct CKArgs
     int Y;
     int X;
     ck::index_t split_k = 1;
+    miopenDataType_t data_type;
+    miopenAlphaBetaCase_t alpha_beta_case;
     std::array<ck::index_t, 5> input;
     std::array<ck::index_t, 5> in_strides;
     std::array<ck::index_t, 5> output;
@@ -212,22 +233,146 @@ bool ConvHipImplicitGemmGroupWrwXdlops::CheckCKApplicability(
 {
     return IsCKApplicable<DeviceOpGWrwPtrs<DataType>, CKArgs>(problem);
 }
-#endif
+
+#if MIOPEN_ENABLE_AI_KERNEL_TUNING
+static std::vector<std::string> GetKernelAsTokens(const std::string& kernel)
+{
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(
+        kernel.substr(kernel.find('<') + 1, kernel.find('>') - kernel.find('<') - 1));
+    while(std::getline(tokenStream, token, ','))
+    {
+        token.erase(remove_if(token.begin(), token.end(), isspace),
+                    token.end()); // strip whitespace
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+void PerformanceConfigHipImplicitGemmGroupWrwXdlops::InitHeuristicKernelIDs()
+{
+    for(int i = 0; i < valid_kernels.size(); i++)
+    {
+        if(valid_kernels[i].find("DeviceGroupedConvBwdWeight_Xdl_CShuffle") != std::string::npos)
+        {
+            heuristic_indexes.push_back(i);
+            heuristic_kernels.push_back(GetKernelAsTokens(valid_kernels[i]));
+        }
+    }
+}
+
+bool PerformanceConfigHipImplicitGemmGroupWrwXdlops::ModelApplyToken(int idx, std::string value)
+{
+    if(idx == 13)
+        idx += 1; // skip
+
+    auto eraseBegin = std::remove_if(
+        heuristic_indexes.begin(), heuristic_indexes.end(), [&](int heuristic_index) {
+            return heuristic_kernels[heuristic_index][idx] != value;
+        });
+
+    if(eraseBegin != heuristic_indexes.begin())
+    {
+        heuristic_indexes.erase(eraseBegin, heuristic_indexes.end());
+        return true;
+    }
+    return false;
+}
+
+static std::vector<float> GetFeatures(const ProblemDescription& problem)
+{
+    std::size_t n = 18;
+    std::vector<float> features(n * n, 0.0f);
+    features[0]           = 1.0;
+    features[n + 1]       = problem.GetOutChannels();
+    features[2 * n + 2]   = problem.GetOutHeight();
+    features[3 * n + 3]   = problem.GetOutWidth();
+    features[4 * n + 4]   = problem.GetInChannels();
+    features[5 * n + 5]   = problem.GetInHeight();
+    features[6 * n + 6]   = problem.GetInWidth();
+    features[7 * n + 7]   = problem.GetWeightsHeight();
+    features[8 * n + 8]   = problem.GetWeightsWidth();
+    features[9 * n + 9]   = problem.GetPadH();
+    features[10 * n + 10] = problem.GetPadW();
+    features[11 * n + 11] = problem.GetKernelStrideH();
+    features[12 * n + 12] = problem.GetKernelStrideW();
+    features[13 * n + 13] = problem.GetDilationH();
+    features[14 * n + 14] = problem.GetDilationW();
+    features[15 * n + 15] = problem.GetBatchSize();
+    features[16 * n + 16] = problem.GetInDataType() == miopenFloat ? 2.0 : 1.0;
+    features[17 * n + 17] = problem.GetGroupCount();
+    return features;
+}
+
+template <typename DataType>
+bool PerformanceConfigHipImplicitGemmGroupWrwXdlops::RunParameterPredictionModel(
+    const ExecutionContext& ctx, const ProblemDescription& problem)
+{
+    valid_kernels = FillValidKernelsIDs<DeviceOpGWrwPtrs<DataType>, CKArgs>(
+        problem); // filter valid_kernel ID's
+    InitHeuristicKernelIDs();
+    static const std::string& arch  = ctx.GetStream().GetDeviceName();
+    static const std::string solver = "ConvHipIgemmGroupXdlops";
+    std::vector<float> features     = GetFeatures(problem);
+    if(ai::tuning::ModelSetParams(
+           arch, solver, problem.GetDirection(), features, true, [&](int idx, std::string value) {
+               return this->ModelApplyToken(idx, value);
+           }))
+    {
+        index     = heuristic_indexes[0];
+        kernel_id = valid_kernels[index];
+        MIOPEN_LOG_I("Params set by AI: " << ToString());
+        return true;
+    }
+    return false;
+}
+#endif // MIOPEN_ENABLE_AI_KERNEL_TUNING
+#endif // MIOPEN_BACKEND_HIP && MIOPEN_USE_COMPOSABLEKERNEL
+
+bool PerformanceConfigHipImplicitGemmGroupWrwXdlops::IsModelApplicable(
+    const ExecutionContext& ctx, const ProblemDescription& problem) const
+{
+    if(ctx.GetStream().GetDeviceName() != "gfx90a" && ctx.GetStream().GetDeviceName() != "gfx942")
+        return false;
+    if(problem.GetInDataType() != miopenFloat && problem.GetInDataType() != miopenHalf)
+        return false;
+    if(env::disabled(MIOPEN_DEBUG_GROUP_CONV_IMPLICIT_GEMM_HIP_WRW_XDLOPS_AI_HEUR))
+        return false;
+    return true;
+}
 
 void PerformanceConfigHipImplicitGemmGroupWrwXdlops::HeuristicInit(
+    [[maybe_unused]] const ExecutionContext& ctx,
     [[maybe_unused]] const ProblemDescription& problem)
 {
+    // these seem redundant
     index     = 0;
     kernel_id = "";
-
 #if MIOPEN_BACKEND_HIP && MIOPEN_USE_COMPOSABLEKERNEL
+#if MIOPEN_ENABLE_AI_KERNEL_TUNING
+    if(IsModelApplicable(ctx, problem))
+    {
+        if(problem.GetInDataType() == miopenFloat)
+        {
+            if(RunParameterPredictionModel<float>(ctx, problem))
+                return;
+        }
+        else
+        {
+            if(RunParameterPredictionModel<ck::half_t>(ctx, problem))
+                return;
+        }
+    }
+#endif
     switch(problem.GetInDataType())
     {
     case miopenHalf: Init<ck::half_t>(problem); break;
     case miopenFloat: Init<float>(problem); break;
     case miopenInt8: Init<int8_t>(problem); break;
+    case miopenBFloat16: Init<ck::bhalf_t>(problem); break;
+    case miopenInt64:
     case miopenInt32:
-    case miopenBFloat16:
     case miopenFloat8:
     case miopenBFloat8:
     case miopenDouble: break;
@@ -237,9 +382,21 @@ void PerformanceConfigHipImplicitGemmGroupWrwXdlops::HeuristicInit(
 
 bool PerformanceConfigHipImplicitGemmGroupWrwXdlops::SetNextValue(const ProblemDescription& problem)
 {
+#if MIOPEN_USE_COMPOSABLEKERNEL
     if(valid_kernels.empty())
     {
-        HeuristicInit(problem);
+        switch(problem.GetInDataType())
+        {
+        case miopenHalf: Init<ck::half_t>(problem); break;
+        case miopenFloat: Init<float>(problem); break;
+        case miopenInt8: Init<int8_t>(problem); break;
+        case miopenBFloat16: Init<ck::bhalf_t>(problem); break;
+        case miopenInt64:
+        case miopenInt32:
+        case miopenFloat8:
+        case miopenBFloat8:
+        case miopenDouble: break;
+        }
         assert(!valid_kernels.empty());
         return true;
     }
@@ -250,6 +407,7 @@ bool PerformanceConfigHipImplicitGemmGroupWrwXdlops::SetNextValue(const ProblemD
         return true;
     }
     else
+#endif
         return false;
 }
 
@@ -267,8 +425,9 @@ bool PerformanceConfigHipImplicitGemmGroupWrwXdlops::IsValid(
     case miopenHalf: return CheckIsSupportCKArgs<ck::half_t>(problem);
     case miopenFloat: return CheckIsSupportCKArgs<float>(problem);
     case miopenInt8: return CheckIsSupportCKArgs<int8_t>(problem);
+    case miopenBFloat16: return CheckIsSupportCKArgs<ck::bhalf_t>(problem);
+    case miopenInt64:
     case miopenInt32:
-    case miopenBFloat16:
     case miopenFloat8:
     case miopenBFloat8:
     case miopenDouble: break;
@@ -285,10 +444,10 @@ bool PerformanceConfigHipImplicitGemmGroupWrwXdlops::operator==(
 
 PerformanceConfigHipImplicitGemmGroupWrwXdlops
 ConvHipImplicitGemmGroupWrwXdlops::GetDefaultPerformanceConfig(
-    const ExecutionContext&, const ProblemDescription& problem) const
+    const ExecutionContext& ctx, const ProblemDescription& problem) const
 {
     PerformanceConfigHipImplicitGemmGroupWrwXdlops pp;
-    pp.HeuristicInit(problem);
+    pp.HeuristicInit(ctx, problem);
     return pp;
 }
 
@@ -319,9 +478,9 @@ bool ConvHipImplicitGemmGroupWrwXdlops::IsApplicable(
     [[maybe_unused]] const ProblemDescription& problem) const
 {
 #if MIOPEN_BACKEND_HIP && MIOPEN_USE_COMPOSABLEKERNEL
-    if(miopen::IsDisabled(ENV(MIOPEN_DEBUG_GROUP_CONV_IMPLICIT_GEMM_HIP_WRW_XDLOPS)))
+    if(env::disabled(MIOPEN_DEBUG_GROUP_CONV_IMPLICIT_GEMM_HIP_WRW_XDLOPS))
         return false;
-    if(miopen::IsEnabled(ENV(MIOPEN_DEBUG_CONVOLUTION_DETERMINISTIC)))
+    if(env::enabled(MIOPEN_DEBUG_CONVOLUTION_DETERMINISTIC))
         return false;
     if(problem.HasMixedDataTypes())
         return false;
@@ -343,8 +502,9 @@ bool ConvHipImplicitGemmGroupWrwXdlops::IsApplicable(
     case miopenHalf: return CheckCKApplicability<ck::half_t>(problem);
     case miopenFloat: return CheckCKApplicability<float>(problem);
     case miopenInt8: return CheckCKApplicability<int8_t>(problem);
+    case miopenBFloat16: return CheckCKApplicability<ck::bhalf_t>(problem);
+    case miopenInt64:
     case miopenInt32:
-    case miopenBFloat16:
     case miopenFloat8:
     case miopenBFloat8:
     case miopenDouble: break;

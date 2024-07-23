@@ -258,10 +258,7 @@ void BackendTensorDescriptor::getAttribute(miopenBackendAttributeName_t attribut
             const auto& dimensions = mDescriptor.getDimensions();
             *elementCount          = dimensions.size();
             std::copy_n(dimensions.begin(),
-                        // WORKAROUND: building on Windows is failing due to conflicting definitions
-                        // of std::min() between the MSVC standard library and HIP Clang wrappers.
-                        *elementCount < requestedElementCount ? *elementCount
-                                                              : requestedElementCount,
+                        minimum(*elementCount, requestedElementCount),
                         static_cast<int64_t*>(arrayOfElements));
             return;
         }
@@ -276,10 +273,7 @@ void BackendTensorDescriptor::getAttribute(miopenBackendAttributeName_t attribut
             const auto& strides = mDescriptor.getStrides();
             *elementCount       = strides.size();
             std::copy_n(strides.begin(),
-                        // WORKAROUND: building on Windows is failing due to conflicting definitions
-                        // of std::min() between the MSVC standard library and HIP Clang wrappers.
-                        *elementCount < requestedElementCount ? *elementCount
-                                                              : requestedElementCount,
+                        minimum(*elementCount, requestedElementCount),
                         static_cast<int64_t*>(arrayOfElements));
             return;
         }
@@ -291,7 +285,7 @@ void BackendTensorDescriptor::getAttribute(miopenBackendAttributeName_t attribut
     case MIOPEN_ATTR_TENSOR_IS_VIRTUAL:
         if(attributeType == MIOPEN_TYPE_BOOLEAN && requestedElementCount == 1)
         {
-            *static_cast<bool*>(arrayOfElements) = mDescriptor.getVirtual();
+            *static_cast<bool*>(arrayOfElements) = mDescriptor.isVirtual();
             *elementCount                        = 1;
             return;
         }
