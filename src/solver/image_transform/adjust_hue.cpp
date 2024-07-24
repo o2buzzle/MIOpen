@@ -117,7 +117,7 @@ ConvSolution ImageAdjustHue::GetSolution(
             size_t N        = xdesc.GetElementSize() / 3;
             size_t c_stride = xdesc.GetLengths()[2] * xdesc.GetLengths()[3];
 
-            if(kernel.name == "ImageAdjustHueContiguous")
+            if(kernel.GetName() == "ImageAdjustHueContiguous")
             {
                 kernel(params.input_buf,
                        params.output_buf,

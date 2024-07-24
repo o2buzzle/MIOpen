@@ -36,7 +36,8 @@ namespace image_adjust_saturation {
 
 std::string GetFloatArg()
 {
-    const auto& tmp = miopen::GetStringEnv(ENV(MIOPEN_TEST_FLOAT_ARG));
+    const auto& tmp = env::value(MIOPEN_TEST_FLOAT_ARG);
+
     if(tmp.empty())
     {
         return "";
@@ -62,8 +63,7 @@ using namespace image_adjust_saturation;
 
 TEST_P(ImageAdjustSaturationTestFloat, ImageAdjustSaturationTestFw)
 {
-    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
-       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--float")))
+    if(env::enabled(MIOPEN_TEST_ALL) || (GetFloatArg() == "--float"))
     {
         RunTest();
         Verify();
@@ -76,8 +76,7 @@ TEST_P(ImageAdjustSaturationTestFloat, ImageAdjustSaturationTestFw)
 
 TEST_P(ImageAdjustSaturationTestHalf, ImageAdjustSaturationTestFw)
 {
-    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
-       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--half")))
+    if(env::enabled(MIOPEN_TEST_ALL) || (GetFloatArg() == "--half"))
     {
         RunTest();
         Verify();
@@ -90,8 +89,7 @@ TEST_P(ImageAdjustSaturationTestHalf, ImageAdjustSaturationTestFw)
 
 TEST_P(ImageAdjustSaturationBfloat16, ImageAdjustSaturationTestFw)
 {
-    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
-       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--bfloat16")))
+    if(env::enabled(MIOPEN_TEST_ALL) || (GetFloatArg() == "--bfloat16"))
     {
         RunTest();
         Verify();

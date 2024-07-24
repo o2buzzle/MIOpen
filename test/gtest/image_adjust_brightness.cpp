@@ -34,7 +34,8 @@ namespace image_adjust_brightness {
 
 std::string GetFloatArg()
 {
-    const auto& tmp = miopen::GetStringEnv(ENV(MIOPEN_TEST_FLOAT_ARG));
+    const auto& tmp = env::value(MIOPEN_TEST_FLOAT_ARG);
+
     if(tmp.empty())
     {
         return "";
@@ -60,8 +61,7 @@ using namespace image_adjust_brightness;
 
 TEST_P(ImageAdjustBrightnessTestFloat, ImageAdjustBrightnessTestFw)
 {
-    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
-       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--float")))
+    if(env::enabled(MIOPEN_TEST_ALL) || (GetFloatArg() == "--float"))
     {
         RunTest();
         Verify();
@@ -74,8 +74,7 @@ TEST_P(ImageAdjustBrightnessTestFloat, ImageAdjustBrightnessTestFw)
 
 TEST_P(ImageAdjustBrightnessTestHalf, ImageAdjustBrightnessTestFw)
 {
-    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
-       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--half")))
+    if(env::enabled(MIOPEN_TEST_ALL) || (GetFloatArg() == "--half"))
     {
         RunTest();
         Verify();
@@ -88,8 +87,7 @@ TEST_P(ImageAdjustBrightnessTestHalf, ImageAdjustBrightnessTestFw)
 
 TEST_P(ImageAdjustBrightnessTestBfloat16, ImageAdjustBrightnessTestFw)
 {
-    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
-       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--bfloat16")))
+    if(env::enabled(MIOPEN_TEST_ALL) || (GetFloatArg() == "--bfloat16"))
     {
         RunTest();
         Verify();

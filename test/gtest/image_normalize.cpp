@@ -34,7 +34,7 @@ namespace image_normalize {
 
 std::string GetFloatArg()
 {
-    const auto& tmp = miopen::GetStringEnv(ENV(MIOPEN_TEST_FLOAT_ARG));
+    const auto& tmp = env::value(MIOPEN_TEST_FLOAT_ARG);
     if(tmp.empty())
     {
         return "";
@@ -60,8 +60,7 @@ using namespace image_normalize;
 
 TEST_P(ImageNormalizeTestFloat, ImageNormalizeTestFw)
 {
-    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
-       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--float")))
+    if(env::enabled(MIOPEN_TEST_ALL) || (GetFloatArg() == "--float"))
     {
         RunTest();
         Verify();
@@ -74,8 +73,7 @@ TEST_P(ImageNormalizeTestFloat, ImageNormalizeTestFw)
 
 TEST_P(ImageNormalizeTestHalf, ImageNormalizeTestFw)
 {
-    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
-       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--half")))
+    if(env::enabled(MIOPEN_TEST_ALL) || (GetFloatArg() == "--half"))
     {
         RunTest();
         Verify();
@@ -88,8 +86,7 @@ TEST_P(ImageNormalizeTestHalf, ImageNormalizeTestFw)
 
 TEST_P(ImageNormalizeTestBfloat16, ImageNormalizeTestFw)
 {
-    if(miopen::IsUnset(ENV(MIOPEN_TEST_ALL)) ||
-       (miopen::IsEnabled(ENV(MIOPEN_TEST_ALL)) && (GetFloatArg() == "--bfloat16")))
+    if(env::enabled(MIOPEN_TEST_ALL) || (GetFloatArg() == "--bfloat16"))
     {
         RunTest();
         Verify();
