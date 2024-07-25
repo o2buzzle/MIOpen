@@ -24,97 +24,55 @@
  *
  *******************************************************************************/
 
-#ifndef GUARD_TENSOR_VIEW_H
-#define GUARD_TENSOR_VIEW_H
+#ifndef GUARD_TENSOR_VIEW_HPP
+#define GUARD_TENSOR_VIEW_HPP
 
-#include <hip/hip_runtime.h>
+template <int N>
+struct tensor_layout_t;
 
-struct tensor_view_5d_t
+template <int N>
+struct tensor_view_t
 {
-    uint64_t offset = 0;
-    uint64_t size[5];
-    uint64_t stride[5];
+    // Get index in tensor view at tensor layout
+    constexpr uint64_t get_tensor_view_idx(const tensor_layout_t<N>& tensor_layout)
+    {
+        static_assert(N > 0);
+        uint64_t idx = 0;
+        for(auto i = 0; i < N; ++i)
+        {
+            idx += stride[i] * tensor_layout.layout[i];
+        }
+        return idx;
+    }
+    uint64_t stride[N];
+    uint64_t size[N];
 };
 
-struct padding_5d_t
+template <int N>
+struct tensor_layout_t
 {
-    uint64_t val[10];
+    // Make tensor layout at index using tensor view
+    constexpr tensor_layout_t(const tensor_view_t<N>& tensor_view, uint64_t idx)
+    {
+        static_assert(N > 0);
+        uint64_t temp = idx;
+        if constexpr(N == 1)
+        {
+            layout[0] = idx;
+        }
+        else
+        {
+            for(auto i = N - 1; i > 1; --i)
+            {
+                layout[i] = temp % tensor_view.size[i];
+                temp      = temp / tensor_view.size[i];
+            }
+            layout[1] = temp % tensor_view.size[1];
+            layout[0] = temp / tensor_view.size[1];
+        }
+    }
+
+    uint64_t layout[N];
 };
 
-template <typename T>
-__host__ __device__ void inline getNCDHW(T* ncdhw, const T idx, const T size[5])
-{
-    ulong ncdh = (idx) / size[4];
-    ncdhw[4]   = (idx) % size[4];
-    ulong ncd  = ncdh / size[3];
-    ncdhw[3]   = ncdh % size[3];
-    ulong nc   = ncd / size[2];
-    ncdhw[2]   = ncd % size[2];
-    ncdhw[0]   = nc / size[1];
-    ncdhw[1]   = nc % size[1];
-}
-
-template <typename T, typename U>
-__host__
-    __device__ T inline get5DValueAt(const T* x, const uint64_t* x_strides, U n, U c, U d, U h, U w)
-{
-    return x[n * x_strides[0] + c * x_strides[1] + d * x_strides[2] + h * x_strides[3] +
-             w * x_strides[4]];
-}
-
-template <typename T>
-__host__ __device__ void inline set5DValueAt(T* x, const tensor_view_5d_t& x_tv, size_t idx, T val)
-{
-    uint64_t o[5];
-    o[4] = x_tv.stride[0] *
-           (size_t)((idx) / x_tv.size[4] / x_tv.size[3] / x_tv.size[2] / x_tv.size[1]);
-    o[3] = x_tv.stride[1] *
-           ((size_t)((idx) / x_tv.size[4] / x_tv.size[3] / x_tv.size[2]) % x_tv.size[1]);
-    o[2] = x_tv.stride[2] * ((size_t)((idx) / x_tv.size[4] / x_tv.size[3]) % x_tv.size[2]);
-    o[1] = x_tv.stride[3] * ((size_t)((idx) / x_tv.size[4]) % x_tv.size[3]);
-    o[0] = x_tv.stride[4] * ((idx) % x_tv.size[4]) + x_tv.offset;
-    x[o[0] + o[1] + o[2] + o[3] + o[4]] = val;
-}
-
-template <typename T>
-__host__
-    __device__ T inline getTensorViewIndexAt(const tensor_view_5d_t& tv, const size_t idx, size_t n)
-{
-    return tv.stride[idx] * (n) + tv.offset;
-}
-
-template <typename T>
-__host__ __device__ T inline get1DIndexAt(const tensor_view_5d_t& tv, size_t n0)
-{
-    // offset do not exist yet.
-    return getTensorViewIndexAt<T>(tv, 0, n0);
-}
-
-template <typename T>
-__host__ __device__ T inline get2DIndexAt(const tensor_view_5d_t& tv, size_t n0, size_t n1)
-{
-    return getTensorViewIndexAt<T>(tv, 1, n1) + get1DIndexAt<T>(tv, n0);
-}
-
-template <typename T>
-__host__
-    __device__ T inline get3DIndexAt(const tensor_view_5d_t& tv, size_t n0, size_t n1, size_t n2)
-{
-    return getTensorViewIndexAt<T>(tv, 2, n2) + get2DIndexAt<T>(tv, n0, n1);
-}
-
-template <typename T>
-__host__ __device__
-    T inline get4DIndexAt(const tensor_view_5d_t& tv, size_t n0, size_t n1, size_t n2, size_t n3)
-{
-    return getTensorViewIndexAt<T>(tv, 3, n3) + get3DIndexAt<T>(tv, n0, n1, n2);
-}
-
-template <typename T>
-__host__ __device__ T inline get5DIndexAt(
-    const tensor_view_5d_t& tv, size_t n0, size_t n1, size_t n2, size_t n3, size_t n4)
-{
-    return getTensorViewIndexAt<T>(tv, 4, n4) + get4DIndexAt<T>(tv, n0, n1, n2, n3);
-}
-
-#endif
+#endif // GUARD_TENSOR_VIEW_HPP
