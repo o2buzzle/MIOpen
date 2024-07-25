@@ -45,15 +45,15 @@ extern "C" miopenStatus_t miopenMSELossForward(miopenHandle_t handle,
     MIOPEN_LOG_FUNCTION(xDesc, yDesc, x, y, z, divisor);
 
     return miopen::try_([&] {
-        miopen::miopenMSELossForward(miopen::deref(handle),
-                                     miopen::deref(xDesc),
-                                     miopen::deref(yDesc),
-                                     miopen::deref(zDesc),
-                                     DataCast(x),
-                                     DataCast(y),
-                                     DataCast(z),
-                                     DataCast(ws),
-                                     divisor);
+        miopen::MSELossForward(miopen::deref(handle),
+                               miopen::deref(xDesc),
+                               miopen::deref(yDesc),
+                               miopen::deref(zDesc),
+                               DataCast(x),
+                               DataCast(y),
+                               DataCast(z),
+                               DataCast(ws),
+                               divisor);
     });
 }
 
@@ -65,7 +65,7 @@ extern "C" miopenStatus_t miopenGetMSELossForwardWorkspaceSize(miopenHandle_t ha
     MIOPEN_LOG_FUNCTION(xDesc, yDesc, size);
 
     return miopen::try_([&] {
-        miopen::deref(size) = miopen::miopenMSELossForwardGetWorkspaceSize(
+        miopen::deref(size) = miopen::MSELossForwardGetWorkspaceSize(
             miopen::deref(handle), miopen::deref(xDesc), miopen::deref(yDesc));
     });
 }
@@ -86,17 +86,17 @@ extern "C" miopenStatus_t miopenMSELossBackward(miopenHandle_t handle,
     MIOPEN_LOG_FUNCTION(xDesc, yDesc, zDesc, dxDesc, dyDesc, x, y, z, dx, dy, divisor);
 
     return miopen::try_([&] {
-        miopen::miopenMSELossBackward(miopen::deref(handle),
-                                      miopen::deref(xDesc),
-                                      miopen::deref(yDesc),
-                                      miopen::deref(zDesc),
-                                      miopen::deref(dxDesc),
-                                      miopen::deref(dyDesc),
-                                      DataCast(x),
-                                      DataCast(y),
-                                      DataCast(z),
-                                      DataCast(dx),
-                                      DataCast(dy),
-                                      divisor);
+        miopen::MSELossBackward(miopen::deref(handle),
+                                miopen::deref(xDesc),
+                                miopen::deref(yDesc),
+                                miopen::deref(zDesc),
+                                miopen::deref(dxDesc),
+                                miopen::deref(dyDesc),
+                                DataCast(x),
+                                DataCast(y),
+                                DataCast(z),
+                                DataCast(dx),
+                                DataCast(dy),
+                                divisor);
     });
 }

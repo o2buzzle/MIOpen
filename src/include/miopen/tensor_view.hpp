@@ -28,13 +28,14 @@
 #define GUARD_TENSOR_VIEW_HOST
 
 #include "../../kernels/tensor_view.hpp"
+#include "miopen/tensor.hpp"
 
 inline tensor_view_5d_t get_inner_expanded_tv(const miopen::TensorDescriptor Desc)
 {
     auto dims    = Desc.GetLengths();
     auto strides = Desc.GetStrides();
 
-    tensor_view_5d_t tv_5d;
+    tensor_view_5d_t tv_5d = tensor_view_5d_t();
     for(size_t i = 0; i < strides.size(); ++i)
     {
         tv_5d.stride[i] = strides[i];

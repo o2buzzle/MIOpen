@@ -38,15 +38,15 @@
 
 namespace miopen {
 
-miopenStatus_t miopenMSELossForward(Handle& handle,
-                                    const TensorDescriptor& xDesc,
-                                    const TensorDescriptor& yDesc,
-                                    const TensorDescriptor& zDesc,
-                                    ConstData_t x,
-                                    ConstData_t y,
-                                    Data_t z,
-                                    Data_t ws,
-                                    float divisor)
+miopenStatus_t MSELossForward(Handle& handle,
+                              const TensorDescriptor& xDesc,
+                              const TensorDescriptor& yDesc,
+                              const TensorDescriptor& zDesc,
+                              ConstData_t x,
+                              ConstData_t y,
+                              Data_t z,
+                              Data_t ws,
+                              float divisor)
 {
     auto ctx = ExecutionContext{&handle};
 
@@ -72,9 +72,8 @@ miopenStatus_t miopenMSELossForward(Handle& handle,
     return miopenStatusSuccess;
 }
 
-size_t miopenMSELossForwardGetWorkspaceSize(Handle& handle,
-                                            TensorDescriptor& xDesc,
-                                            TensorDescriptor& yDesc)
+size_t
+MSELossForwardGetWorkspaceSize(Handle& handle, TensorDescriptor& xDesc, TensorDescriptor& yDesc)
 {
     auto ctx = ExecutionContext{&handle};
 
@@ -88,18 +87,18 @@ size_t miopenMSELossForwardGetWorkspaceSize(Handle& handle,
     return workspace_sizes.empty() ? static_cast<size_t>(0) : workspace_sizes.front().second;
 }
 
-miopenStatus_t miopenMSELossBackward(Handle& handle,
-                                     const TensorDescriptor& xDesc,
-                                     const TensorDescriptor& yDesc,
-                                     const TensorDescriptor& zDesc,
-                                     const TensorDescriptor& dxDesc,
-                                     const TensorDescriptor& dyDesc,
-                                     ConstData_t x,
-                                     ConstData_t y,
-                                     ConstData_t z,
-                                     Data_t dx,
-                                     Data_t dy,
-                                     float divisor)
+miopenStatus_t MSELossBackward(Handle& handle,
+                               const TensorDescriptor& xDesc,
+                               const TensorDescriptor& yDesc,
+                               const TensorDescriptor& zDesc,
+                               const TensorDescriptor& dxDesc,
+                               const TensorDescriptor& dyDesc,
+                               ConstData_t x,
+                               ConstData_t y,
+                               ConstData_t z,
+                               Data_t dx,
+                               Data_t dy,
+                               float divisor)
 {
     auto ctx = ExecutionContext{&handle};
 

@@ -32,30 +32,30 @@ namespace miopen {
 struct Handle;
 struct TensorDescriptor;
 
-miopenStatus_t miopenMSELossForward(Handle& handle,
-                                    const TensorDescriptor& xDesc,
-                                    const TensorDescriptor& yDesc,
-                                    const TensorDescriptor& zDesc,
-                                    ConstData_t x,
-                                    ConstData_t y,
-                                    Data_t z,
-                                    Data_t ws,
-                                    float divisor = 1.0f);
+MIOPEN_INTERNALS_EXPORT miopenStatus_t MSELossForward(Handle& handle,
+                                                      const TensorDescriptor& xDesc,
+                                                      const TensorDescriptor& yDesc,
+                                                      const TensorDescriptor& zDesc,
+                                                      ConstData_t x,
+                                                      ConstData_t y,
+                                                      Data_t z,
+                                                      Data_t ws,
+                                                      float divisor = 1.0f);
 
-size_t miopenMSELossForwardGetWorkspaceSize(Handle& handle,
-                                            TensorDescriptor& xDesc,
-                                            TensorDescriptor& yDesc);
+MIOPEN_INTERNALS_EXPORT size_t MSELossForwardGetWorkspaceSize(Handle& handle,
+                                                              TensorDescriptor& xDesc,
+                                                              TensorDescriptor& yDesc);
 
-miopenStatus_t miopenMSELossBackward(Handle& handle,
-                                     const TensorDescriptor& xDesc,
-                                     const TensorDescriptor& yDesc,
-                                     const TensorDescriptor& dzDesc,
-                                     const TensorDescriptor& dxDesc,
-                                     const TensorDescriptor& dyDesc,
-                                     ConstData_t x,
-                                     ConstData_t y,
-                                     ConstData_t dz,
-                                     Data_t dx,
-                                     Data_t dy,
-                                     float divisor = 1.0f);
+MIOPEN_INTERNALS_EXPORT miopenStatus_t MSELossBackward(Handle& handle,
+                                                       const TensorDescriptor& xDesc,
+                                                       const TensorDescriptor& yDesc,
+                                                       const TensorDescriptor& dzDesc,
+                                                       const TensorDescriptor& dxDesc,
+                                                       const TensorDescriptor& dyDesc,
+                                                       ConstData_t x,
+                                                       ConstData_t y,
+                                                       ConstData_t dz,
+                                                       Data_t dx,
+                                                       Data_t dy,
+                                                       float divisor = 1.0f);
 } // namespace miopen
