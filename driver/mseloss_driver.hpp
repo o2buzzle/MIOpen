@@ -591,13 +591,6 @@ int MSELossDriver<Tgpu, Tref>::VerifyBackward()
 {
     RunBackwardCPU();
 
-    // Dump the first 10 or so values from both CPU and GPU to compare visually
-    for(size_t i = 0; i < 10; i++)
-    {
-        std::cout << "CPU: " << i << " " << target_grad_host[i] << " GPU: " << target_grad[i]
-                  << std::endl;
-    }
-
     auto error = miopen::rms_range(target_grad, target_grad_host);
     if(error > tolerance)
     {
@@ -607,13 +600,6 @@ int MSELossDriver<Tgpu, Tref>::VerifyBackward()
     }
     else
         printf("Success: Backward CPU and GPU match on target\n");
-
-    // Dump the first 10 or so values from both CPU and GPU to compare visually
-    for(size_t i = 0; i < 10; i++)
-    {
-        std::cout << "CPU: " << i << " " << input_grad_host[i] << " GPU: " << input_grad[i]
-                  << std::endl;
-    }
 
     error = miopen::rms_range(input_grad, input_grad_host);
     if(error > tolerance)
