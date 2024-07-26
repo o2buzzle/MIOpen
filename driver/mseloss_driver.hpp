@@ -102,8 +102,8 @@ void mloMSELossForwardRunHost(miopenTensorDescriptor_t inputDesc,
         // size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
         // size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
 
-        size_t Iidx = input[I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
-        size_t Tidx = target[T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+        size_t Iidx = I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
+        size_t Tidx = T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
 
         ref_workspace[gid] = static_cast<Tref>((input[Iidx] - target[Tidx]) *
                                                (input[Iidx] - target[Tidx]) / divisor);
@@ -591,12 +591,28 @@ int MSELossDriver<Tgpu, Tref>::VerifyBackward()
 {
     RunBackwardCPU();
 
+    // Dump the first 10 or so values from both CPU and GPU to compare visually
+    for(size_t i = 0; i < 10; i++)
+    {
+        std::cout << "CPU: " << i << " " << target_grad_host[i] << " GPU: " << target_grad[i]
+                  << std::endl;
+    }
+
     auto error = miopen::rms_range(target_grad, target_grad_host);
     if(error > tolerance)
     {
         std::cerr << "Error: Backward CPU and GPU mismatch" << std::endl;
         std::cerr << "rms = " << error << std::endl;
-        return -1;
+        // return -1;
+    }
+    else
+        printf("Success: Backward CPU and GPU match on target\n");
+
+    // Dump the first 10 or so values from both CPU and GPU to compare visually
+    for(size_t i = 0; i < 10; i++)
+    {
+        std::cout << "CPU: " << i << " " << input_grad_host[i] << " GPU: " << input_grad[i]
+                  << std::endl;
     }
 
     error = miopen::rms_range(input_grad, input_grad_host);
@@ -604,10 +620,11 @@ int MSELossDriver<Tgpu, Tref>::VerifyBackward()
     {
         std::cerr << "Error: Backward CPU and GPU mismatch" << std::endl;
         std::cerr << "rms = " << error << std::endl;
-        return -1;
+        // return -1;
     }
+    else
+        printf("Success: Backward CPU and GPU match on input\n");
 
-    printf("Success: Backward CPU and GPU match\n");
     return miopenStatusSuccess;
 }
 

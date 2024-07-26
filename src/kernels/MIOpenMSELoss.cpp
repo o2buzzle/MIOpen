@@ -53,8 +53,8 @@ __device__ void DeviceMSELossForward5d(const IO_TYPE* __restrict__ I,
     // size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
     // size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
 
-    size_t Iidx = I[I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
-    size_t Tidx = T[T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+    size_t Iidx = I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
+    size_t Tidx = T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
 
     FLOAT_ACCUM iidxval = CVT_FLOAT2ACCUM(I[Iidx]);
     FLOAT_ACCUM tidxval = CVT_FLOAT2ACCUM(T[Tidx]);
@@ -88,8 +88,8 @@ __device__ void DeviceMSELossBackward5d(const IO_TYPE* __restrict__ I,
     // size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
     // size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
 
-    size_t Iidx = I[I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
-    size_t Tidx = T[T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+    size_t Iidx = I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
+    size_t Tidx = T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
 
     FLOAT_ACCUM iidxval  = CVT_FLOAT2ACCUM(I[Iidx]);
     FLOAT_ACCUM tidxval  = CVT_FLOAT2ACCUM(T[Tidx]);
@@ -99,13 +99,13 @@ __device__ void DeviceMSELossBackward5d(const IO_TYPE* __restrict__ I,
     if(dI != nullptr)
     {
         // size_t dIidx = get5DIndexAt<size_t>(dI_tv, n0, n1, n2, n3, n4);
-        size_t dIidx = dI[dI_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+        size_t dIidx = dI_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
         dI[dIidx]    = CVT_ACCUM2FLOAT(grad);
     }
     if(dT != nullptr)
     {
         // size_t dTidx = get5DIndexAt<size_t>(dT_tv, n0, n1, n2, n3, n4);
-        size_t dTidx = dT[dT_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+        size_t dTidx = dT_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
         dT[dTidx]    = CVT_ACCUM2FLOAT(-grad);
     }
 }
@@ -132,9 +132,9 @@ __device__ void DeviceMSELossUnreducedForward5d(const IO_TYPE* __restrict__ I,
     // size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
     // size_t Oidx = get5DIndexAt<size_t>(O_tv, n0, n1, n2, n3, n4);
 
-    size_t Iidx = I[I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
-    size_t Tidx = T[T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
-    size_t Oidx = O[O_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+    size_t Iidx = I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
+    size_t Tidx = T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
+    size_t Oidx = O_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
 
     FLOAT_ACCUM iidxval = CVT_FLOAT2ACCUM(I[Iidx]);
     FLOAT_ACCUM tidxval = CVT_FLOAT2ACCUM(T[Tidx]);
@@ -169,9 +169,9 @@ __device__ void DeviceMSELossUnreducedBackward5d(const IO_TYPE* __restrict__ I,
     // size_t Tidx  = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
     // size_t dOidx = get5DIndexAt<size_t>(dO_tv, n0, n1, n2, n3, n4);
 
-    size_t Iidx  = I[I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
-    size_t Tidx  = T[T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
-    size_t dOidx = dO[dO_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+    size_t Iidx  = I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
+    size_t Tidx  = T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
+    size_t dOidx = dO_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
 
     FLOAT_ACCUM dOval   = CVT_FLOAT2ACCUM(dO[dOidx]);
     FLOAT_ACCUM iidxval = CVT_FLOAT2ACCUM(I[Iidx]);
@@ -181,13 +181,13 @@ __device__ void DeviceMSELossUnreducedBackward5d(const IO_TYPE* __restrict__ I,
     if(dI != nullptr)
     {
         // size_t dIidx = get5DIndexAt<size_t>(dI_tv, n0, n1, n2, n3, n4);
-        size_t dIidx = dI[dI_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+        size_t dIidx = dI_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
         dI[dIidx]    = CVT_ACCUM2FLOAT(grad);
     }
     if(dT != nullptr)
     {
         // size_t dTidx = get5DIndexAt<size_t>(dT_tv, n0, n1, n2, n3, n4);
-        size_t dTidx = dT[dT_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+        size_t dTidx = dT_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
         dT[dTidx]    = CVT_ACCUM2FLOAT(-grad);
     }
 }
