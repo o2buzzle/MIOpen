@@ -31,7 +31,7 @@
 #include "miopen/mlo_internal.hpp"
 #include "miopen/mseloss/solvers.hpp"
 #include "miopen/mseloss/invoke_params.hpp"
-#include "miopen/tensor_view.hpp"
+#include "miopen/tensor_view_utils.hpp"
 #include <cstddef>
 
 #define LOCAL_SIZE_MSELOSS 256
@@ -111,8 +111,8 @@ MSELossForward::GetSolution(const ExecutionContext& context,
                 auto xstrides = params.xDesc->GetStrides();
                 auto ystrides = params.yDesc->GetStrides();
 
-                tensor_view_5d_t I_tv = get_inner_expanded_tv(*params.xDesc);
-                tensor_view_5d_t T_tv = get_inner_expanded_tv(*params.yDesc);
+                tensor_view_t<5> I_tv = get_inner_expanded_tv<5>(miopen::deref(params.xDesc));
+                tensor_view_t<5> T_tv = get_inner_expanded_tv<5>(miopen::deref(params.yDesc));
 
                 kernel(params.x, params.y, params.workspace, params.divisor, I_tv, T_tv);
 
@@ -233,9 +233,9 @@ ConvSolution MSELossForwardUnreduced::GetSolution(
             decltype(auto) params =
                 raw_params.CastTo<miopen::mseloss::forward_unreduced::InvokeParams>();
 
-            auto I_tv = get_inner_expanded_tv(*params.xDesc);
-            auto T_tv = get_inner_expanded_tv(*params.yDesc);
-            auto O_tv = get_inner_expanded_tv(*params.zDesc);
+            auto I_tv = get_inner_expanded_tv<5>(*params.xDesc);
+            auto T_tv = get_inner_expanded_tv<5>(*params.yDesc);
+            auto O_tv = get_inner_expanded_tv<5>(*params.zDesc);
 
             kernel(params.x, params.y, params.z, I_tv, T_tv, O_tv);
         };
@@ -305,11 +305,11 @@ MSELossBackward::GetSolution(const ExecutionContext& context,
             decltype(auto) kernel = handle_.Run(kernels.front());
             decltype(auto) params = raw_params.CastTo<miopen::mseloss::backward::InvokeParams>();
 
-            tensor_view_5d_t I_tv  = get_inner_expanded_tv(*params.xDesc);
-            tensor_view_5d_t T_tv  = get_inner_expanded_tv(*params.yDesc);
-            tensor_view_5d_t dO_tv = get_inner_expanded_tv(*params.zDesc);
-            tensor_view_5d_t dI_tv = get_inner_expanded_tv(*params.dxDesc);
-            tensor_view_5d_t dT_tv = get_inner_expanded_tv(*params.dyDesc);
+            tensor_view_t<5> I_tv  = get_inner_expanded_tv<5>(miopen::deref(params.xDesc));
+            tensor_view_t<5> T_tv  = get_inner_expanded_tv<5>(miopen::deref(params.yDesc));
+            tensor_view_t<5> dO_tv = get_inner_expanded_tv<5>(miopen::deref(params.zDesc));
+            tensor_view_t<5> dI_tv = get_inner_expanded_tv<5>(miopen::deref(params.dxDesc));
+            tensor_view_t<5> dT_tv = get_inner_expanded_tv<5>(miopen::deref(params.dyDesc));
 
             kernel(params.x,
                    params.y,
@@ -389,11 +389,11 @@ ConvSolution MSELossBackwardUnreduced::GetSolution(
             decltype(auto) params =
                 raw_params.CastTo<miopen::mseloss::backward_unreduced::InvokeParams>();
 
-            tensor_view_5d_t I_tv  = get_inner_expanded_tv(*params.xDesc);
-            tensor_view_5d_t T_tv  = get_inner_expanded_tv(*params.yDesc);
-            tensor_view_5d_t dO_tv = get_inner_expanded_tv(*params.zDesc);
-            tensor_view_5d_t dI_tv = get_inner_expanded_tv(*params.dxDesc);
-            tensor_view_5d_t dT_tv = get_inner_expanded_tv(*params.dyDesc);
+            tensor_view_t<5> I_tv  = get_inner_expanded_tv<5>(miopen::deref(params.xDesc));
+            tensor_view_t<5> T_tv  = get_inner_expanded_tv<5>(miopen::deref(params.yDesc));
+            tensor_view_t<5> dO_tv = get_inner_expanded_tv<5>(miopen::deref(params.zDesc));
+            tensor_view_t<5> dI_tv = get_inner_expanded_tv<5>(miopen::deref(params.dxDesc));
+            tensor_view_t<5> dT_tv = get_inner_expanded_tv<5>(miopen::deref(params.dyDesc));
 
             kernel(params.x,
                    params.y,

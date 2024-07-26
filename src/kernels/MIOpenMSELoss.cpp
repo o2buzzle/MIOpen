@@ -37,8 +37,8 @@ __device__ void DeviceMSELossForward5d(const IO_TYPE* __restrict__ I,
                                        const IO_TYPE* __restrict__ T,
                                        IO_TYPE* __restrict__ lsum,
                                        float divisor,
-                                       tensor_view_5d_t I_tv,
-                                       tensor_view_5d_t T_tv)
+                                       tensor_view_t<5> I_tv,
+                                       tensor_view_t<5> T_tv)
 {
     size_t gid = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -50,8 +50,11 @@ __device__ void DeviceMSELossForward5d(const IO_TYPE* __restrict__ I,
     if(!(n0 < I_tv.size[0]))
         return;
 
-    size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
-    size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
+    // size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
+    // size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
+
+    size_t Iidx = I[I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+    size_t Tidx = T[T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
 
     FLOAT_ACCUM iidxval = CVT_FLOAT2ACCUM(I[Iidx]);
     FLOAT_ACCUM tidxval = CVT_FLOAT2ACCUM(T[Tidx]);
@@ -67,11 +70,11 @@ __device__ void DeviceMSELossBackward5d(const IO_TYPE* __restrict__ I,
                                         IO_TYPE* __restrict__ dI,
                                         IO_TYPE* __restrict__ dT,
                                         float divisor,
-                                        tensor_view_5d_t I_tv,
-                                        tensor_view_5d_t T_tv,
-                                        tensor_view_5d_t dO_tv,
-                                        tensor_view_5d_t dI_tv,
-                                        tensor_view_5d_t dT_tv)
+                                        tensor_view_t<5> I_tv,
+                                        tensor_view_t<5> T_tv,
+                                        tensor_view_t<5> dO_tv,
+                                        tensor_view_t<5> dI_tv,
+                                        tensor_view_t<5> dT_tv)
 {
     const size_t gid = blockIdx.x * blockDim.x + threadIdx.x;
     size_t n0123 = gid / I_tv.size[4], n4 = gid % I_tv.size[4];
@@ -82,22 +85,27 @@ __device__ void DeviceMSELossBackward5d(const IO_TYPE* __restrict__ I,
     if(!(n0 < I_tv.size[0]))
         return;
 
-    size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
-    size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
+    // size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
+    // size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
+
+    size_t Iidx = I[I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+    size_t Tidx = T[T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
 
     FLOAT_ACCUM iidxval  = CVT_FLOAT2ACCUM(I[Iidx]);
     FLOAT_ACCUM tidxval  = CVT_FLOAT2ACCUM(T[Tidx]);
-    FLOAT_ACCUM dOidxval = CVT_FLOAT2ACCUM(dO[dO_tv.offset]);
+    FLOAT_ACCUM dOidxval = CVT_FLOAT2ACCUM(dO[dO_tv.get_tensor_view_idx({dO_tv, 0})]);
     FLOAT_ACCUM grad     = 2.0f * (iidxval - tidxval) / divisor * dOidxval;
 
     if(dI != nullptr)
     {
-        size_t dIidx = get5DIndexAt<size_t>(dI_tv, n0, n1, n2, n3, n4);
+        // size_t dIidx = get5DIndexAt<size_t>(dI_tv, n0, n1, n2, n3, n4);
+        size_t dIidx = dI[dI_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
         dI[dIidx]    = CVT_ACCUM2FLOAT(grad);
     }
     if(dT != nullptr)
     {
-        size_t dTidx = get5DIndexAt<size_t>(dT_tv, n0, n1, n2, n3, n4);
+        // size_t dTidx = get5DIndexAt<size_t>(dT_tv, n0, n1, n2, n3, n4);
+        size_t dTidx = dT[dT_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
         dT[dTidx]    = CVT_ACCUM2FLOAT(-grad);
     }
 }
@@ -106,9 +114,9 @@ template <typename IO_TYPE>
 __device__ void DeviceMSELossUnreducedForward5d(const IO_TYPE* __restrict__ I,
                                                 const IO_TYPE* __restrict__ T,
                                                 IO_TYPE* __restrict__ O,
-                                                tensor_view_5d_t I_tv,
-                                                tensor_view_5d_t T_tv,
-                                                tensor_view_5d_t O_tv)
+                                                tensor_view_t<5> I_tv,
+                                                tensor_view_t<5> T_tv,
+                                                tensor_view_t<5> O_tv)
 {
     const size_t gid = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -120,9 +128,13 @@ __device__ void DeviceMSELossUnreducedForward5d(const IO_TYPE* __restrict__ I,
     if(!(n0 < I_tv.size[0]))
         return;
 
-    size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
-    size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
-    size_t Oidx = get5DIndexAt<size_t>(O_tv, n0, n1, n2, n3, n4);
+    // size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
+    // size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
+    // size_t Oidx = get5DIndexAt<size_t>(O_tv, n0, n1, n2, n3, n4);
+
+    size_t Iidx = I[I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+    size_t Tidx = T[T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+    size_t Oidx = O[O_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
 
     FLOAT_ACCUM iidxval = CVT_FLOAT2ACCUM(I[Iidx]);
     FLOAT_ACCUM tidxval = CVT_FLOAT2ACCUM(T[Tidx]);
@@ -138,11 +150,11 @@ __device__ void DeviceMSELossUnreducedBackward5d(const IO_TYPE* __restrict__ I,
                                                  const IO_TYPE* __restrict__ dO,
                                                  IO_TYPE* __restrict__ dI,
                                                  IO_TYPE* __restrict__ dT,
-                                                 tensor_view_5d_t I_tv,
-                                                 tensor_view_5d_t T_tv,
-                                                 tensor_view_5d_t dO_tv,
-                                                 tensor_view_5d_t dI_tv,
-                                                 tensor_view_5d_t dT_tv)
+                                                 tensor_view_t<5> I_tv,
+                                                 tensor_view_t<5> T_tv,
+                                                 tensor_view_t<5> dO_tv,
+                                                 tensor_view_t<5> dI_tv,
+                                                 tensor_view_t<5> dT_tv)
 {
     const size_t gid = blockIdx.x * blockDim.x + threadIdx.x;
     size_t n0123 = gid / I_tv.size[4], n4 = gid % I_tv.size[4];
@@ -153,9 +165,13 @@ __device__ void DeviceMSELossUnreducedBackward5d(const IO_TYPE* __restrict__ I,
     if(!(n0 < I_tv.size[0]))
         return;
 
-    size_t Iidx  = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
-    size_t Tidx  = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
-    size_t dOidx = get5DIndexAt<size_t>(dO_tv, n0, n1, n2, n3, n4);
+    // size_t Iidx  = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
+    // size_t Tidx  = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
+    // size_t dOidx = get5DIndexAt<size_t>(dO_tv, n0, n1, n2, n3, n4);
+
+    size_t Iidx  = I[I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+    size_t Tidx  = T[T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+    size_t dOidx = dO[dO_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
 
     FLOAT_ACCUM dOval   = CVT_FLOAT2ACCUM(dO[dOidx]);
     FLOAT_ACCUM iidxval = CVT_FLOAT2ACCUM(I[Iidx]);
@@ -164,12 +180,14 @@ __device__ void DeviceMSELossUnreducedBackward5d(const IO_TYPE* __restrict__ I,
 
     if(dI != nullptr)
     {
-        size_t dIidx = get5DIndexAt<size_t>(dI_tv, n0, n1, n2, n3, n4);
+        // size_t dIidx = get5DIndexAt<size_t>(dI_tv, n0, n1, n2, n3, n4);
+        size_t dIidx = dI[dI_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
         dI[dIidx]    = CVT_ACCUM2FLOAT(grad);
     }
     if(dT != nullptr)
     {
-        size_t dTidx = get5DIndexAt<size_t>(dT_tv, n0, n1, n2, n3, n4);
+        // size_t dTidx = get5DIndexAt<size_t>(dT_tv, n0, n1, n2, n3, n4);
+        size_t dTidx = dT[dT_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
         dT[dTidx]    = CVT_ACCUM2FLOAT(-grad);
     }
 }
@@ -179,8 +197,8 @@ extern "C" __global__ void MSELossForward5d(const DTYPE* __restrict__ I,
                                             const DTYPE* __restrict__ T,
                                             DTYPE* __restrict__ lsum,
                                             float divisor,
-                                            tensor_view_5d_t I_tv,
-                                            tensor_view_5d_t T_tv)
+                                            tensor_view_t<5> I_tv,
+                                            tensor_view_t<5> T_tv)
 
 {
     DeviceMSELossForward5d<DTYPE>(I, T, lsum, divisor, I_tv, T_tv);
@@ -192,20 +210,20 @@ extern "C" __global__ void MSELossBackward5d(const DTYPE* __restrict__ I,
                                              DTYPE* __restrict__ dI,
                                              DTYPE* __restrict__ dT,
                                              float divisor,
-                                             tensor_view_5d_t I_tv,
-                                             tensor_view_5d_t T_tv,
-                                             tensor_view_5d_t dO_tv,
-                                             tensor_view_5d_t dI_tv,
-                                             tensor_view_5d_t dT_tv)
+                                             tensor_view_t<5> I_tv,
+                                             tensor_view_t<5> T_tv,
+                                             tensor_view_t<5> dO_tv,
+                                             tensor_view_t<5> dI_tv,
+                                             tensor_view_t<5> dT_tv)
 {
     DeviceMSELossBackward5d<DTYPE>(I, T, dO, dI, dT, divisor, I_tv, T_tv, dO_tv, dI_tv, dT_tv);
 }
 extern "C" __global__ void MSELossForwardUnreduced5d(const DTYPE* __restrict__ I,
                                                      const DTYPE* __restrict__ T,
                                                      DTYPE* __restrict__ O,
-                                                     tensor_view_5d_t I_tv,
-                                                     tensor_view_5d_t T_tv,
-                                                     tensor_view_5d_t O_tv)
+                                                     tensor_view_t<5> I_tv,
+                                                     tensor_view_t<5> T_tv,
+                                                     tensor_view_t<5> O_tv)
 {
     DeviceMSELossUnreducedForward5d<DTYPE>(I, T, O, I_tv, T_tv, O_tv);
 }
@@ -215,11 +233,11 @@ extern "C" __global__ void MSELossBackwardUnreduced5d(const DTYPE* __restrict__ 
                                                       const DTYPE* __restrict__ dO,
                                                       DTYPE* __restrict__ dI,
                                                       DTYPE* __restrict__ dT,
-                                                      tensor_view_5d_t I_tv,
-                                                      tensor_view_5d_t T_tv,
-                                                      tensor_view_5d_t dO_tv,
-                                                      tensor_view_5d_t dI_tv,
-                                                      tensor_view_5d_t dT_tv)
+                                                      tensor_view_t<5> I_tv,
+                                                      tensor_view_t<5> T_tv,
+                                                      tensor_view_t<5> dO_tv,
+                                                      tensor_view_t<5> dI_tv,
+                                                      tensor_view_t<5> dT_tv)
 {
     DeviceMSELossUnreducedBackward5d<DTYPE>(I, T, dO, dI, dT, I_tv, T_tv, dO_tv, dI_tv, dT_tv);
 }

@@ -31,7 +31,7 @@
 #include "miopen/errors.hpp"
 #include "miopen/miopen.h"
 #include "miopen/tensor.hpp"
-#include "miopen/tensor_view.hpp"
+#include "miopen/tensor_view_utils.hpp"
 #include "random.hpp"
 #include "../test/verify.hpp"
 #include "tensor_driver.hpp"
@@ -81,9 +81,8 @@ void mloMSELossForwardRunHost(miopenTensorDescriptor_t inputDesc,
 {
     const int local_size = 256;
 
-    tensor_view_5d_t I_tv = get_inner_expanded_tv(miopen::deref(inputDesc));
-    tensor_view_5d_t T_tv = get_inner_expanded_tv(miopen::deref(targetDesc));
-    tensor_view_5d_t O_tv = get_inner_expanded_tv(miopen::deref(outputDesc));
+    tensor_view_t<5> I_tv = miopen::get_inner_expanded_tv<5>(miopen::deref(inputDesc));
+    tensor_view_t<5> T_tv = miopen::get_inner_expanded_tv<5>(miopen::deref(targetDesc));
 
     int64_t gid = 0;
     auto size   = miopen::deref(inputDesc).GetElementSize();
@@ -100,8 +99,11 @@ void mloMSELossForwardRunHost(miopenTensorDescriptor_t inputDesc,
         if(!(n0 < I_tv.size[0]))
             break;
 
-        size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
-        size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
+        // size_t Iidx = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
+        // size_t Tidx = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
+
+        size_t Iidx = input[I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
+        size_t Tidx = target[T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4})];
 
         ref_workspace[gid] = static_cast<Tref>((input[Iidx] - target[Tidx]) *
                                                (input[Iidx] - target[Tidx]) / divisor);
@@ -125,7 +127,7 @@ void mloMSELossForwardRunHost(miopenTensorDescriptor_t inputDesc,
                 for(int j = 0; j < offset; ++j)
                     shared[j] += shared[j + offset];
             if(_size <= local_size)
-                output[O_tv.offset] = shared[0];
+                output[0] = shared[0];
             else
                 ref_workspace[offset_b + i / local_size] = shared[0];
         }
@@ -147,11 +149,10 @@ void mloMSELossBackwardRunHost(miopenTensorDescriptor_t inputDesc,
                                Tref* target_grad,
                                float divisor)
 {
-    tensor_view_5d_t I_tv  = get_inner_expanded_tv(miopen::deref(inputDesc));
-    tensor_view_5d_t T_tv  = get_inner_expanded_tv(miopen::deref(targetDesc));
-    tensor_view_5d_t IG_tv = get_inner_expanded_tv(miopen::deref(inputGradDesc));
-    tensor_view_5d_t TG_tv = get_inner_expanded_tv(miopen::deref(targetGradDesc));
-    tensor_view_5d_t O_tv  = get_inner_expanded_tv(miopen::deref(outputDesc));
+    tensor_view_t<5> I_tv  = miopen::get_inner_expanded_tv<5>(miopen::deref(inputDesc));
+    tensor_view_t<5> T_tv  = miopen::get_inner_expanded_tv<5>(miopen::deref(targetDesc));
+    tensor_view_t<5> IG_tv = miopen::get_inner_expanded_tv<5>(miopen::deref(inputGradDesc));
+    tensor_view_t<5> TG_tv = miopen::get_inner_expanded_tv<5>(miopen::deref(targetGradDesc));
 
     int64_t gid = 0;
 
@@ -165,13 +166,18 @@ void mloMSELossBackwardRunHost(miopenTensorDescriptor_t inputDesc,
         if(!(n0 < I_tv.size[0]))
             break;
 
-        size_t Iidx  = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
-        size_t Tidx  = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
-        size_t IGidx = get5DIndexAt<size_t>(IG_tv, n0, n1, n2, n3, n4);
-        size_t TGidx = get5DIndexAt<size_t>(TG_tv, n0, n1, n2, n3, n4);
+        // size_t Iidx  = get5DIndexAt<size_t>(I_tv, n0, n1, n2, n3, n4);
+        // size_t Tidx  = get5DIndexAt<size_t>(T_tv, n0, n1, n2, n3, n4);
+        // size_t IGidx = get5DIndexAt<size_t>(IG_tv, n0, n1, n2, n3, n4);
+        // size_t TGidx = get5DIndexAt<size_t>(TG_tv, n0, n1, n2, n3, n4);
+
+        size_t Iidx  = I_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
+        size_t Tidx  = T_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
+        size_t IGidx = IG_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
+        size_t TGidx = TG_tv.get_tensor_view_idx({n0, n1, n2, n3, n4});
 
         Tref grad = static_cast<Tgpu>(2.0f) * (input[Iidx] - target[Tidx]) /
-                    static_cast<Tgpu>(divisor) * output[O_tv.offset];
+                    static_cast<Tgpu>(divisor) * output[0];
 
         if(input_grad != nullptr)
         {

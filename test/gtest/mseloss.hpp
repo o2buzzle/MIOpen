@@ -190,15 +190,15 @@ protected:
                        output_ref.data.data(),
                        divisor);
 
-        status = miopenMSELossForward(handle,
-                                      input.desc,
-                                      target.desc,
-                                      output.desc,
-                                      input_dev.get(),
-                                      target_dev.get(),
-                                      output_dev.get(),
-                                      workspace_dev.get(),
-                                      divisor);
+        status = MSELossForward(handle,
+                                input.desc,
+                                target.desc,
+                                output.desc,
+                                input_dev.get(),
+                                target_dev.get(),
+                                output_dev.get(),
+                                workspace_dev.get(),
+                                divisor);
 
         EXPECT_EQ(status, miopenStatusSuccess);
         output.data = handle.Read<T>(output_dev, output.data.size());
@@ -217,18 +217,18 @@ protected:
                                     target_grad_ref.data.data(),
                                     divisor);
 
-            status = miopenMSELossBackward(handle,
-                                           input.desc,
-                                           target.desc,
-                                           output.desc,
-                                           input_grad.desc,
-                                           target_grad.desc,
-                                           input_dev.get(),
-                                           target_dev.get(),
-                                           output_dev.get(),
-                                           input_grad_dev.get(),
-                                           target_grad_dev.get(),
-                                           divisor);
+            status = MSELossBackward(handle,
+                                     input.desc,
+                                     target.desc,
+                                     output.desc,
+                                     input_grad.desc,
+                                     target_grad.desc,
+                                     input_dev.get(),
+                                     target_dev.get(),
+                                     output_dev.get(),
+                                     input_grad_dev.get(),
+                                     target_grad_dev.get(),
+                                     divisor);
             EXPECT_EQ(status, miopenStatusSuccess);
         }
 
