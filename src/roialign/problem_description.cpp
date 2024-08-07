@@ -24,47 +24,23 @@
  *
  *******************************************************************************/
 
-#pragma once
+#include "miopen/names.hpp"
+#include <miopen/roialign/problem_description.hpp>
+#include <sstream>
 
-#include "miopen/problem_description_base.hpp"
-#include "miopen/tensor.hpp"
-#include <cstdint>
 namespace miopen {
-
-struct NetworkConfig;
-
 namespace roialign {
-struct ProblemDescription : ProblemDescriptionBase
+NetworkConfig ProblemDescription::MakeNetworkConfig() const
 {
-    ProblemDescription(const TensorDescriptor& inputDesc_,
-                       const TensorDescriptor& roisDesc_,
-                       const TensorDescriptor& outputDesc_,
-                       const int alignedHeight_,
-                       const int alignedWidth_)
-        : inputDesc(inputDesc_),
-          roisDesc(roisDesc_),
-          outputDesc(outputDesc_),
-          alignedHeight(alignedHeight_),
-          alignedWidth(alignedWidth_)
-    {
-    }
+    std::ostringstream oss;
 
-    const TensorDescriptor& GetInputDesc() const { return inputDesc; }
-    const TensorDescriptor& GetRoisDesc() const { return roisDesc; }
-    const TensorDescriptor& GetOutputDesc() const { return outputDesc; }
+    oss << "fwd";
+    oss << "dtype" << GetInputDesc().GetType();
+    oss << "xdesc" << GetInputDesc();
+    oss << "ydesc" << GetOutputDesc();
+    oss << "rois" << GetRoisDesc();
 
-    int32_t GetAlignedHeight() const { return alignedHeight; }
-    int32_t GetAlignedWidth() const { return alignedWidth; }
-
-    NetworkConfig MakeNetworkConfig() const override;
-
-private:
-    const TensorDescriptor& inputDesc;
-    const TensorDescriptor& roisDesc;
-    const TensorDescriptor& outputDesc;
-
-    const int32_t alignedHeight;
-    const int32_t alignedWidth;
-};
+    return NetworkConfig{oss.str()};
+}
 } // namespace roialign
 } // namespace miopen

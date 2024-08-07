@@ -121,18 +121,18 @@ __device__ DTYPE bilinear_interpolate(const DTYPE* input,
 }
 
 template <typename DTYPE>
-__device__ void RoIAlignForward(DTYPE* input,
-                                DTYPE* rois,
-                                DTYPE* output,
-                                int output_h,
-                                int output_w,
-                                DTYPE spatial_scale,
-                                int sampling_ratio,
-                                char aligned,
-                                int roi_batch_base_idx,
-                                tensor_view_t<4> input_tv,
-                                tensor_view_t<2> rois_tv,
-                                tensor_view_t<4> output_tv)
+__device__ void DeviceRoIAlignForward(const DTYPE* __restrict__ input,
+                                      const DTYPE* __restrict__ rois,
+                                      DTYPE* __restrict__ output,
+                                      int output_h,
+                                      int output_w,
+                                      float spatial_scale,
+                                      int sampling_ratio,
+                                      bool aligned,
+                                      int roi_batch_base_idx,
+                                      tensor_view_t<4> input_tv,
+                                      tensor_view_t<2> rois_tv,
+                                      tensor_view_t<4> output_tv)
 {
     /*
      * input : input, (N, C, H, W)
@@ -142,7 +142,8 @@ __device__ void RoIAlignForward(DTYPE* input,
      * lws = {LOCAL_SIZE}
      */
 
-    long gid = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    // long gid = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    long gid = blockIdx.x * blockDim.x + threadIdx.x;
 
     long N = input_tv.size[0];
     long C = input_tv.size[1];
@@ -261,8 +262,12 @@ __device__ void RoIAlignBackward(DTYPE* output_grad,
      * gws = {ceil(C * H * W, LOCAL_SIZE), N}
      * lws = {LOCAL_SIZE, 1}
      */
-    long chw = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x,
-         n   = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    // long chw = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x,
+    //      n   = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+
+    long chw = blockIdx.x * blockDim.x + threadIdx.x;
+    long n   = blockIdx.y * blockDim.y + threadIdx.y;
+
     long ch = chw / W, w = chw % W;
     long c = ch / H, h = ch % H;
     if(c >= C)
@@ -366,7 +371,9 @@ __global__ void RoIAlignBackwardAtomic(DTYPE* output_grad,
      * gws = {ceil(K * C * OH * OW, LOCAL_SIZE), 1}
      * lws = {LOCAL_SIZE, 1}
      */
-    long kchw = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    // long kchw = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+
+    long kchw = blockIdx.x * blockDim.x + threadIdx.x;
     long ow   = kchw % OW;
     long oh   = (kchw / OW) % OH;
     long c    = (kchw / (OW * OH)) % C;
@@ -487,29 +494,30 @@ __global__ void RoIAlignBackwardAtomic(DTYPE* output_grad,
     }
 }
 
-extern "C" __global__ void RoIAlignForward(FLOAT* input,
-                                           FLOAT* rois,
-                                           FLOAT* output,
+extern "C" __global__ void RoIAlignForward(const FLOAT* __restrict__ input,
+                                           const FLOAT* __restrict__ rois,
+                                           FLOAT* __restrict__ output,
                                            int output_h,
                                            int output_w,
-                                           FLOAT spatial_scale,
+                                           float spatial_scale,
                                            int sampling_ratio,
-                                           char aligned,
+                                           bool aligned,
                                            int roi_batch_base_idx,
                                            tensor_view_t<4> input_tv,
                                            tensor_view_t<2> rois_tv,
                                            tensor_view_t<4> output_tv)
 {
-    RoIAlignForward<FLOAT>(input,
-                           rois,
-                           output,
-                           output_h,
-                           output_w,
-                           spatial_scale,
-                           sampling_ratio,
-                           aligned,
-                           roi_batch_base_idx,
-                           input_tv,
-                           rois_tv,
-                           output_tv);
+    printf("Global kernel called\n");
+    DeviceRoIAlignForward<FLOAT>(input,
+                                 rois,
+                                 output,
+                                 output_h,
+                                 output_w,
+                                 spatial_scale,
+                                 sampling_ratio,
+                                 aligned,
+                                 roi_batch_base_idx,
+                                 input_tv,
+                                 rois_tv,
+                                 output_tv);
 }
