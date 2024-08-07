@@ -23,8 +23,8 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-#ifndef GUARD_CPU_ARGMAX_HPP
-#define GUARD_CPU_ARGMAX_HPP
+#ifndef GUARD_TENSOR_VIEW_HPP
+#define GUARD_TENSOR_VIEW_HPP
 
 template <int N>
 struct tensor_layout_t;
