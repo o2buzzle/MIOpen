@@ -46,14 +46,14 @@ struct InvokeParams : public miopen::InvokeParams
     ConstData_t rois  = nullptr;
     Data_t output     = nullptr;
 
-    int32_t alignedHeight = 0;
-    int32_t alignedWidth  = 0;
+    int alignedHeight = 0;
+    int alignedWidth  = 0;
 
-    float spatialScale    = 0.0f;
-    int32_t samplingRatio = 0;
+    float spatialScale = 0.0f;
+    int samplingRatio  = 0;
 
-    bool aligned            = false;
-    int32_t roi_batch_index = 0;
+    bool aligned        = false;
+    int roi_batch_index = 0;
 
     std::size_t workspace_size = 0;
     Data_t workspace           = nullptr;

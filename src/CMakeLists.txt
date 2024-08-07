@@ -181,6 +181,7 @@ set( MIOpen_Source
     rnn/Solutions/bwd_multi_stream.cpp
     roialign.cpp
     roialign_api.cpp
+    roialign/problem_description.cpp
     scalar.cpp
     softmax.cpp
     softmax_api.cpp

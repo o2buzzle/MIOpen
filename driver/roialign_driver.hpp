@@ -66,6 +66,8 @@ public:
         miopenCreateTensorDescriptor(&inputDesc);
         miopenCreateTensorDescriptor(&roisDesc);
         miopenCreateTensorDescriptor(&outputDesc);
+
+        data_type = miopen_type<Tgpu>{};
     }
 
     int AddCmdLineArgs() override;
@@ -81,6 +83,7 @@ public:
     int RunForwardCPU();
 
     int RunBackwardGPU() override;
+    int RunBackwardCPU();
 
     int VerifyForward() override;
     int VerifyBackward() override;
@@ -123,16 +126,16 @@ template <typename Tgpu, typename Tref>
 int RoIAlignDriver<Tgpu, Tref>::AddCmdLineArgs()
 {
     inflags.AddInputFlag("forw", 'F', "1", "Only run forward pass (Default=1)", "int");
-    inflags.AddTensorFlag("input", 'I', "3x244x244");
+    inflags.AddTensorFlag("input", 'I', "1x3x244x244");
     inflags.AddInputFlag("rois",
                          'r',
                          "1-0-0-3-3,2-1-1-4-3",
                          "RoIs (format: elem_idx-x1-y1-x2-y2,elem_idx-x1-y1-x2-y2)",
                          "string");
-    inflags.AddInputFlag("output_h", 'h', "244", "Output Height (Default=244)", "int");
-    inflags.AddInputFlag("output_w", 'w', "244", "Output Width (Default=244)", "int");
+    inflags.AddInputFlag("output_h", 'H', "244", "Output Height (Default=244)", "int");
+    inflags.AddInputFlag("output_w", 'W', "244", "Output Width (Default=244)", "int");
     inflags.AddInputFlag("spatial_scale", 's', "0.0625", "Spatial Scale (Default=0.0625)", "float");
-    inflags.AddInputFlag("sampling_ratio", 'S', "0", "Sampling Ratio (Default=0)", "int");
+    inflags.AddInputFlag("sampling_ratio", 'S', "1", "Sampling Ratio (Default=1)", "int");
     inflags.AddInputFlag("aligned", 'a', "0", "Aligned (Default=0)", "int");
     inflags.AddInputFlag("roi_batch_idx", 'B', "0", "RoI Batch Index (Default=0)", "int");
 
@@ -161,7 +164,8 @@ template <typename Tgpu, typename Tref>
 int RoIAlignDriver<Tgpu, Tref>::ParseRoIs(std::vector<Tgpu>& rois, const std::string& rois_str)
 {
     std::vector<std::string> rois_vec = split(rois_str, ',');
-    SetTensorNd(roisDesc, {rois_vec.size(), 5}, data_type);
+    std::vector<int> new_len          = {rois_vec.size(), 5};
+    SetTensorNd(roisDesc, new_len, data_type);
     rois.resize(rois_vec.size() * 5);
 
     for(int i = 0; i < rois_vec.size(); i++)
@@ -181,11 +185,17 @@ template <typename Tgpu, typename Tref>
 int RoIAlignDriver<Tgpu, Tref>::GetandSetData()
 {
     std::vector<int> in_len = inflags.GetValueTensor("input").lengths;
-
     SetTensorNd(inputDesc, in_len, data_type);
 
     output_h = inflags.GetValueInt("output_h");
     output_w = inflags.GetValueInt("output_w");
+    // Change h and w of out_len to match H and W of output
+    std::vector<int> out_len = inflags.GetValueTensor("input").lengths;
+
+    out_len[out_len.size() - 2] = output_w;
+    out_len[out_len.size() - 1] = output_h;
+
+    SetTensorNd(outputDesc, out_len, data_type);
 
     spatial_scale  = inflags.GetValueDouble("spatial_scale");
     sampling_ratio = inflags.GetValueInt("sampling_ratio");
@@ -204,9 +214,11 @@ int RoIAlignDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
     size_t in_sz  = GetTensorSize(inputDesc);
     size_t out_sz = GetTensorSize(outputDesc);
 
-    in_dev   = std::unique_ptr<GPUMem>(new GPUMem(GetStream(), GetTensorSize(inputDesc)));
-    rois_dev = std::unique_ptr<GPUMem>(new GPUMem(GetStream(), GetTensorSize(roisDesc)));
-    out_dev  = std::unique_ptr<GPUMem>(new GPUMem(GetStream(), GetTensorSize(outputDesc)));
+    uint32_t ctx = 0;
+
+    in_dev   = std::unique_ptr<GPUMem>(new GPUMem(ctx, GetTensorSize(inputDesc), sizeof(Tgpu)));
+    rois_dev = std::unique_ptr<GPUMem>(new GPUMem(ctx, GetTensorSize(roisDesc), sizeof(Tgpu)));
+    out_dev  = std::unique_ptr<GPUMem>(new GPUMem(ctx, GetTensorSize(outputDesc), sizeof(Tgpu)));
 
     in_host  = std::vector<Tgpu>(in_sz, static_cast<Tgpu>(0));
     out_host = std::vector<Tgpu>(out_sz, static_cast<Tgpu>(0));
@@ -244,7 +256,7 @@ int RoIAlignDriver<Tgpu, Tref>::RunForwardGPU()
                               inputDesc,
                               in_dev->GetMem(),
                               roisDesc,
-                              rois_dev,
+                              rois_dev->GetMem(),
                               outputDesc,
                               out_dev->GetMem(),
                               output_h,
@@ -284,6 +296,30 @@ int RoIAlignDriver<Tgpu, Tref>::RunForwardGPU()
 
 template <typename Tgpu, typename Tref>
 int RoIAlignDriver<Tgpu, Tref>::RunForwardCPU()
+{
+    return miopenStatusSuccess;
+}
+
+template <typename Tgpu, typename Tref>
+int RoIAlignDriver<Tgpu, Tref>::RunBackwardGPU()
+{
+    return miopenStatusSuccess;
+}
+
+template <typename Tgpu, typename Tref>
+int RoIAlignDriver<Tgpu, Tref>::RunBackwardCPU()
+{
+    return miopenStatusSuccess;
+}
+
+template <typename Tgpu, typename Tref>
+int RoIAlignDriver<Tgpu, Tref>::VerifyForward()
+{
+    return miopenStatusSuccess;
+}
+
+template <typename Tgpu, typename Tref>
+int RoIAlignDriver<Tgpu, Tref>::VerifyBackward()
 {
     return miopenStatusSuccess;
 }
