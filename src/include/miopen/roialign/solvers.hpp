@@ -46,12 +46,6 @@ struct RoIAlignForward final : RoIAlignSolver
     ConvSolution GetSolution(const ExecutionContext& context,
                              const miopen::roialign::ProblemDescription& problem) const override;
 
-    std::size_t GetWorkspaceSize(const ExecutionContext& context,
-                                 const miopen::roialign::ProblemDescription& problem) const override
-    {
-        return 0;
-    }
-
     bool MayNeedWorkspace() const override { return false; }
 };
 } // namespace roialign

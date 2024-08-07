@@ -28,7 +28,7 @@
 
 #include "miopen/problem_description_base.hpp"
 #include "miopen/tensor.hpp"
-#include <cstdint>
+
 namespace miopen {
 
 struct NetworkConfig;
@@ -53,8 +53,8 @@ struct ProblemDescription : ProblemDescriptionBase
     const TensorDescriptor& GetRoisDesc() const { return roisDesc; }
     const TensorDescriptor& GetOutputDesc() const { return outputDesc; }
 
-    int32_t GetAlignedHeight() const { return alignedHeight; }
-    int32_t GetAlignedWidth() const { return alignedWidth; }
+    int GetAlignedHeight() const { return alignedHeight; }
+    int GetAlignedWidth() const { return alignedWidth; }
 
     NetworkConfig MakeNetworkConfig() const override;
 
@@ -63,8 +63,8 @@ private:
     const TensorDescriptor& roisDesc;
     const TensorDescriptor& outputDesc;
 
-    const int32_t alignedHeight;
-    const int32_t alignedWidth;
+    const int alignedHeight;
+    const int alignedWidth;
 };
 } // namespace roialign
 } // namespace miopen
