@@ -39,12 +39,12 @@ miopenStatus_t RoIAlignForward(Handle& handle,
                                ConstData_t rois,
                                const TensorDescriptor& outputDesc,
                                Data_t output,
-                               const int alignedHeight,
-                               const int alignedWidth,
-                               const float spatialScale,
-                               const int samplingRatio,
-                               const bool aligned,
-                               const int roi_batch_index)
+                               int alignedHeight,
+                               int alignedWidth,
+                               float spatialScale,
+                               int samplingRatio,
+                               bool aligned,
+                               int roi_batch_index)
 {
     const auto problem = roialign::ProblemDescription{
         inputDesc,

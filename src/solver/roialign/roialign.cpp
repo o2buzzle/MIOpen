@@ -66,11 +66,11 @@ ConvSolution RoIAlignForward::GetSolution(const ExecutionContext& context,
     const size_t g =
         K * C * problem.GetAlignedHeight() * problem.GetAlignedWidth() / ROIALIGN_LOCAL_SIZE;
 
-    const size_t xlocalsize = g + 1;
+    const size_t xlocalsize = ROIALIGN_LOCAL_SIZE;
     const size_t ylocalsize = 1;
     const size_t zlocalsize = 1;
 
-    const size_t xgridsize = ROIALIGN_LOCAL_SIZE;
+    const size_t xgridsize = g + 1;
     const size_t ygridsize = 1;
     const size_t zgridsize = 1;
 
@@ -83,6 +83,8 @@ ConvSolution RoIAlignForward::GetSolution(const ExecutionContext& context,
         {"MIOPEN_USE_FP32", static_cast<int32_t>(dtype == miopenFloat)},
         {"MIOPEN_USE_FP64", static_cast<int32_t>(dtype == miopenDouble)},
         {"MIOPEN_USE_BFP16", static_cast<int32_t>(dtype == miopenBFloat16)},
+        {"IO_TYPE",
+         miopen::GetDataType(dtype) == "bfloat16" ? "ushort" : miopen::GetDataType(dtype)},
     };
 
     kernel.comp_options = build_params.GenerateFor(kbp::HIP{});
@@ -102,9 +104,9 @@ ConvSolution RoIAlignForward::GetSolution(const ExecutionContext& context,
             decltype(auto) params = raw_params.CastTo<miopen::roialign::InvokeParams>();
             decltype(auto) kernel = handle_.Run(kernels[0]);
 
-            auto input_tv  = get_inner_expanded_tv<4>(*params.inputDesc);
-            auto rois_tv   = get_inner_expanded_tv<2>(*params.roisDesc);
-            auto output_tv = get_inner_expanded_tv<4>(*params.outputDesc);
+            decltype(auto) input_tv  = get_inner_expanded_tv<4>(*params.inputDesc);
+            decltype(auto) rois_tv   = get_inner_expanded_tv<2>(*params.roisDesc);
+            decltype(auto) output_tv = get_inner_expanded_tv<4>(*params.outputDesc);
 
             kernel(params.input,
                    params.rois,

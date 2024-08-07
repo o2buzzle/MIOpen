@@ -34,7 +34,7 @@
 #include "hip_atomic.hpp"
 
 template <typename DTYPE>
-__device__ DTYPE bilinear_interpolate(const DTYPE* input,
+__device__ DTYPE bilinear_interpolate(const DTYPE* __restrict__ input,
                                       const long roi_batch_index,
                                       const long c,
                                       long height,
@@ -238,22 +238,22 @@ __device__ void DeviceRoIAlignForward(const DTYPE* __restrict__ input,
 }
 
 template <typename DTYPE>
-__device__ void RoIAlignBackward(DTYPE* output_grad,
-                                 DTYPE* rois,
-                                 DTYPE* input_grad,
-                                 long N,
-                                 long C,
-                                 long H,
-                                 long W,
-                                 long K,
-                                 int OH,
-                                 int OW,
-                                 DTYPE spatial_scale,
-                                 int sampling_ratio,
-                                 char aligned,
-                                 tensor_view_t<4> output_grad_tv,
-                                 tensor_view_t<2> rois_tv,
-                                 tensor_view_t<4> input_grad_tv)
+__device__ void DeviceRoIAlignBackward(const DTYPE* __restrict__ output_grad,
+                                       const DTYPE* __restrict__ rois,
+                                       DTYPE* __restrict__ input_grad,
+                                       long N,
+                                       long C,
+                                       long H,
+                                       long W,
+                                       long K,
+                                       int OH,
+                                       int OW,
+                                       DTYPE spatial_scale,
+                                       int sampling_ratio,
+                                       char aligned,
+                                       tensor_view_t<4> output_grad_tv,
+                                       tensor_view_t<2> rois_tv,
+                                       tensor_view_t<4> input_grad_tv)
 {
     /*
      * output_grad : input, (K, C, OH, OW)
@@ -346,23 +346,23 @@ __device__ void RoIAlignBackward(DTYPE* output_grad,
 }
 
 template <typename DTYPE>
-__global__ void RoIAlignBackwardAtomic(DTYPE* output_grad,
-                                       DTYPE* rois,
-                                       DTYPE* input_grad,
-                                       long N,
-                                       long C,
-                                       long H,
-                                       long W,
-                                       long K,
-                                       int OH,
-                                       int OW,
-                                       DTYPE spatial_scale,
-                                       int sampling_ratio,
-                                       char aligned,
-                                       int roi_batch_base_idx,
-                                       tensor_view_t<4> output_grad_tv,
-                                       tensor_view_t<2> rois_tv,
-                                       tensor_view_t<4> input_grad_tv)
+__device__ void DeviceRoIAlignBackwardAtomic(const DTYPE* __restrict__ output_grad,
+                                             const DTYPE* __restrict__ rois,
+                                             DTYPE* __restrict__ input_grad,
+                                             long N,
+                                             long C,
+                                             long H,
+                                             long W,
+                                             long K,
+                                             int OH,
+                                             int OW,
+                                             DTYPE spatial_scale,
+                                             int sampling_ratio,
+                                             char aligned,
+                                             int roi_batch_base_idx,
+                                             tensor_view_t<4> output_grad_tv,
+                                             tensor_view_t<2> rois_tv,
+                                             tensor_view_t<4> input_grad_tv)
 {
     /*
      * output_grad : input, (K, C, OH, OW)
@@ -497,17 +497,16 @@ __global__ void RoIAlignBackwardAtomic(DTYPE* output_grad,
 extern "C" __global__ void RoIAlignForward(const FLOAT* __restrict__ input,
                                            const FLOAT* __restrict__ rois,
                                            FLOAT* __restrict__ output,
-                                           int output_h,
-                                           int output_w,
-                                           float spatial_scale,
-                                           int sampling_ratio,
-                                           bool aligned,
-                                           int roi_batch_base_idx,
-                                           tensor_view_t<4> input_tv,
-                                           tensor_view_t<2> rois_tv,
-                                           tensor_view_t<4> output_tv)
+                                           const int output_h,
+                                           const int output_w,
+                                           const float spatial_scale,
+                                           const int sampling_ratio,
+                                           const bool aligned,
+                                           const int roi_batch_base_idx,
+                                           const tensor_view_t<4> input_tv,
+                                           const tensor_view_t<2> rois_tv,
+                                           const tensor_view_t<4> output_tv)
 {
-    printf("Global kernel called\n");
     DeviceRoIAlignForward<FLOAT>(input,
                                  rois,
                                  output,

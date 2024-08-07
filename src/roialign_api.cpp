@@ -37,10 +37,10 @@ extern "C" miopenStatus_t miopenRoIAlignForward(miopenHandle_t handle,
                                                 const void* rois,
                                                 const miopenTensorDescriptor_t outputDesc,
                                                 void* output,
-                                                int32_t alignedHeight,
-                                                int32_t alignedWidth,
+                                                int alignedHeight,
+                                                int alignedWidth,
                                                 float spatialScale,
-                                                int32_t samplingRatio,
+                                                int samplingRatio,
                                                 bool aligned,
                                                 int roi_batch_index)
 {
