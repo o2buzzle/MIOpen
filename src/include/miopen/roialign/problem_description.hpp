@@ -30,10 +30,10 @@
 #include "miopen/tensor.hpp"
 
 namespace miopen {
-
 struct NetworkConfig;
 
 namespace roialign {
+namespace forward {
 struct ProblemDescription : ProblemDescriptionBase
 {
     ProblemDescription(const TensorDescriptor& inputDesc_,
@@ -66,5 +66,39 @@ private:
     const int alignedHeight;
     const int alignedWidth;
 };
+} // namespace forward
+namespace backward {
+struct ProblemDescription : ProblemDescriptionBase
+{
+public:
+    ProblemDescription(const TensorDescriptor& gradOutputDesc_,
+                       const TensorDescriptor& roisDesc_,
+                       const TensorDescriptor& gradInputDesc_,
+                       const int alignedHeight_,
+                       const int alignedWidth_)
+        : gradOutputDesc(gradOutputDesc_),
+          roisDesc(roisDesc_),
+          gradInputDesc(gradInputDesc_),
+          alignedHeight(alignedHeight_),
+          alignedWidth(alignedWidth_){};
+
+    const TensorDescriptor& GetGradOutputDesc() const { return gradOutputDesc; }
+    const TensorDescriptor& GetRoisDesc() const { return roisDesc; }
+    const TensorDescriptor& GetGradInputDesc() const { return gradInputDesc; }
+
+    int GetAlignedHeight() const { return alignedHeight; }
+    int GetAlignedWidth() const { return alignedWidth; }
+
+    NetworkConfig MakeNetworkConfig() const override;
+
+private:
+    const TensorDescriptor& gradOutputDesc;
+    const TensorDescriptor& roisDesc;
+    const TensorDescriptor& gradInputDesc;
+
+    const int alignedHeight;
+    const int alignedWidth;
+};
+} // namespace backward
 } // namespace roialign
 } // namespace miopen

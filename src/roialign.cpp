@@ -24,6 +24,7 @@
  *
  *******************************************************************************/
 
+#include "miopen/miopen.h"
 #include <miopen/find_solution.hpp>
 #include <miopen/roialign.hpp>
 #include <miopen/roialign/invoke_params.hpp>
@@ -46,7 +47,7 @@ miopenStatus_t RoIAlignForward(Handle& handle,
                                bool aligned,
                                int roi_batch_index)
 {
-    const auto problem = roialign::ProblemDescription{
+    const auto problem = roialign::forward::ProblemDescription{
         inputDesc,
         roisDesc,
         outputDesc,
@@ -55,7 +56,7 @@ miopenStatus_t RoIAlignForward(Handle& handle,
     };
 
     const auto invoke_params = [&]() {
-        auto tmp       = miopen::roialign::InvokeParams{};
+        auto tmp       = miopen::roialign::forward::InvokeParams{};
         tmp.inputDesc  = &inputDesc;
         tmp.roisDesc   = &roisDesc;
         tmp.outputDesc = &outputDesc;
@@ -76,11 +77,61 @@ miopenStatus_t RoIAlignForward(Handle& handle,
     }();
 
     const auto algo   = AlgorithmName{"RoIAlignForward"};
-    const auto solver = solver::SolverContainer<solver::roialign::RoIAlignForward>{};
+    const auto solver = solver::SolverContainer<solver::roialign::forward::RoIAlignForward>{};
 
     solver.ExecutePrimitive(handle, problem, algo, invoke_params);
 
     return miopenStatusSuccess;
 }
 
+miopenStatus_t RoIAlignBackward(Handle& handle,
+                                const TensorDescriptor& gradOutputDesc,
+                                const void* gradOutput,
+                                const TensorDescriptor& roisDesc,
+                                const void* rois,
+                                const TensorDescriptor& gradInputDesc,
+                                void* gradInput,
+                                const int alignedHeight,
+                                const int alignedWidth,
+                                const float spatialScale,
+                                const int samplingRatio,
+                                const bool aligned,
+                                const int roi_batch_index)
+{
+    const auto problem = roialign::backward::ProblemDescription{
+        gradOutputDesc,
+        roisDesc,
+        gradInputDesc,
+        alignedHeight,
+        alignedWidth,
+    };
+
+    const auto invoke_params = [&]() {
+        auto tmp           = miopen::roialign::backward::InvokeParams{};
+        tmp.gradOutputDesc = &gradOutputDesc;
+        tmp.roisDesc       = &roisDesc;
+        tmp.gradInputDesc  = &gradInputDesc;
+
+        tmp.gradOutput = gradOutput;
+        tmp.rois       = rois;
+        tmp.gradInput  = gradInput;
+
+        tmp.alignedHeight = alignedHeight;
+        tmp.alignedWidth  = alignedWidth;
+
+        tmp.spatialScale    = spatialScale;
+        tmp.samplingRatio   = samplingRatio;
+        tmp.aligned         = aligned;
+        tmp.roi_batch_index = roi_batch_index;
+
+        return tmp;
+    }();
+
+    const auto algo   = AlgorithmName{"RoIAlignBackward"};
+    const auto solver = solver::SolverContainer<solver::roialign::backward::RoIAlignBackward>{};
+
+    solver.ExecutePrimitive(handle, problem, algo, invoke_params);
+
+    return miopenStatusSuccess;
+}
 } // namespace miopen

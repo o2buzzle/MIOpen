@@ -30,17 +30,31 @@
 
 namespace miopen {
 namespace roialign {
+namespace forward {
 NetworkConfig ProblemDescription::MakeNetworkConfig() const
 {
     std::ostringstream oss;
 
     oss << "fwd";
-    oss << "dtype" << GetInputDesc().GetType();
-    oss << "xdesc" << GetInputDesc();
-    oss << "ydesc" << GetOutputDesc();
-    oss << "rois" << GetRoisDesc();
+    oss << "-dtype" << GetInputDesc().GetType();
+    oss << "-xdesc" << GetInputDesc();
+    oss << "-ydesc" << GetOutputDesc();
+    oss << "-rois" << GetRoisDesc();
 
     return NetworkConfig{oss.str()};
 }
+} // namespace forward
+namespace backward {
+NetworkConfig ProblemDescription::MakeNetworkConfig() const
+{
+    std::ostringstream oss;
+
+    oss << "bwd";
+    oss << "-dtype" << GetGradOutputDesc().GetType();
+    oss << "-xdesc" << GetGradOutputDesc();
+    oss << "-ydesc" << GetGradOutputDesc();
+    oss << "-rois" << GetRoisDesc();
+};
+} // namespace backward
 } // namespace roialign
 } // namespace miopen

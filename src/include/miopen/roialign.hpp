@@ -47,5 +47,19 @@ miopenStatus_t RoIAlignForward(Handle& handle,
                                const bool aligned,
                                const int roi_batch_index);
 
+miopenStatus_t RoIAlignBackward(Handle& handle,
+                                const TensorDescriptor& gradOutputDesc,
+                                const void* gradOutput,
+                                const TensorDescriptor& roisDesc,
+                                const void* rois,
+                                const TensorDescriptor& gradInputDesc,
+                                void* gradInput,
+                                const int alignedHeight,
+                                const int alignedWidth,
+                                const float spatialScale,
+                                const int samplingRatio,
+                                const bool aligned,
+                                const int roi_batch_index);
+
 } // namespace miopen
 #endif // MIOPEN_ROI_ALIGN_HPP_

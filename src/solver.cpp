@@ -656,7 +656,10 @@ inline SolverRegistrar::SolverRegistrar(IdRegistryData& registry)
     Register(registry, ++id, Primitive::Softmax, softmax::Softmax{}.SolverDbId());
     Register(registry, ++id, Primitive::Softmax, softmax::AttnSoftmax{}.SolverDbId());
 
-    Register(registry, ++id, Primitive::RoIAlign, roialign::RoIAlignForward{}.SolverDbId());
+    Register(
+        registry, ++id, Primitive::RoIAlign, roialign::forward::RoIAlignForward{}.SolverDbId());
+    Register(
+        registry, ++id, Primitive::RoIAlign, roialign::backward::RoIAlignBackward{}.SolverDbId());
 
     Register(registry, ++id, Primitive::RoPE, rope::RoPEForward{}.SolverDbId());
     Register(registry, ++id, Primitive::RoPE, rope::RoPEBackward{}.SolverDbId());

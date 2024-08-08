@@ -33,7 +33,7 @@
 
 namespace miopen {
 namespace roialign {
-
+namespace forward {
 struct InvokeParams : public miopen::InvokeParams
 {
     InvokeParams() = default;
@@ -60,5 +60,34 @@ struct InvokeParams : public miopen::InvokeParams
     std::size_t GetWorkspaceSize() const { return workspace_size; }
     Data_t GetWorkspace() const { return workspace; }
 };
+} // namespace forward
+namespace backward {
+struct InvokeParams : public miopen::InvokeParams
+{
+    InvokeParams() = default;
+
+    const TensorDescriptor* gradOutputDesc = nullptr;
+    const TensorDescriptor* roisDesc       = nullptr;
+    const TensorDescriptor* gradInputDesc  = nullptr;
+
+    ConstData_t gradOutput = nullptr;
+    ConstData_t rois       = nullptr;
+    Data_t gradInput       = nullptr;
+
+    int alignedHeight = 0;
+    int alignedWidth  = 0;
+
+    float spatialScale = 0.0f;
+    int samplingRatio  = 0;
+
+    bool aligned        = false;
+    int roi_batch_index = 0;
+
+    std::size_t workspace_size = 0;
+    Data_t workspace           = nullptr;
+    std::size_t GetWorkspaceSize() const { return workspace_size; }
+    Data_t GetWorkspace() const { return workspace; }
+};
+} // namespace backward
 } // namespace roialign
 } // namespace miopen
