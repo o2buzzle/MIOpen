@@ -28,18 +28,16 @@
 
 #include "InputFlags.hpp"
 #include "driver.hpp"
+#include "miopen/errors.hpp"
+#include "miopen/tensor_view_utils.hpp"
 #include "tensor_driver.hpp"
 #include "timer.hpp"
-#include "random.hpp"
-#include <algorithm>
+#include "mloRoIAlign.hpp"
 #include <cassert>
-#include <cfloat>
 #include <cstdlib>
-#include <iomanip>
 #include <memory>
 #include <miopen/miopen.h>
 #include <miopen/tensor.hpp>
-#include <numeric>
 #include <vector>
 #include <../test/tensor_holder.hpp>
 #include <../test/verify.hpp>
@@ -226,15 +224,6 @@ int RoIAlignDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
     out_host = std::vector<Tgpu>(out_sz, static_cast<Tgpu>(0));
     out_ref  = std::vector<Tref>(out_sz, static_cast<Tref>(0));
 
-    /*
-    Fill in a predictable way
-    for i in range(224):
-        for j in range(224):
-            input[0, 0, i, j] = i / 224
-            input[0, 1, i, j] = j / 224
-            input[0, 2, i, j] = (i - 112) / 112
-    */
-
     for(int i = 0; i < 224; i++)
     {
         for(int j = 0; j < 224; j++)
@@ -313,6 +302,23 @@ int RoIAlignDriver<Tgpu, Tref>::RunForwardGPU()
 template <typename Tgpu, typename Tref>
 int RoIAlignDriver<Tgpu, Tref>::RunForwardCPU()
 {
+    auto input_tv  = miopen::get_inner_expanded_tv<4>(miopen::deref(inputDesc));
+    auto rois_tv   = miopen::get_inner_expanded_tv<2>(miopen::deref(roisDesc));
+    auto output_tv = miopen::get_inner_expanded_tv<4>(miopen::deref(outputDesc));
+
+    mloRoIAlignForward(in_host.data(),
+                       rois_host.data(),
+                       out_ref.data(),
+                       output_h,
+                       output_w,
+                       spatial_scale,
+                       sampling_ratio,
+                       aligned,
+                       roi_batch_idx,
+                       input_tv,
+                       rois_tv,
+                       output_tv);
+
     return miopenStatusSuccess;
 }
 
@@ -331,13 +337,18 @@ int RoIAlignDriver<Tgpu, Tref>::RunBackwardCPU()
 template <typename Tgpu, typename Tref>
 int RoIAlignDriver<Tgpu, Tref>::VerifyForward()
 {
-    // for now, dump to stdout to check with torch
-    for(int i = 0; i < out_host.size(); i++)
+    RunForwardCPU();
+
+    auto error     = miopen::rms_range(out_host, out_ref);
+    auto tolerance = std::numeric_limits<Tgpu>::epsilon();
+
+    if(error > tolerance)
     {
-        // std::cout << std::setprecision(4) << "in[" << i << "] = " << in_host[i] << std::endl;
-        std::cout << std::setprecision(4) << "out[" << i << "] = " << out_host[i] << std::endl;
+        std::cout << "Error: " << error << ",  Tolerance: " << tolerance << std::endl;
+        return miopenStatusInvalidValue;
     }
-    std::cout << "\n";
+
+    std::cout << "Verification OK: " << error << " < " << tolerance << std::endl;
 
     return miopenStatusSuccess;
 }
