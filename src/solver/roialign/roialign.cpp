@@ -39,21 +39,24 @@
 namespace miopen {
 namespace solver {
 namespace roialign {
+namespace forward {
 
 bool IsImprovementOverROCm(const ExecutionContext context,
-                           const miopen::roialign::ProblemDescription& problem)
+                           const miopen::roialign::forward::ProblemDescription& problem)
 {
     return true;
 }
 
-bool RoIAlignForward::IsApplicable(const ExecutionContext& context,
-                                   const miopen::roialign::ProblemDescription& problem) const
+bool RoIAlignForward::IsApplicable(
+    const ExecutionContext& context,
+    const miopen::roialign::forward::ProblemDescription& problem) const
 {
     return true;
 }
 
-ConvSolution RoIAlignForward::GetSolution(const ExecutionContext& context,
-                                          const miopen::roialign::ProblemDescription& problem) const
+ConvSolution
+RoIAlignForward::GetSolution(const ExecutionContext& context,
+                             const miopen::roialign::forward::ProblemDescription& problem) const
 {
     auto result = ConvSolution{miopenStatusSuccess};
 
@@ -99,7 +102,7 @@ ConvSolution RoIAlignForward::GetSolution(const ExecutionContext& context,
 
     result.invoker_factory = [](const std::vector<Kernel>& kernels) {
         return [=](const Handle& handle_, const AnyInvokeParams& raw_params) {
-            decltype(auto) params = raw_params.CastTo<miopen::roialign::InvokeParams>();
+            decltype(auto) params = raw_params.CastTo<miopen::roialign::forward::InvokeParams>();
             decltype(auto) kernel = handle_.Run(kernels[0]);
 
             decltype(auto) input_tv  = get_inner_expanded_tv<4>(*params.inputDesc);
@@ -124,6 +127,101 @@ ConvSolution RoIAlignForward::GetSolution(const ExecutionContext& context,
     return result;
 }
 
+} // namespace forward
+namespace backward {
+
+bool IsImprovementOverROCm(const ExecutionContext context,
+                           const miopen::roialign::backward::ProblemDescription& problem)
+{
+    return true;
+}
+
+bool RoIAlignBackward::IsApplicable(
+    const ExecutionContext& context,
+    const miopen::roialign::backward::ProblemDescription& problem) const
+{
+    return true;
+}
+
+ConvSolution
+RoIAlignBackward::GetSolution(const ExecutionContext& context,
+                              const miopen::roialign::backward::ProblemDescription& problem) const
+{
+    auto result = ConvSolution{miopenStatusSuccess};
+
+    auto dtype = problem.GetGradOutputDesc().GetType();
+    auto K     = problem.GetRoisDesc().GetLengths()[0];
+    auto C     = problem.GetGradOutputDesc().GetLengths()[1];
+
+    auto xlocalsize = ROIALIGN_LOCAL_SIZE;
+    auto xgridsize =
+        AlignUp(K * C * problem.GetAlignedHeight() * problem.GetAlignedWidth(), xlocalsize);
+    auto ylocalsize = 1;
+    auto ygridsize  = 1;
+    auto zlocalsize = 1;
+    auto zgridsize  = 1;
+
+    auto kernel        = KernelInfo{};
+    kernel.kernel_file = "MIOpenRoIAlign.cpp";
+    kernel.kernel_name = "RoIAlignBackward";
+
+    const auto build_params =
+        KernelBuildParameters{{"MIOPEN_USE_FP16", static_cast<int32_t>(dtype == miopenHalf)},
+                              {"MIOPEN_USE_FP32", static_cast<int32_t>(dtype == miopenFloat)},
+                              {"MIOPEN_USE_FP64", static_cast<int32_t>(dtype == miopenDouble)},
+                              {"MIOPEN_USE_BFP16", static_cast<int32_t>(dtype == miopenBFloat16)}};
+
+    kernel.comp_options = build_params.GenerateFor(kbp::HIP{});
+
+    kernel.l_wk.push_back(xlocalsize);
+    kernel.l_wk.push_back(ylocalsize);
+    kernel.l_wk.push_back(zlocalsize);
+
+    kernel.g_wk.push_back(xgridsize);
+    kernel.g_wk.push_back(ygridsize);
+    kernel.g_wk.push_back(zgridsize);
+
+    result.construction_params.push_back(kernel);
+
+    result.invoker_factory = [](const std::vector<Kernel>& kernels) {
+        return [=](const Handle& handle_, const AnyInvokeParams& raw_params) {
+            decltype(auto) params = raw_params.CastTo<miopen::roialign::backward::InvokeParams>();
+            decltype(auto) kernel = handle_.Run(kernels[0]);
+
+            decltype(auto) grad_output_tv = get_inner_expanded_tv<4>(*params.gradOutputDesc);
+            decltype(auto) rois_tv        = get_inner_expanded_tv<2>(*params.roisDesc);
+            decltype(auto) grad_input_tv  = get_inner_expanded_tv<4>(*params.gradInputDesc);
+
+            size_t N = grad_input_tv.size[0];
+            size_t C = grad_input_tv.size[1];
+            size_t H = grad_input_tv.size[2];
+            size_t W = grad_input_tv.size[3];
+            size_t K = rois_tv.size[0];
+
+            kernel(params.gradOutput,
+                   params.rois,
+                   params.gradInput,
+                   N,
+                   C,
+                   H,
+                   W,
+                   K,
+                   params.alignedHeight,
+                   params.alignedWidth,
+                   params.spatialScale,
+                   params.samplingRatio,
+                   params.aligned,
+                   params.roi_batch_index,
+                   grad_output_tv,
+                   rois_tv,
+                   grad_input_tv);
+        };
+    };
+
+    return result;
+}
+
+} // namespace backward
 } // namespace roialign
 } // namespace solver
 } // namespace miopen

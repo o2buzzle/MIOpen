@@ -33,21 +33,45 @@
 namespace miopen {
 namespace solver {
 namespace roialign {
+namespace forward {
 
-using RoIAlignSolver = NonTunableSolverBase<ExecutionContext, miopen::roialign::ProblemDescription>;
+using RoIAlignSolver =
+    NonTunableSolverBase<ExecutionContext, miopen::roialign::forward::ProblemDescription>;
 
 struct RoIAlignForward final : RoIAlignSolver
 {
     const std::string& SolverDbId() const override { return GetSolverDbId<RoIAlignForward>(); }
 
     bool IsApplicable(const ExecutionContext& context,
-                      const miopen::roialign::ProblemDescription& problem) const override;
+                      const miopen::roialign::forward::ProblemDescription& problem) const override;
 
-    ConvSolution GetSolution(const ExecutionContext& context,
-                             const miopen::roialign::ProblemDescription& problem) const override;
+    ConvSolution
+    GetSolution(const ExecutionContext& context,
+                const miopen::roialign::forward::ProblemDescription& problem) const override;
 
     bool MayNeedWorkspace() const override { return false; }
 };
+} // namespace forward
+
+namespace backward {
+
+using RoIAlignSolver =
+    NonTunableSolverBase<ExecutionContext, miopen::roialign::backward::ProblemDescription>;
+
+struct RoIAlignBackward final : RoIAlignSolver
+{
+    const std::string& SolverDbId() const override { return GetSolverDbId<RoIAlignBackward>(); }
+
+    bool IsApplicable(const ExecutionContext& context,
+                      const miopen::roialign::backward::ProblemDescription& problem) const override;
+
+    ConvSolution
+    GetSolution(const ExecutionContext& context,
+                const miopen::roialign::backward::ProblemDescription& problem) const override;
+
+    bool MayNeedWorkspace() const override { return false; }
+};
+} // namespace backward
 } // namespace roialign
 } // namespace solver
 } // namespace miopen

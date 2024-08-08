@@ -60,3 +60,34 @@ extern "C" miopenStatus_t miopenRoIAlignForward(miopenHandle_t handle,
                                 roi_batch_index);
     });
 }
+
+extern "C" miopenStatus_t miopenRoIAlignBackward(miopenHandle_t handle,
+                                                 const miopenTensorDescriptor_t gradOutputDesc,
+                                                 const void* gradOutput,
+                                                 const miopenTensorDescriptor_t roisDesc,
+                                                 const void* rois,
+                                                 const miopenTensorDescriptor_t gradInputDesc,
+                                                 void* gradInput,
+                                                 int alignedHeight,
+                                                 int alignedWidth,
+                                                 float spatialScale,
+                                                 int samplingRatio,
+                                                 bool aligned,
+                                                 int roi_batch_index)
+{
+    return miopen::try_([&] {
+        miopen::RoIAlignBackward(miopen::deref(handle),
+                                 miopen::deref(gradOutputDesc),
+                                 DataCast(gradOutput),
+                                 miopen::deref(roisDesc),
+                                 DataCast(rois),
+                                 miopen::deref(gradInputDesc),
+                                 DataCast(gradInput),
+                                 alignedHeight,
+                                 alignedWidth,
+                                 spatialScale,
+                                 samplingRatio,
+                                 aligned,
+                                 roi_batch_index);
+    });
+}
