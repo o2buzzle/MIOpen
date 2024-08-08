@@ -24,6 +24,7 @@
  *
  *******************************************************************************/
 
+#include <cstdio>
 #ifndef MIOPEN_DONT_USE_HIP_RUNTIME_HEADERS
 #include <hip/hip_fp16.h>
 #include <hip/hip_runtime.h>
@@ -385,6 +386,7 @@ __device__ void DeviceRoIAlignBackwardAtomic(const DTYPE* __restrict__ output_gr
     // long n = GET_2D_VAL_AT(rois, k, 0);
     long n = rois[rois_tv.get_tensor_view_idx({k, 0})];
     n -= roi_batch_base_idx;
+
     if(n < 0 || n >= N)
     {
         return;

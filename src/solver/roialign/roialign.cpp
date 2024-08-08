@@ -28,6 +28,7 @@
 #include "miopen/execution_context.hpp"
 #include "miopen/kernel_build_params.hpp"
 #include "miopen/miopen.h"
+#include "miopen/mlo_internal.hpp"
 #include "miopen/roialign/invoke_params.hpp"
 #include "miopen/roialign/problem_description.hpp"
 #include "miopen/roialign/solvers.hpp"
@@ -63,8 +64,8 @@ ConvSolution RoIAlignForward::GetSolution(const ExecutionContext& context,
 
     const size_t K = problem.GetRoisDesc().GetLengths()[0];
     const size_t C = problem.GetInputDesc().GetLengths()[1];
-    const size_t g =
-        K * C * problem.GetAlignedHeight() * problem.GetAlignedWidth() / ROIALIGN_LOCAL_SIZE;
+    const size_t g = AlignUp(K * C * problem.GetAlignedHeight() * problem.GetAlignedWidth(),
+                             ROIALIGN_LOCAL_SIZE);
 
     const size_t xlocalsize = ROIALIGN_LOCAL_SIZE;
     const size_t ylocalsize = 1;
@@ -78,14 +79,11 @@ ConvSolution RoIAlignForward::GetSolution(const ExecutionContext& context,
     kernel.kernel_file = "MIOpenRoIAlign.cpp";
     kernel.kernel_name = "RoIAlignForward";
 
-    const auto build_params = KernelBuildParameters{
-        {"MIOPEN_USE_FP16", static_cast<int32_t>(dtype == miopenHalf)},
-        {"MIOPEN_USE_FP32", static_cast<int32_t>(dtype == miopenFloat)},
-        {"MIOPEN_USE_FP64", static_cast<int32_t>(dtype == miopenDouble)},
-        {"MIOPEN_USE_BFP16", static_cast<int32_t>(dtype == miopenBFloat16)},
-        {"IO_TYPE",
-         miopen::GetDataType(dtype) == "bfloat16" ? "ushort" : miopen::GetDataType(dtype)},
-    };
+    const auto build_params =
+        KernelBuildParameters{{"MIOPEN_USE_FP16", static_cast<int32_t>(dtype == miopenHalf)},
+                              {"MIOPEN_USE_FP32", static_cast<int32_t>(dtype == miopenFloat)},
+                              {"MIOPEN_USE_FP64", static_cast<int32_t>(dtype == miopenDouble)},
+                              {"MIOPEN_USE_BFP16", static_cast<int32_t>(dtype == miopenBFloat16)}};
 
     kernel.comp_options = build_params.GenerateFor(kbp::HIP{});
 
