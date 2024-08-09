@@ -54,6 +54,8 @@ NetworkConfig ProblemDescription::MakeNetworkConfig() const
     oss << "-xdesc" << GetGradOutputDesc();
     oss << "-ydesc" << GetGradOutputDesc();
     oss << "-rois" << GetRoisDesc();
+
+    return NetworkConfig{oss.str()};
 };
 } // namespace backward
 } // namespace roialign

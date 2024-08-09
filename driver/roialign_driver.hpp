@@ -102,6 +102,7 @@ private:
     miopenTensorDescriptor_t inputDesc;
     miopenTensorDescriptor_t roisDesc;
     miopenTensorDescriptor_t outputDesc;
+
     size_t output_h;
     size_t output_w;
 
@@ -113,18 +114,24 @@ private:
     std::unique_ptr<GPUMem> in_dev;
     std::unique_ptr<GPUMem> rois_dev;
     std::unique_ptr<GPUMem> out_dev;
+    std::unique_ptr<GPUMem> out_grad_dev;
+    std::unique_ptr<GPUMem> in_grad_dev;
 
     std::vector<Tgpu> in_host;
     std::vector<Tgpu> rois_host;
 
     std::vector<Tgpu> out_host;
     std::vector<Tref> out_ref;
+
+    std::vector<Tgpu> out_grad_host;
+    std::vector<Tgpu> in_grad_host;
+    std::vector<Tref> in_grad_ref;
 };
 
 template <typename Tgpu, typename Tref>
 int RoIAlignDriver<Tgpu, Tref>::AddCmdLineArgs()
 {
-    inflags.AddInputFlag("forw", 'F', "1", "Only run forward pass (Default=1)", "int");
+    inflags.AddInputFlag("forw", 'F', "0", "Only run forward pass (Default=1)", "int");
     inflags.AddTensorFlag("input", 'I', "1x3x224x224");
     inflags.AddInputFlag("rois",
                          'r',
@@ -219,10 +226,15 @@ int RoIAlignDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
     in_dev   = std::unique_ptr<GPUMem>(new GPUMem(ctx, GetTensorSize(inputDesc), sizeof(Tgpu)));
     rois_dev = std::unique_ptr<GPUMem>(new GPUMem(ctx, GetTensorSize(roisDesc), sizeof(Tgpu)));
     out_dev  = std::unique_ptr<GPUMem>(new GPUMem(ctx, GetTensorSize(outputDesc), sizeof(Tgpu)));
+    out_grad_dev =
+        std::unique_ptr<GPUMem>(new GPUMem(ctx, GetTensorSize(outputDesc), sizeof(Tgpu)));
+    in_grad_dev = std::unique_ptr<GPUMem>(new GPUMem(ctx, GetTensorSize(inputDesc), sizeof(Tgpu)));
 
-    in_host  = std::vector<Tgpu>(in_sz, static_cast<Tgpu>(1));
-    out_host = std::vector<Tgpu>(out_sz, static_cast<Tgpu>(0));
-    out_ref  = std::vector<Tref>(out_sz, static_cast<Tref>(0));
+    in_host       = std::vector<Tgpu>(in_sz, static_cast<Tgpu>(0));
+    out_host      = std::vector<Tgpu>(out_sz, static_cast<Tgpu>(0));
+    out_ref       = std::vector<Tref>(out_sz, static_cast<Tref>(0));
+    out_grad_host = std::vector<Tgpu>(out_sz, static_cast<Tgpu>(1));
+    in_grad_host  = std::vector<Tgpu>(in_sz, static_cast<Tgpu>(0));
 
     for(int i = 0; i < 224; i++)
     {
@@ -237,12 +249,12 @@ int RoIAlignDriver<Tgpu, Tref>::AllocateBuffersAndCopy()
     if(in_dev->ToGPU(GetStream(), in_host.data()) != 0)
         std::cerr << "Error copying (in) to GPU, size: " << in_dev->GetSize() << std::endl;
 
-    if(out_dev->ToGPU(GetStream(), out_host.data()) != 0)
-        std::cerr << "Error copying (out) to GPU, size: " << out_dev->GetSize() << std::endl;
-
     if(rois_dev->ToGPU(GetStream(), rois_host.data()) != 0)
         std::cerr << "Error copying (rois) to GPU, size: " << rois_dev->GetSize() << std::endl;
 
+    if(out_grad_dev->ToGPU(GetStream(), out_grad_host.data()) != 0)
+        std::cerr << "Error copying (out_grad) to GPU, size: " << out_grad_dev->GetSize()
+                  << std::endl;
     return miopenStatusSuccess;
 }
 
@@ -325,6 +337,55 @@ int RoIAlignDriver<Tgpu, Tref>::RunForwardCPU()
 template <typename Tgpu, typename Tref>
 int RoIAlignDriver<Tgpu, Tref>::RunBackwardGPU()
 {
+    float kernel_total_time = 0;
+    float kernel_first_time = 0;
+
+    Timer t;
+    START_TIME
+
+    for(int i = 0; i < inflags.GetValueInt("iter"); i++)
+    {
+        miopenRoIAlignBackward(GetHandle(),
+                               outputDesc,
+                               out_grad_dev->GetMem(),
+                               roisDesc,
+                               rois_dev->GetMem(),
+                               inputDesc,
+                               in_grad_dev->GetMem(),
+                               output_h,
+                               output_w,
+                               spatial_scale,
+                               sampling_ratio,
+                               aligned,
+                               roi_batch_idx);
+
+        float time = 0.0f;
+        miopenGetKernelTime(GetHandle(), &time);
+        kernel_total_time += time;
+        if(i == 0)
+            kernel_first_time = time;
+    }
+
+    if(inflags.GetValueInt("time") == 1)
+    {
+        STOP_TIME
+
+        int iter = inflags.GetValueInt("iter");
+
+        if(WALL_CLOCK)
+            std::cout << "Wall-clock Time Backward RoIAlign Elapsed: " << t.gettime_ms() / iter
+                      << " ms\n";
+
+        float kernel_average_time =
+            iter > 1 ? (kernel_total_time - kernel_first_time) / (iter - 1) : kernel_first_time;
+
+        std::cout << "Kernel Time Backward RoIAlign Elapsed: " << kernel_average_time << " ms\n";
+    }
+
+    if(in_grad_dev->FromGPU(GetStream(), in_grad_host.data()) != 0)
+        std::cerr << "Error copying (in_grad_dev) from GPU, size: " << in_grad_dev->GetSize()
+                  << std::endl;
+
     return miopenStatusSuccess;
 }
 
