@@ -70,6 +70,7 @@
  * @defgroup SGD
  * @defgroup getitem
  * @defgroup ReduceCalculation
+ * @defgroup RoIAlign
  *
  */
 
@@ -7619,6 +7620,79 @@ MIOPEN_EXPORT miopenStatus_t miopenGetitemBackward(miopenHandle_t handle,
 
 /** @} */
 // CLOSEOUT GETITEM DOXYGEN GROUP
+
+/** @addtogroup RoIAlign
+ *
+ *  @{
+ */
+
+/**
+ * @brief Performs the forward pass of the Region-of-Interest (RoI) Align operation.
+ *
+ * @param [in]  handle          MIOpen handle
+ * @param [in]  inputDesc       Input tensor descriptor
+ * @param [in]  input           Input tensor
+ * @param [in]  roisDesc        RoI tensor descriptor
+ * @param [in]  rois            RoI tensor
+ * @param [in]  outputDesc      Output tensor descriptor
+ * @param [out] output          Output tensor
+ * @param [in]  alignedHeight   Height of the aligned output
+ * @param [in]  alignedWidth    Width of the aligned output
+ * @param [in]  spatialScale    RoI spatial scale
+ *
+ * @return miopenStatus_t
+ */
+MIOPEN_EXPORT miopenStatus_t miopenRoIAlignForward(miopenHandle_t handle,
+                                                   miopenTensorDescriptor_t inputDesc,
+                                                   const void* input,
+                                                   miopenTensorDescriptor_t roisDesc,
+                                                   const void* rois,
+                                                   miopenTensorDescriptor_t outputDesc,
+                                                   void* output,
+                                                   int alignedHeight,
+                                                   int alignedWidth,
+                                                   float spatialScale,
+                                                   int samplingRatio,
+                                                   bool aligned,
+                                                   int roi_batch_index);
+
+/**
+ * @brief Performs the backward pass of the Region-of-Interest (RoI) Align operation.
+ *
+ * @param   [in]    handle            MIOpen handle.
+ * @param   [in]    gradOutputDesc    Tensor descriptor for the gradient of the output.
+ * @param   [in]    gradOutput        Pointer to the gradient of the output.
+ * @param   [in]    roisDesc          Tensor descriptor for the RoI tensor.
+ * @param   [in]    rois              Pointer to the RoI tensor.
+ * @param   [in]    gradInputDesc     Tensor descriptor for the gradient for the input.
+ * @param   [out]   gradInput         Pointer to the gradient for the input.
+ * @param   [in]    alignedHeight     Height of the aligned output.
+ * @param   [in]    alignedWidth      Width of the aligned output.
+ * @param   [in]    spatialScale      RoI spatial scale.
+ * @param   [in]    samplingRatio     Sampling ratio.
+ * @param   [in]    aligned           Flag indicating if the RoI is aligned.
+ * @param   [in]    roi_batch_index   RoI batch index.
+ *
+ * @return miopenStatus_t Returns miopenStatusSuccess on success, otherwise an error code.
+ *
+ */
+MIOPEN_EXPORT miopenStatus_t miopenRoIAlignBackward(miopenHandle_t handle,
+                                                    miopenTensorDescriptor_t gradOutputDesc,
+                                                    const void* gradOutput,
+                                                    miopenTensorDescriptor_t roisDesc,
+                                                    const void* rois,
+                                                    miopenTensorDescriptor_t gradInputDesc,
+                                                    void* gradInput,
+                                                    int alignedHeight,
+                                                    int alignedWidth,
+                                                    float spatialScale,
+                                                    int samplingRatio,
+                                                    bool aligned,
+                                                    int roi_batch_index);
+
+/** @}*/
+// CLOSEOUT RoIAlign DOXYGEN GROUP
+
 #endif // MIOPEN_BETA_API
 
 #ifdef __cplusplus

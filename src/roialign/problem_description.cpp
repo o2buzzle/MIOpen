@@ -24,58 +24,37 @@
  *
  *******************************************************************************/
 
-#ifndef MIOPEN_TENSOR_VIEW_UTIL_HPP_
-#define MIOPEN_TENSOR_VIEW_UTIL_HPP_
-
-#include <miopen/common.hpp>
-#include "../../kernels/tensor_view.hpp"
-#include "miopen/tensor.hpp"
+#include "miopen/names.hpp"
+#include <miopen/roialign/problem_description.hpp>
+#include <sstream>
 
 namespace miopen {
-
-template <int N>
-inline tensor_view_t<N> get_inner_expanded_tv(const TensorDescriptor Desc)
+namespace roialign {
+namespace forward {
+NetworkConfig ProblemDescription::MakeNetworkConfig() const
 {
-    auto dims    = Desc.GetLengths();
-    auto strides = Desc.GetStrides();
+    std::ostringstream oss;
 
-    tensor_view_t<N> tensor_view;
-    for(size_t i = 0; i < N; ++i)
-    {
-        if(i < dims.size())
-        {
-            tensor_view.stride[i] = strides[i];
-            tensor_view.size[i]   = dims[i];
-        }
-        else
-        {
-            tensor_view.stride[i] = (i == 0 ? 1 : strides[i - 1]);
-            tensor_view.size[i]   = 1;
-        }
-    }
-    return tensor_view;
+    oss << "fwd";
+    oss << "-dtype" << GetInputDesc().GetType();
+    oss << "-xdesc" << GetInputDesc();
+    oss << "-ydesc" << GetOutputDesc();
+    oss << "-rois" << GetRoisDesc();
+
+    return NetworkConfig{oss.str()};
 }
-
-template <int N>
-inline void slice_tv(tensor_view_t<N>& tensor_view, int32_t sliceCount, const int32_t* slices)
+} // namespace forward
+namespace backward {
+NetworkConfig ProblemDescription::MakeNetworkConfig() const
 {
-    for(int32_t i = 0; i < sliceCount; i++)
-    {
-        int32_t dim   = slices[4 * i + 0];
-        int32_t start = slices[4 * i + 1];
-        int32_t end   = slices[4 * i + 2];
-        int32_t step  = slices[4 * i + 3];
+    std::ostringstream oss;
 
-        if(end > static_cast<int32_t>(tensor_view.size[dim]))
-            end = tensor_view.size[dim];
-
-        auto len = end - start;
-
-        tensor_view.size[dim] = (len + step - 1) / step;
-        tensor_view.stride[dim] *= step;
-    }
-}
-
+    oss << "bwd";
+    oss << "-dtype" << GetGradOutputDesc().GetType();
+    oss << "-xdesc" << GetGradOutputDesc();
+    oss << "-ydesc" << GetGradOutputDesc();
+    oss << "-rois" << GetRoisDesc();
+};
+} // namespace backward
+} // namespace roialign
 } // namespace miopen
-
-#endif // MIOPEN_TENSOR_REORDER_UTIL_HPP_

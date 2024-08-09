@@ -51,6 +51,7 @@ add_executable(MIOpenDriver
     dm_reduce.cpp
     dm_reduceextreme.cpp
     dm_reducecalculation.cpp
+    dm_roialign.cpp
     dm_rnn.cpp
     dm_softmax.cpp
     dm_t5layernorm.cpp

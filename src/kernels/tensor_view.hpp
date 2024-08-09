@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2024 Advanced Micro Devices, Inc.
+ * Copyright (c) 2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,9 +23,10 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-
 #ifndef GUARD_TENSOR_VIEW_HPP
 #define GUARD_TENSOR_VIEW_HPP
+
+#include <initializer_list>
 
 template <int N>
 struct tensor_layout_t;
@@ -69,6 +70,15 @@ struct tensor_layout_t
             }
             layout[1] = temp % tensor_view.size[1];
             layout[0] = temp / tensor_view.size[1];
+        }
+    }
+
+    constexpr tensor_layout_t(std::initializer_list<uint64_t> layout_)
+    {
+        static_assert(N > 0);
+        for(auto i = 0; i < N; ++i)
+        {
+            layout[i] = layout_.begin()[i];
         }
     }
 

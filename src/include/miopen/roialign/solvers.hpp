@@ -1,0 +1,77 @@
+/*******************************************************************************
+ *
+ * MIT License
+ *
+ * Copyright (c) 2024 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *******************************************************************************/
+
+#pragma once
+
+#include "miopen/execution_context.hpp"
+#include "miopen/roialign/problem_description.hpp"
+#include "miopen/solver.hpp"
+
+namespace miopen {
+namespace solver {
+namespace roialign {
+namespace forward {
+
+using RoIAlignSolver =
+    NonTunableSolverBase<ExecutionContext, miopen::roialign::forward::ProblemDescription>;
+
+struct RoIAlignForward final : RoIAlignSolver
+{
+    const std::string& SolverDbId() const override { return GetSolverDbId<RoIAlignForward>(); }
+
+    bool IsApplicable(const ExecutionContext& context,
+                      const miopen::roialign::forward::ProblemDescription& problem) const override;
+
+    ConvSolution
+    GetSolution(const ExecutionContext& context,
+                const miopen::roialign::forward::ProblemDescription& problem) const override;
+
+    bool MayNeedWorkspace() const override { return false; }
+};
+} // namespace forward
+
+namespace backward {
+
+using RoIAlignSolver =
+    NonTunableSolverBase<ExecutionContext, miopen::roialign::backward::ProblemDescription>;
+
+struct RoIAlignBackward final : RoIAlignSolver
+{
+    const std::string& SolverDbId() const override { return GetSolverDbId<RoIAlignBackward>(); }
+
+    bool IsApplicable(const ExecutionContext& context,
+                      const miopen::roialign::backward::ProblemDescription& problem) const override;
+
+    ConvSolution
+    GetSolution(const ExecutionContext& context,
+                const miopen::roialign::backward::ProblemDescription& problem) const override;
+
+    bool MayNeedWorkspace() const override { return false; }
+};
+} // namespace backward
+} // namespace roialign
+} // namespace solver
+} // namespace miopen
